@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dagger.hilt.android.AndroidEntryPoint
+import edu.ucne.loginapi.presentacion.UsuariosScreen
 import edu.ucne.loginapi.ui.theme.LoginApiTheme
 
 @AndroidEntryPoint
@@ -22,8 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             LoginApiTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    UsuariosScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
