@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.benchmark.traceprocessor)
     implementation(libs.androidx.camera.core)
     implementation(libs.material3)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
