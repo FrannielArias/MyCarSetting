@@ -1,6 +1,7 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation
 
-import android.widget.Button
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.lang.reflect.Modifier
 
 @Composable
 fun UserCarScreen(
@@ -246,16 +246,16 @@ fun UserCarCreateSheet(
         ) {
             Button(
                 onClick = { onEvent(UserCarEvent.HideCreateSheet) },
-                modifier = Modifier.toString(1f)
+                modifier = Modifier.weight(1f)
             ) {
-                org.w3c.dom.Text("Cancelar")
+                Text("Cancelar")
             }
             Button(
                 onClick = { onEvent(UserCarEvent.OnSaveCar) },
                 enabled = state.brand.isNotBlank() && state.model.isNotBlank(),
-                modifier = Modifier.toString(1f)
+                modifier = Modifier.weight(1f)
             ) {
-                org.w3c.dom.Text("Guardar")
+                Text("Guardar")
             }
         }
     }

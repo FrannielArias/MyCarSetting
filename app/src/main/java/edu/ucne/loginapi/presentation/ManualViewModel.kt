@@ -57,7 +57,7 @@ class ManualViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
 
             val lights = getWarningLightsUseCase().first()
-            val guides = getGuideArticlesUseCase().first()
+            val guides = getGuideArticlesUseCase(null).first()
 
             _state.update {
                 it.copy(

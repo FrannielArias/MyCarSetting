@@ -5,8 +5,15 @@ import edu.ucne.loginapi.domain.model.WarningLight
 import kotlinx.coroutines.flow.Flow
 
 interface ManualRepository {
-    fun observeWarningLights(): Flow<List<WarningLight>>
-    fun observeWarningLightById(id: String): Flow<WarningLight?>
-    fun observeGuideArticles(): Flow<List<GuideArticle>>
-    fun observeGuideArticleById(id: String): Flow<GuideArticle?>
+    fun getWarningLights(
+        brand: String?,
+        model: String?,
+        year: Int?
+    ): Flow<List<WarningLight>>
+
+    fun getWarningLightDetail(id: String): Flow<WarningLight?>
+
+    fun getGuideArticles(category: String?): Flow<List<GuideArticle>>
+
+    fun getGuideArticleDetail(id: String): Flow<GuideArticle?>
 }

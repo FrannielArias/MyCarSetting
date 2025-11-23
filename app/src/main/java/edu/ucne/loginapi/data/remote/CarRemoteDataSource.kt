@@ -4,7 +4,6 @@ import edu.ucne.loginapi.data.mapper.toCreateRequest
 import edu.ucne.loginapi.data.mapper.toDomain
 import edu.ucne.loginapi.data.mapper.toUpdateRequest
 import edu.ucne.loginapi.data.remote.api.CarApiService
-import edu.ucne.loginapi.domain.model.Resource
 import edu.ucne.loginapi.domain.model.UserCar
 import javax.inject.Inject
 

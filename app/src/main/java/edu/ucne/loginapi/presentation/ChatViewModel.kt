@@ -6,10 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.ChatMessage
 import edu.ucne.loginapi.domain.model.ChatRole
-import edu.ucne.loginapi.domain.model.Resource
 import edu.ucne.loginapi.domain.useCase.ClearConversationUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveChatMessagesUseCase
-import edu.ucne.loginapi.domain.useCase.SendChatMessageLocalUseCase
+import edu.ucne.loginapi.domain.useCase.chat.SendChatMessageLocalUseCase
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

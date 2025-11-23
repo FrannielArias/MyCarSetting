@@ -215,7 +215,6 @@ fun GuideArticle.toDto(): GuideArticleDto =
         content = content,
         category = category
     )
-
 fun ChatMessageDto.toDomain(): ChatMessage =
     ChatMessage(
         id = id,
@@ -226,28 +225,19 @@ fun ChatMessageDto.toDomain(): ChatMessage =
         isPendingCreate = false
     )
 
-fun ChatMessage.toDto(): ChatMessageDto =
-    ChatMessageDto(
-        id = id,
-        conversationId = conversationId,
-        role = role.toDto(),
-        content = content,
-        timestampMillis = timestampMillis
-    )
-
-fun ChatResponseDto.toDomain(conversationIdOverride: String? = null): ChatMessage =
-    ChatMessage(
-        id = messageId,
-        conversationId = conversationIdOverride ?: conversationId,
-        role = ChatRole.ASSISTANT,
-        content = reply,
-        timestampMillis = timestampMillis,
-        isPendingCreate = false
-    )
-
 fun ChatMessage.toChatRequest(vehicleId: String?): ChatRequestDto =
     ChatRequestDto(
         conversationId = conversationId,
         userMessage = content,
         vehicleId = vehicleId
+    )
+
+fun ChatResponseDto.toDomain(conversationId: String): ChatMessage =
+    ChatMessage(
+        id = messageId,
+        conversationId = conversationId,
+        role = ChatRole.ASSISTANT,
+        content = reply,
+        timestampMillis = timestampMillis,
+        isPendingCreate = false
     )

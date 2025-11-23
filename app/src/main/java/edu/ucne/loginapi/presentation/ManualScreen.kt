@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation
 
 import androidx.compose.foundation.clickable

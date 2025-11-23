@@ -2,12 +2,10 @@ package edu.ucne.loginapi.data.remote
 
 import edu.ucne.loginapi.data.mapper.toCreateRequest
 import edu.ucne.loginapi.data.mapper.toDomain
-import edu.ucne.loginapi.data.mapper.toDto
 import edu.ucne.loginapi.data.mapper.toUpdateRequest
 import edu.ucne.loginapi.data.remote.api.MaintenanceApiService
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import edu.ucne.loginapi.domain.model.MaintenanceTask
-import edu.ucne.loginapi.domain.model.Resource
 import javax.inject.Inject
 
 class MaintenanceRemoteDataSource @Inject constructor(

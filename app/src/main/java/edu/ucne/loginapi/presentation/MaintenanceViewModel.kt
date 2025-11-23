@@ -7,8 +7,6 @@ import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.MaintenanceStatus
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.model.MaintenanceType
-import edu.ucne.loginapi.domain.model.Resource
-import edu.ucne.loginapi.domain.useCase.AddUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.CreateMaintenanceTaskLocalUseCase
 import edu.ucne.loginapi.domain.useCase.DeleteMaintenanceTaskUseCase
 import edu.ucne.loginapi.domain.useCase.GetCurrentCarUseCase

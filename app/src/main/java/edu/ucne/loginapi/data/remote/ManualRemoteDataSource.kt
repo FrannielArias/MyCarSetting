@@ -3,7 +3,6 @@ package edu.ucne.loginapi.data.remote
 import edu.ucne.loginapi.data.mapper.toDomain
 import edu.ucne.loginapi.data.remote.api.ManualApiService
 import edu.ucne.loginapi.domain.model.GuideArticle
-import edu.ucne.loginapi.domain.model.Resource
 import edu.ucne.loginapi.domain.model.WarningLight
 import javax.inject.Inject
 

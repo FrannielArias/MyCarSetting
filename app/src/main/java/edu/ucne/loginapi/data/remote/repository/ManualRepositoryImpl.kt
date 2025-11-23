@@ -1,8 +1,8 @@
 package edu.ucne.loginapi.data.repository
 
 import edu.ucne.loginapi.data.remote.ManualRemoteDataSource
+import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.GuideArticle
-import edu.ucne.loginapi.domain.model.Resource
 import edu.ucne.loginapi.domain.model.WarningLight
 import edu.ucne.loginapi.domain.repository.ManualRepository
 import javax.inject.Inject
@@ -20,8 +20,7 @@ class ManualRepositoryImpl @Inject constructor(
     ): Flow<List<WarningLight>> = flow {
         when (val result = remote.getWarningLights(brand, model, year)) {
             is Resource.Success -> emit(result.data.orEmpty())
-            is Resource.Error -> emit(emptyList())
-            is Resource.Loading -> emit(emptyList())
+            is Resource.Error, is Resource.Loading -> emit(emptyList())
         }
     }
 
@@ -35,8 +34,7 @@ class ManualRepositoryImpl @Inject constructor(
     override fun getGuideArticles(category: String?): Flow<List<GuideArticle>> = flow {
         when (val result = remote.getGuideArticles(category)) {
             is Resource.Success -> emit(result.data.orEmpty())
-            is Resource.Error -> emit(emptyList())
-            is Resource.Loading -> emit(emptyList())
+            is Resource.Error, is Resource.Loading -> emit(emptyList())
         }
     }
 

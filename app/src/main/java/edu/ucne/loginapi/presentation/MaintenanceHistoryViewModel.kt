@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.domain.model.Resource
 import edu.ucne.loginapi.domain.useCase.DeleteMaintenanceRecordUseCase
 import edu.ucne.loginapi.domain.useCase.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.GetMaintenanceHistoryForCarUseCase

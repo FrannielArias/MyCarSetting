@@ -5,6 +5,7 @@ import edu.ucne.loginapi.domain.model.MaintenanceTask
 import kotlinx.coroutines.flow.Flow
 
 interface MaintenanceTaskRepository {
+
     fun observeTasksForCar(carId: String): Flow<List<MaintenanceTask>>
     fun observeUpcomingTasksForCar(carId: String): Flow<List<MaintenanceTask>>
     fun observeOverdueTasksForCar(carId: String): Flow<List<MaintenanceTask>>

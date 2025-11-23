@@ -4,8 +4,9 @@ import android.content.Context
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import edu.ucne.loginapi.data.ChatSyncWorker
+import javax.inject.Inject
 
-class TriggerChatSyncUseCase(
+class TriggerChatSyncUseCase @Inject constructor(
     private val context: Context
 ) {
     operator fun invoke() {

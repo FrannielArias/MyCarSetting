@@ -2,6 +2,7 @@ package edu.ucne.loginapi.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import edu.ucne.loginapi.data.local.dao.UserCarDao
 
 @Database(
     entities = [
@@ -11,7 +12,7 @@ import androidx.room.RoomDatabase
         ChatMessageEntity::class
     ],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 abstract class MyCarSettingDatabase : RoomDatabase() {
     abstract val userCarDao: UserCarDao

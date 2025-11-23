@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.domain.model.Resource
 import edu.ucne.loginapi.domain.model.UserCar
 import edu.ucne.loginapi.domain.useCase.AddUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveCarsUseCase

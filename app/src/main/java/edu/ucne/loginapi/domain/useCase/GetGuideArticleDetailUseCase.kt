@@ -3,10 +3,11 @@ package edu.ucne.loginapi.domain.useCase
 import edu.ucne.loginapi.domain.model.GuideArticle
 import edu.ucne.loginapi.domain.repository.ManualRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class GetGuideArticleDetailUseCase(
+class GetGuideArticleDetailUseCase @Inject constructor(
     private val repository: ManualRepository
 ) {
     operator fun invoke(id: String): Flow<GuideArticle?> =
-        repository.observeGuideArticleById(id)
+        repository.getGuideArticleDetail(id)
 }

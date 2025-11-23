@@ -1,34 +1,37 @@
-package edu.ucne.loginapi.data
+package edu.ucne.loginapi.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
+import edu.ucne.loginapi.data.UserCarEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserCarDao {
 
     @Query("SELECT * FROM user_cars")
-    fun observeCars(): Flow<List<UserCarEntity>>
-
-    @Query("SELECT * FROM user_cars WHERE isCurrent = 1 LIMIT 1")
-    fun observeCurrentCar(): Flow<UserCarEntity?>
-
-    @Query("SELECT * FROM user_cars WHERE isCurrent = 1 LIMIT 1")
-    suspend fun getCurrentCar(): UserCarEntity?
+    fun getCars(): Flow<List<UserCarEntity>>
 
     @Query("SELECT * FROM user_cars WHERE id = :id LIMIT 1")
-    suspend fun getCarById(id: String): UserCarEntity?
+    suspend fun getCar(id: String): UserCarEntity?
 
     @Upsert
     suspend fun upsert(car: UserCarEntity)
 
+    @Query("DELETE FROM user_cars WHERE id = :id")
+    suspend fun delete(id: String)
+
     @Query("UPDATE user_cars SET isCurrent = 0")
-    suspend fun clearCurrentCar()
+    suspend fun clearCurrent()
 
     @Query("UPDATE user_cars SET isCurrent = 1 WHERE id = :id")
-    suspend fun setCurrentCar(id: String)
+    suspend fun setCurrent(id: String)
 
-    @Query("DELETE FROM user_cars WHERE id = :id")
-    suspend fun deleteCar(id: String)
+    @Query("DELETE FROM user_cars")
+    suspend fun clearAll()
+
+    suspend fun replaceAll(cars: List<UserCarEntity>) {
+        clearAll()
+        cars.forEach { upsert(it) }
+    }
 }
