@@ -5,6 +5,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import edu.ucne.loginapi.presentation.chatBot.ChatScreen
+import edu.ucne.loginapi.presentation.dashboard.DashboardScreen
+import edu.ucne.loginapi.presentation.maintenance.MaintenanceScreen
+import edu.ucne.loginapi.presentation.maintenanceHistory.MaintenanceHistoryScreen
+import edu.ucne.loginapi.presentation.manual.ManualScreen
+import edu.ucne.loginapi.presentation.user.UserCarScreen
 
 sealed class AppDestination(val route: String) {
     object Dashboard : AppDestination("dashboard")

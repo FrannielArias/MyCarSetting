@@ -1,6 +1,9 @@
 package edu.ucne.loginapi.data
 
+import edu.ucne.loginapi.data.dao.MaintenanceHistoryDao
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.remote.mappers.toDomain
+import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import javax.inject.Inject
