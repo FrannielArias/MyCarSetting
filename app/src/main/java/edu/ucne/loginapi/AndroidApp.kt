@@ -11,7 +11,6 @@ import androidx.navigation.compose.rememberNavController
 import edu.ucne.loginapi.presentation.MyCarSettingBottomBar
 import edu.ucne.loginapi.presentation.MyCarSettingNavHost
 
-
 @Composable
 fun AndroidApp() {
     MaterialTheme {
