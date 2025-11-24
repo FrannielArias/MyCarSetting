@@ -2,7 +2,14 @@ package edu.ucne.loginapi.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import edu.ucne.loginapi.data.local.dao.UserCarDao
+import edu.ucne.loginapi.data.Entity.ChatMessageEntity
+import edu.ucne.loginapi.data.Entity.MaintenanceHistoryEntity
+import edu.ucne.loginapi.data.Entity.MaintenanceTaskEntity
+import edu.ucne.loginapi.data.Entity.UserCarEntity
+import edu.ucne.loginapi.data.dao.ChatMessageDao
+import edu.ucne.loginapi.data.dao.MaintenanceHistoryDao
+import edu.ucne.loginapi.data.dao.MaintenanceTaskDao
+import edu.ucne.loginapi.data.dao.UserCarDao
 
 @Database(
     entities = [
