@@ -15,7 +15,10 @@ fun MyCarSettingApp() {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-        val showBottomBar = currentRoute != AppDestination.Login.route
+
+        val showBottomBar =
+            currentRoute != AppDestination.Login.route &&
+                    currentRoute != AppDestination.Splash.route
 
         Scaffold(
             bottomBar = {

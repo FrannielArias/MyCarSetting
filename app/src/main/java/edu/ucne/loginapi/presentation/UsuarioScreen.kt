@@ -46,18 +46,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import edu.ucne.loginapi.domain.model.Usuarios
 
 @Composable
 fun UsuariosScreen(
-    onLoginSuccess: () -> Unit,
+    navController: NavHostController,
     viewModel: UsuarioViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
-            onLoginSuccess()
+            navController.navigate(AppDestination.Dashboard.route) {
+                popUpTo(AppDestination.Login.route) { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -103,47 +107,6 @@ fun UsuariosScreenBody(
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
-                }
-                state.isLoggedIn && state.currentUser != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "¡Hola ${state.currentUser.userName}!",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Bienvenido a mi app",
-                            style = MaterialTheme.typography.headlineMedium,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(modifier = Modifier.height(48.dp))
-
-                        Button(
-                            onClick = { onEvent(UsuarioEvent.Logout) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = MaterialTheme.shapes.extraLarge
-                        ) {
-                            Text(
-                                text = "Cerrar Sesión",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
                 }
                 else -> {
                     Column(

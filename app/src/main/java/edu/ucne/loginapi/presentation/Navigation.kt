@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 sealed class AppDestination(val route: String) {
+    object Splash : AppDestination("splash")
     object Login : AppDestination("login")
     object Dashboard : AppDestination("dashboard")
     object Maintenance : AppDestination("maintenance")
@@ -24,19 +25,14 @@ fun MyCarSettingNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = AppDestination.Login.route,
+        startDestination = AppDestination.Splash.route,
         modifier = modifier
     ) {
+        composable(AppDestination.Splash.route) {
+            SplashScreen(navController = navController)
+        }
         composable(AppDestination.Login.route) {
-            UsuariosScreen(
-                onLoginSuccess = {
-                    navController.navigate(AppDestination.Dashboard.route) {
-                        popUpTo(AppDestination.Login.route) { inclusive = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
+            UsuariosScreen(navController = navController)
         }
         composable(AppDestination.Dashboard.route) {
             DashboardScreen(
