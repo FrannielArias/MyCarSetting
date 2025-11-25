@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.androidx.benchmark.traceprocessor)
     implementation(libs.androidx.camera.core)
     implementation(libs.material3)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.firebase.components)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
@@ -77,6 +79,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.5.0-alpha08")
 
     implementation  ("androidx.compose.material:material-icons-extended")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
