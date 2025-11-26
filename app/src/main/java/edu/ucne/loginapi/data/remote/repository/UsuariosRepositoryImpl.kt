@@ -4,7 +4,7 @@ import android.util.Log
 import retrofit2.HttpException
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toDto
-import edu.ucne.loginapi.data.remote.RemoteDataSource
+import edu.ucne.loginapi.data.remote.dataSource.RemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.Usuarios
 import edu.ucne.loginapi.domain.repository.UsuariosRepository

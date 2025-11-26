@@ -1,10 +1,10 @@
 package edu.ucne.loginapi.data.repository
 
-import edu.ucne.loginapi.data.ChatMessageDao
-import edu.ucne.loginapi.data.remote.ChatRemoteDataSource
+import edu.ucne.loginapi.data.dao.ChatMessageDao
+import edu.ucne.loginapi.data.remote.dataSource.ChatRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.toDomain
-import edu.ucne.loginapi.data.toEntity
+import edu.ucne.loginapi.data.remote.mappers.toDomain
+import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.ChatMessage
 import edu.ucne.loginapi.domain.repository.ChatRepository
 import javax.inject.Inject

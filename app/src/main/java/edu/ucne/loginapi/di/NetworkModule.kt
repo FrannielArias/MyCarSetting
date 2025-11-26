@@ -1,14 +1,15 @@
 package edu.ucne.loginapi.di
 
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import edu.ucne.loginapi.data.remote.UsuariosApi
-import edu.ucne.loginapi.data.remote.api.ChatApiService
-import edu.ucne.loginapi.data.remote.api.ManualApiService
-import edu.ucne.loginapi.data.remote.api.MaintenanceApiService
+import edu.ucne.loginapi.data.remote.apiService.ChatApiService
+import edu.ucne.loginapi.data.remote.apiService.ManualApiService
+import edu.ucne.loginapi.data.remote.apiService.MaintenanceApiService
 import javax.inject.Singleton
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -23,7 +24,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideMoshi(): Moshi =
-        Moshi.Builder().build()
+        Moshi.Builder()
+            .addLast(KotlinJsonAdapterFactory())
+            .build()
 
     @Provides
     @Singleton

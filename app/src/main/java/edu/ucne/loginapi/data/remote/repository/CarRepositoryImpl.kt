@@ -1,10 +1,10 @@
 package edu.ucne.loginapi.data.repository
 
-import edu.ucne.loginapi.data.local.dao.UserCarDao
-import edu.ucne.loginapi.data.remote.CarRemoteDataSource
+import edu.ucne.loginapi.data.dao.UserCarDao
+import edu.ucne.loginapi.data.remote.dataSource.CarRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.toDomain
-import edu.ucne.loginapi.data.toEntity
+import edu.ucne.loginapi.data.remote.mappers.toDomain
+import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.UserCar
 import edu.ucne.loginapi.domain.repository.CarRepository
 import javax.inject.Inject

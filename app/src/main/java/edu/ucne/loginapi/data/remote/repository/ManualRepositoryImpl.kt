@@ -1,6 +1,6 @@
 package edu.ucne.loginapi.data.repository
 
-import edu.ucne.loginapi.data.remote.ManualRemoteDataSource
+import edu.ucne.loginapi.data.remote.dataSource.ManualRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.GuideArticle
 import edu.ucne.loginapi.domain.model.WarningLight

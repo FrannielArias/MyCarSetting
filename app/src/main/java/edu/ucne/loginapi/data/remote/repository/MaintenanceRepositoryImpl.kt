@@ -1,11 +1,11 @@
 package edu.ucne.loginapi.data.repository
 
-import edu.ucne.loginapi.data.MaintenanceHistoryDao
-import edu.ucne.loginapi.data.MaintenanceTaskDao
-import edu.ucne.loginapi.data.remote.MaintenanceRemoteDataSource
+import edu.ucne.loginapi.data.dao.MaintenanceHistoryDao
+import edu.ucne.loginapi.data.dao.MaintenanceTaskDao
+import edu.ucne.loginapi.data.remote.dataSource.MaintenanceRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.toDomain
-import edu.ucne.loginapi.data.toEntity
+import edu.ucne.loginapi.data.remote.mappers.toDomain
+import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
