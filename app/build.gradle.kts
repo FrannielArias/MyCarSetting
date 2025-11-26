@@ -81,6 +81,7 @@ dependencies {
     implementation  ("androidx.compose.material:material-icons-extended")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

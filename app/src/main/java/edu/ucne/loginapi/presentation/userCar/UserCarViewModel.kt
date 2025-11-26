@@ -5,19 +5,20 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.UserCar
+import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
+import edu.ucne.loginapi.domain.useCase.currentCar.SetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.user.AddUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.user.DeleteUserCarUseCase
-import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.user.ObserveCarsUseCase
-import edu.ucne.loginapi.domain.useCase.currentCar.SetCurrentCarUseCase
+import edu.ucne.loginapi.domain.validation.ValidateCarDataUseCase
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
-import javax.inject.Inject
 
 @HiltViewModel
 class UserCarViewModel @Inject constructor(
@@ -25,7 +26,8 @@ class UserCarViewModel @Inject constructor(
     private val addUserCarUseCase: AddUserCarUseCase,
     private val setCurrentCarUseCase: SetCurrentCarUseCase,
     private val deleteUserCarUseCase: DeleteUserCarUseCase,
-    private val getCurrentCarUseCase: GetCurrentCarUseCase
+    private val getCurrentCarUseCase: GetCurrentCarUseCase,
+    private val validateCarDataUseCase: ValidateCarDataUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserCarUiState())
@@ -103,16 +105,13 @@ class UserCarViewModel @Inject constructor(
         val model = _state.value.model.trim()
         val yearText = _state.value.yearText.trim()
 
-        if (brand.isBlank() || model.isBlank()) {
-            _state.update { it.copy(userMessage = "Marca y modelo son requeridos") }
+        val validationResult = validateCarDataUseCase(brand, model, yearText)
+        if (!validationResult.successful) {
+            _state.update { it.copy(userMessage = validationResult.errorMessage) }
             return
         }
 
-        val year = yearText.toIntOrNull()
-        if (year == null || year < 1980 || year > 2100) {
-            _state.update { it.copy(userMessage = "Año inválido") }
-            return
-        }
+        val year = yearText.toInt()
 
         val car = UserCar(
             id = UUID.randomUUID().toString(),
