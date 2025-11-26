@@ -255,7 +255,7 @@ val unspecified_scheme = ColorFamily(
 )
 
 @Composable
-fun LoginApiTheme(
+fun MyCarSettingTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable() () -> Unit

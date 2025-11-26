@@ -7,11 +7,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import edu.ucne.loginapi.ui.theme.LoginApiTheme
+import edu.ucne.loginapi.ui.theme.MyCarSettingTheme
 
 @Composable
 fun MyCarSettingApp() {
-    LoginApiTheme {
+    MyCarSettingTheme {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
