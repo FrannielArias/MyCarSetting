@@ -19,7 +19,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://gestionhuacalesapi.azurewebsites.net/"
+    private const val BASE_URL = "https://mycarsettingapi.azurewebsites.net/"
 
     @Provides
     @Singleton
