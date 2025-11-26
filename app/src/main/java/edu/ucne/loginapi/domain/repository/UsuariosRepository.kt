@@ -9,4 +9,5 @@ interface UsuariosRepository {
     fun getUsuario(id: Int): Flow<Resource<List<Usuarios>>>
     suspend fun saveUsuarios(usuarios: Usuarios): Resource<Unit>
     suspend fun updateUsuarios(usuarios: Usuarios): Resource<Unit>
+    suspend fun login(userName: String, password: String): Resource<Usuarios>
 }

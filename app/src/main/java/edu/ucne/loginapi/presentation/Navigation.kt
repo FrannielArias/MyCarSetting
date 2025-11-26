@@ -11,6 +11,7 @@ import edu.ucne.loginapi.presentation.maintenance.MaintenanceScreen
 import edu.ucne.loginapi.presentation.maintenanceHistory.MaintenanceHistoryScreen
 import edu.ucne.loginapi.presentation.manual.ManualScreen
 import edu.ucne.loginapi.presentation.userCar.UserCarScreen
+import edu.ucne.loginapi.presentation.usuario.ProfileScreen
 import edu.ucne.loginapi.presentation.usuario.UsuariosScreen
 
 sealed class AppDestination(val route: String) {
@@ -23,6 +24,7 @@ sealed class AppDestination(val route: String) {
     object Manual : AppDestination("manual")
     object Chat : AppDestination("chat")
     object Services : AppDestination("services")
+    object Profile : AppDestination("profile")
 }
 
 @Composable
@@ -45,6 +47,9 @@ fun MyCarSettingNavHost(
             DashboardScreen(
                 onNavigateToMaintenance = {
                     navController.navigate(AppDestination.Maintenance.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(AppDestination.Profile.route)
                 }
             )
         }
@@ -65,6 +70,20 @@ fun MyCarSettingNavHost(
         }
         composable(AppDestination.Services.route) {
             ServicesScreen()
+        }
+        composable(AppDestination.Profile.route) {
+            ProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToUserCar = {
+                    navController.navigate(AppDestination.UserCar.route)
+                },
+                onLogout = {
+                    navController.navigate(AppDestination.Login.route) {
+                        popUpTo(AppDestination.Dashboard.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
     }
 }

@@ -10,20 +10,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: SplashViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(Unit) {
-        delay(1500)
-        navController.navigate(AppDestination.Login.route) {
+    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+
+    LaunchedEffect(startDestination) {
+        val destination = startDestination ?: return@LaunchedEffect
+        delay(1000)
+        navController.navigate(destination.route) {
             popUpTo(AppDestination.Splash.route) { inclusive = true }
             launchSingleTop = true
         }

@@ -1,5 +1,6 @@
 package edu.ucne.loginapi.presentation.usuario
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -47,10 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import edu.ucne.franniel_arias_ap2_p2.R
 import edu.ucne.loginapi.domain.model.Usuarios
 import edu.ucne.loginapi.presentation.AppDestination
-import edu.ucne.loginapi.presentation.usuario.UsuarioUiState
-import edu.ucne.loginapi.presentation.usuario.UsuarioViewModel
 
 @Composable
 fun UsuariosScreen(
@@ -62,7 +63,7 @@ fun UsuariosScreen(
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
             navController.navigate(AppDestination.Dashboard.route) {
-                popUpTo(AppDestination.Login.route) { inclusive = true }
+                popUpTo(0) { inclusive = true }
                 launchSingleTop = true
             }
         }
@@ -72,6 +73,28 @@ fun UsuariosScreen(
         state = state,
         onEvent = viewModel::onEvent
     )
+}
+
+@Composable
+fun LoginLogoSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 48.dp, bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.mycar_logo),
+            contentDescription = "MyCarSetting logo",
+            modifier = Modifier.height(140.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "MyCarSetting",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,6 +134,7 @@ fun UsuariosScreenBody(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
+
                 else -> {
                     Column(
                         modifier = Modifier
@@ -119,11 +143,13 @@ fun UsuariosScreenBody(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        LoginLogoSection()
+
                         Text(
                             text = "Iniciar Sesión",
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 48.dp)
+                            modifier = Modifier.padding(bottom = 32.dp)
                         )
 
                         OutlinedTextField(

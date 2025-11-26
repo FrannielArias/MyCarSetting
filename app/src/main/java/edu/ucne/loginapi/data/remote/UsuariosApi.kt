@@ -1,7 +1,6 @@
 package edu.ucne.loginapi.data.remote
 
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
-import edu.ucne.loginapi.domain.model.Usuarios
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -13,7 +12,7 @@ interface UsuariosApi {
     suspend fun getUsuarios(): List<UsuariosDto>
 
     @GET("api/Usuarios/{id}")
-    suspend fun getUsuario(@Path("id")id: Int): List<UsuariosDto>
+    suspend fun getUsuario(@Path("id") id: Int): List<UsuariosDto>
 
     @POST("api/Usuarios")
     suspend fun saveUsuarios(@Body usuariosDto: UsuariosDto)

@@ -7,16 +7,19 @@ import javax.inject.Inject
 class RemoteDataSource @Inject constructor(
     private val api: UsuariosApi
 ) {
-    suspend fun getUsuarios(): List<UsuariosDto>{
+    suspend fun getUsuarios(): List<UsuariosDto> {
         return api.getUsuarios()
     }
-    suspend fun getUsuario(id: Int): List<UsuariosDto>{
+
+    suspend fun getUsuario(id: Int): List<UsuariosDto> {
         return api.getUsuario(id)
     }
-    suspend fun saveUsuarios(usuariosDto: UsuariosDto){
+
+    suspend fun saveUsuarios(usuariosDto: UsuariosDto) {
         return api.saveUsuarios(usuariosDto)
     }
-    suspend fun updateUsuarios(usuariosDto: UsuariosDto){
+
+    suspend fun updateUsuarios(usuariosDto: UsuariosDto) {
         return api.updateUsuarios(usuariosDto)
     }
 }

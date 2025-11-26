@@ -1,20 +1,20 @@
 package edu.ucne.loginapi.data.remote.repository
 
 import android.util.Log
-import retrofit2.HttpException
+import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.remote.dataSource.RemoteDataSource
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toDto
-import edu.ucne.loginapi.data.remote.dataSource.RemoteDataSource
-import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.Usuarios
 import edu.ucne.loginapi.domain.repository.UsuariosRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class UsuariosRepositoryImpl @Inject constructor(
     private val remoteDataSource: RemoteDataSource
-): UsuariosRepository {
+) : UsuariosRepository {
 
     override fun getUsuario(id: Int): Flow<Resource<List<Usuarios>>> = flow {
         try {
@@ -76,6 +76,25 @@ class UsuariosRepositoryImpl @Inject constructor(
             Resource.Error("Error de servidor: ${e.message}")
         } catch (e: Exception) {
             Resource.Error("Error desconocido: ${e.localizedMessage}")
+        }
+    }
+
+    override suspend fun login(userName: String, password: String): Resource<Usuarios> {
+        return try {
+            val usuariosDto = remoteDataSource.getUsuarios()
+            val usuarioDto = usuariosDto.find {
+                it.userName.trim() == userName.trim() &&
+                        it.password.trim() == password.trim()
+            }
+            if (usuarioDto != null) {
+                Resource.Success(usuarioDto.toDomain())
+            } else {
+                Resource.Error("Usuario o contraseña incorrectos")
+            }
+        } catch (e: HttpException) {
+            Resource.Error("Error de servidor: ${e.message}")
+        } catch (e: Exception) {
+            Resource.Error("Error de red o desconocido: ${e.localizedMessage}")
         }
     }
 }

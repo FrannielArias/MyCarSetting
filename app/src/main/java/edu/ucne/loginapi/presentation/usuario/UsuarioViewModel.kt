@@ -5,8 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.domain.model.SessionInfo
 import edu.ucne.loginapi.domain.model.Usuarios
+import edu.ucne.loginapi.domain.useCase.ClearSessionUseCase
+import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
+import edu.ucne.loginapi.domain.useCase.SaveSessionUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.GetUsuariosUseCase
+import edu.ucne.loginapi.domain.useCase.Usuarios.LoginUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.SaveUsuariosUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +24,11 @@ import javax.inject.Inject
 @HiltViewModel
 class UsuarioViewModel @Inject constructor(
     private val getUsuariosUseCase: GetUsuariosUseCase,
-    private val saveUsuariosUseCase: SaveUsuariosUseCase
+    private val saveUsuariosUseCase: SaveUsuariosUseCase,
+    private val saveSessionUseCase: SaveSessionUseCase,
+    private val clearSessionUseCase: ClearSessionUseCase,
+    private val getSessionUseCase: GetSessionUseCase,
+    private val loginUseCase: LoginUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UsuarioUiState(isLoading = true))
     val state: StateFlow<UsuarioUiState> = _uiState.asStateFlow()
@@ -27,7 +36,27 @@ class UsuarioViewModel @Inject constructor(
     private var usuariosJob: Job? = null
 
     init {
+        observarSesion()
         obtenerUsuarios()
+    }
+
+    private fun observarSesion() {
+        viewModelScope.launch {
+            getSessionUseCase().collect { session ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = session.isLoggedIn,
+                        currentUser = if (session.isLoggedIn && session.userId != null && session.userName != null) {
+                            Usuarios(
+                                usuarioId = session.userId,
+                                userName = session.userName,
+                                password = ""
+                            )
+                        } else null
+                    )
+                }
+            }
+        }
     }
 
     private fun obtenerUsuarios() {
@@ -71,19 +100,7 @@ class UsuarioViewModel @Inject constructor(
         when (event) {
             is UsuarioEvent.Crear -> crearUsuario(event.usuarios)
             is UsuarioEvent.Login -> login()
-            is UsuarioEvent.Logout -> {
-                _uiState.update {
-                    it.copy(
-                        isLoggedIn = false,
-                        currentUser = null,
-                        userName = "",
-                        password = "",
-                        error = null,
-                        message = null
-                    )
-                }
-            }
-
+            is UsuarioEvent.Logout -> logout()
             is UsuarioEvent.ShowBottonSheet -> {
                 _uiState.update {
                     it.copy(
@@ -94,7 +111,6 @@ class UsuarioViewModel @Inject constructor(
                     )
                 }
             }
-
             is UsuarioEvent.HideBottonSheet -> {
                 _uiState.update {
                     it.copy(
@@ -107,13 +123,27 @@ class UsuarioViewModel @Inject constructor(
                     )
                 }
             }
-
             is UsuarioEvent.UserNameChange -> {
                 _uiState.update { it.copy(userName = event.value, error = null) }
             }
-
             is UsuarioEvent.PasswordChange -> {
                 _uiState.update { it.copy(password = event.value, error = null) }
+            }
+        }
+    }
+
+    private fun logout() {
+        viewModelScope.launch {
+            clearSessionUseCase()
+            _uiState.update {
+                it.copy(
+                    isLoggedIn = false,
+                    currentUser = null,
+                    userName = "",
+                    password = "",
+                    error = null,
+                    message = null
+                )
             }
         }
     }
@@ -121,8 +151,6 @@ class UsuarioViewModel @Inject constructor(
     private fun login() {
         viewModelScope.launch {
             try {
-                Log.d("UsuarioViewModel", "Intentando login para: ${_uiState.value.userName}")
-
                 val userName = _uiState.value.userName.trim()
                 val password = _uiState.value.password.trim()
 
@@ -133,36 +161,50 @@ class UsuarioViewModel @Inject constructor(
                     return@launch
                 }
 
-                _uiState.update { it.copy(isLoading = true, error = null) }
+                _uiState.update { it.copy(isLoading = true, error = null, message = null) }
 
-                val listaUsuarios = _uiState.value.listaUsuarios?.data ?: emptyList()
+                val result = loginUseCase(userName, password)
 
-                Log.d("UsuarioViewModel", "Total usuarios: ${listaUsuarios.size}")
-
-                val usuarioEncontrado = listaUsuarios.find { usuario ->
-                    usuario.userName?.trim() == userName &&
-                            usuario.password?.trim() == password
-                }
-
-                if (usuarioEncontrado != null) {
-                    Log.d("UsuarioViewModel", "Login exitoso para: ${usuarioEncontrado.userName}")
-                    _uiState.update {
-                        it.copy(
-                            isLoggedIn = true,
-                            currentUser = usuarioEncontrado,
-                            error = null,
-                            message = null,
-                            isLoading = false,
-                            password = ""
-                        )
+                when (result) {
+                    is Resource.Success -> {
+                        val usuario = result.data
+                        if (usuario != null) {
+                            saveSessionUseCase(
+                                SessionInfo(
+                                    isLoggedIn = true,
+                                    userId = usuario.usuarioId,
+                                    userName = usuario.userName
+                                )
+                            )
+                            _uiState.update {
+                                it.copy(
+                                    isLoggedIn = true,
+                                    currentUser = usuario,
+                                    error = null,
+                                    message = null,
+                                    isLoading = false,
+                                    password = ""
+                                )
+                            }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    error = "Error al iniciar sesión",
+                                    isLoading = false
+                                )
+                            }
+                        }
                     }
-                } else {
-                    Log.d("UsuarioViewModel", "Usuario o contraseña incorrectos")
-                    _uiState.update {
-                        it.copy(
-                            error = "Usuario o contraseña incorrectos",
-                            isLoading = false
-                        )
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                error = result.message ?: "Error al iniciar sesión",
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
                     }
                 }
             } catch (e: Exception) {
@@ -196,7 +238,7 @@ class UsuarioViewModel @Inject constructor(
 
                 val listaUsuarios = _uiState.value.listaUsuarios?.data ?: emptyList()
                 val usuarioExiste = listaUsuarios.any {
-                    it.userName?.trim() == usuario.userName?.trim()
+                    it.userName.trim() == usuario.userName.trim()
                 }
 
                 if (usuarioExiste) {
