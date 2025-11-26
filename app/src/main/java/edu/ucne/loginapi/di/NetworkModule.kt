@@ -1,6 +1,7 @@
 package edu.ucne.loginapi.di
 
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,12 +19,14 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://TU_BASE_URL_AQUI/"
+    private const val BASE_URL = "https://gestionhuacalesapi.azurewebsites.net/"
 
     @Provides
     @Singleton
     fun provideMoshi(): Moshi =
-        Moshi.Builder().build()
+        Moshi.Builder()
+            .addLast(KotlinJsonAdapterFactory())
+            .build()
 
     @Provides
     @Singleton
