@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -67,9 +67,7 @@ fun MaintenanceHistoryBody(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(text = "Historial de mantenimiento")
-                }
+                title = { Text(text = "Historial de mantenimiento") }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -79,93 +77,136 @@ fun MaintenanceHistoryBody(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            when {
-                state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                state.currentCar == null -> {
-                    Text(
-                        text = "Configura un vehículo para ver el historial",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                state.records.isEmpty() -> {
-                    Text(
-                        text = "No hay registros de mantenimiento",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.records, key = { it.id }) { record ->
-                            val dateText = record.serviceDateMillis.let { millis ->
-                                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                                    .format(Date(millis))
-                            }
-                            val costText = record.cost?.let {
-                                NumberFormat.getCurrencyInstance().format(it)
-                            }
-                            Card(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = record.taskType.name,
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                        Text(
-                                            text = dateText,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        record.mileageKm?.let {
-                                            Text(
-                                                text = "$it km",
-                                                style = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
-                                        if (!record.workshopName.isNullOrBlank()) {
-                                            Text(
-                                                text = record.workshopName,
-                                                style = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
-                                        if (!costText.isNullOrBlank()) {
-                                            Text(
-                                                text = costText,
-                                                style = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            onEvent(MaintenanceHistoryEvent.OnDeleteRecord(record.id))
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Eliminar"
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            MaintenanceHistoryContent(
+                state = state,
+                onEvent = onEvent,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MaintenanceHistoryContent(
+    state: MaintenanceHistoryUiState,
+    onEvent: (MaintenanceHistoryEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    when {
+        state.isLoading -> {
+            CircularProgressIndicator(modifier = modifier)
+        }
+        state.currentCar == null -> {
+            Text(
+                text = "Configura un vehículo para ver el historial",
+                modifier = modifier
+            )
+        }
+        state.records.isEmpty() -> {
+            Text(
+                text = "No hay registros de mantenimiento",
+                modifier = modifier
+            )
+        }
+        else -> {
+            MaintenanceHistoryList(
+                records = state.records,
+                onEvent = onEvent
+            )
+        }
+    }
+}
+
+@Composable
+private fun MaintenanceHistoryList(
+    records: List<MaintenanceHistory>,
+    onEvent: (MaintenanceHistoryEvent) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(records, key = { it.id }) { record ->
+            MaintenanceHistoryItem(
+                record = record,
+                onDelete = { onEvent(MaintenanceHistoryEvent.OnDeleteRecord(record.id)) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun MaintenanceHistoryItem(
+    record: MaintenanceHistory,
+    onDelete: () -> Unit
+) {
+    val dateText = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        .format(Date(record.serviceDateMillis))
+
+    val costText = record.cost?.let {
+        NumberFormat.getCurrencyInstance().format(it)
+    }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RecordDetails(
+                record = record,
+                dateText = dateText,
+                costText = costText,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar"
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun RecordDetails(
+    record: MaintenanceHistory,
+    dateText: String,
+    costText: String?,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = record.taskType.name,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = dateText,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        record.mileageKm?.let {
+            Text(
+                text = "$it km",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        if (!record.workshopName.isNullOrBlank()) {
+            Text(
+                text = record.workshopName,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        if (!costText.isNullOrBlank()) {
+            Text(
+                text = costText,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
