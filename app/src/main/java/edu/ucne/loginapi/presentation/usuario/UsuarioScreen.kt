@@ -103,23 +103,12 @@ fun UsuariosScreenBody(
     state: UsuarioUiState,
     onEvent: (UsuarioEvent) -> Unit
 ) {
-    var passwordVisible by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
     Scaffold(
         topBar = {
             if (state.isLoggedIn) {
-                TopAppBar(
-                    title = { Text("Mi App") },
-                    actions = {
-                        IconButton(onClick = { onEvent(UsuarioEvent.Logout) }) {
-                            Icon(
-                                imageVector = Icons.Default.ExitToApp,
-                                contentDescription = "Cerrar sesión"
-                            )
-                        }
-                    }
-                )
+                LoggedInTopBar(onLogout = { onEvent(UsuarioEvent.Logout) })
             }
         }
     ) { padding ->
@@ -134,209 +123,319 @@ fun UsuariosScreenBody(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-
                 else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        LoginLogoSection()
-
-                        Text(
-                            text = "Iniciar Sesión",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 32.dp)
-                        )
-
-                        OutlinedTextField(
-                            value = state.userName,
-                            onValueChange = { onEvent(UsuarioEvent.UserNameChange(it)) },
-                            label = { Text("Nombre de usuario") },
-                            placeholder = { Text("Ingrese su usuario") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = state.error != null
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        OutlinedTextField(
-                            value = state.password,
-                            onValueChange = { onEvent(UsuarioEvent.PasswordChange(it)) },
-                            label = { Text("Contraseña") },
-                            placeholder = { Text("Ingrese su contraseña") },
-                            singleLine = true,
-                            visualTransformation = if (passwordVisible)
-                                VisualTransformation.None
-                            else
-                                PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Text(
-                                        text = if (passwordVisible) "👁️" else "👁️‍🗨️",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = state.error != null
-                        )
-
-                        if (state.error != null) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = state.error,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        if (state.message != null) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = state.message,
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        Button(
-                            onClick = { onEvent(UsuarioEvent.Login) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            enabled = state.userName.isNotBlank() && state.password.isNotBlank(),
-                            shape = MaterialTheme.shapes.extraLarge
-                        ) {
-                            Text(
-                                text = "Log in",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "No tienes Usuario?",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            TextButton(
-                                onClick = { onEvent(UsuarioEvent.ShowBottonSheet) }
-                            ) {
-                                Text(
-                                    text = "Crealo aquí",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            }
-                        }
-                    }
+                    LoginContent(state = state, onEvent = onEvent)
                 }
             }
 
             if (state.isSheetVisible) {
-                ModalBottomSheet(
-                    onDismissRequest = {
-                        onEvent(UsuarioEvent.HideBottonSheet)
-                    },
-                    sheetState = sheetState
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .navigationBarsPadding(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "Nuevo Usuario",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+                RegisterBottomSheet(
+                    state = state,
+                    sheetState = sheetState,
+                    onEvent = onEvent
+                )
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun LoggedInTopBar(onLogout: () -> Unit) {
+    TopAppBar(
+        title = { Text("Mi App") },
+        actions = {
+            IconButton(onClick = onLogout) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Cerrar sesión"
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun LoginContent(
+    state: UsuarioUiState,
+    onEvent: (UsuarioEvent) -> Unit
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        LoginLogoSection()
+
+        Text(
+            text = "Iniciar Sesión",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        LoginForm(
+            userName = state.userName,
+            password = state.password,
+            passwordVisible = passwordVisible,
+            onPasswordVisibilityChange = { passwordVisible = it },
+            hasError = state.error != null,
+            onEvent = onEvent
+        )
+
+        MessageSection(
+            error = state.error,
+            message = state.message
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        LoginButton(
+            enabled = state.userName.isNotBlank() && state.password.isNotBlank(),
+            onClick = { onEvent(UsuarioEvent.Login) }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        RegisterPrompt(onShowSheet = { onEvent(UsuarioEvent.ShowBottonSheet) })
+    }
+}
+
+@Composable
+private fun LoginForm(
+    userName: String,
+    password: String,
+    passwordVisible: Boolean,
+    onPasswordVisibilityChange: (Boolean) -> Unit,
+    hasError: Boolean,
+    onEvent: (UsuarioEvent) -> Unit
+) {
+    OutlinedTextField(
+        value = userName,
+        onValueChange = { onEvent(UsuarioEvent.UserNameChange(it)) },
+        label = { Text("Nombre de usuario") },
+        placeholder = { Text("Ingrese su usuario") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        isError = hasError
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    OutlinedTextField(
+        value = password,
+        onValueChange = { onEvent(UsuarioEvent.PasswordChange(it)) },
+        label = { Text("Contraseña") },
+        placeholder = { Text("Ingrese su contraseña") },
+        singleLine = true,
+        visualTransformation = if (passwordVisible)
+            VisualTransformation.None
+        else
+            PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        trailingIcon = {
+            PasswordVisibilityToggle(
+                visible = passwordVisible,
+                onToggle = onPasswordVisibilityChange
+            )
+        },
+        modifier = Modifier.fillMaxWidth(),
+        isError = hasError
+    )
+}
+
+@Composable
+private fun PasswordVisibilityToggle(
+    visible: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    IconButton(onClick = { onToggle(!visible) }) {
+        Text(
+            text = if (visible) "👁️" else "👁️‍🗨️",
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+private fun MessageSection(
+    error: String?,
+    message: String?
+) {
+    if (error != null) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    if (message != null) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun LoginButton(
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        enabled = enabled,
+        shape = MaterialTheme.shapes.extraLarge
+    ) {
+        Text(
+            text = "Log in",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun RegisterPrompt(onShowSheet: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "No tienes Usuario?",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        TextButton(onClick = onShowSheet) {
+            Text(
+                text = "Crealo aquí",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                textDecoration = TextDecoration.Underline
+            )
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun RegisterBottomSheet(
+    state: UsuarioUiState,
+    sheetState: androidx.compose.material3.SheetState,
+    onEvent: (UsuarioEvent) -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = { onEvent(UsuarioEvent.HideBottonSheet) },
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Nuevo Usuario",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            RegisterForm(state = state, onEvent = onEvent)
+
+            if (state.error != null) {
+                Text(
+                    text = state.error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            RegisterButtons(
+                enabled = state.userName.isNotBlank() && state.password.isNotBlank(),
+                onCancel = { onEvent(UsuarioEvent.HideBottonSheet) },
+                onSave = {
+                    if (state.userName.isNotBlank() && state.password.isNotBlank()) {
+                        val usuario = Usuarios(
+                            usuarioId = null,
+                            userName = state.userName,
+                            password = state.password
                         )
-
-                        OutlinedTextField(
-                            value = state.userName,
-                            onValueChange = { onEvent(UsuarioEvent.UserNameChange(it)) },
-                            label = { Text("Nombre de Usuario") },
-                            placeholder = { Text("Ingrese su nombre de usuario") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        OutlinedTextField(
-                            value = state.password,
-                            onValueChange = { onEvent(UsuarioEvent.PasswordChange(it)) },
-                            label = { Text("Contraseña") },
-                            placeholder = { Text("Ingrese su contraseña") },
-                            singleLine = true,
-                            visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        if (state.error != null) {
-                            Text(
-                                text = state.error,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedButton(
-                                onClick = {
-                                    onEvent(UsuarioEvent.HideBottonSheet)
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Cancelar")
-                            }
-
-                            Button(
-                                onClick = {
-                                    if (state.userName.isNotBlank() && state.password.isNotBlank()) {
-                                        val usuario = Usuarios(
-                                            usuarioId = null,
-                                            userName = state.userName,
-                                            password = state.password
-                                        )
-                                        onEvent(UsuarioEvent.Crear(usuario))
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                enabled = state.userName.isNotBlank() && state.password.isNotBlank()
-                            ) {
-                                Text("Guardar")
-                            }
-                        }
+                        onEvent(UsuarioEvent.Crear(usuario))
                     }
                 }
-            }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RegisterForm(
+    state: UsuarioUiState,
+    onEvent: (UsuarioEvent) -> Unit
+) {
+    OutlinedTextField(
+        value = state.userName,
+        onValueChange = { onEvent(UsuarioEvent.UserNameChange(it)) },
+        label = { Text("Nombre de Usuario") },
+        placeholder = { Text("Ingrese su nombre de usuario") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    OutlinedTextField(
+        value = state.password,
+        onValueChange = { onEvent(UsuarioEvent.PasswordChange(it)) },
+        label = { Text("Contraseña") },
+        placeholder = { Text("Ingrese su contraseña") },
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun RegisterButtons(
+    enabled: Boolean,
+    onCancel: () -> Unit,
+    onSave: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Cancelar")
+        }
+        Button(
+            onClick = onSave,
+            modifier = Modifier.weight(1f),
+            enabled = enabled
+        ) {
+            Text("Guardar")
         }
     }
 }
