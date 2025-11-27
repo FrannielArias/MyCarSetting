@@ -1,3 +1,4 @@
+@file:Suppress("FunctionalInterfaceClash")
 package edu.ucne.loginapi.di
 
 import edu.ucne.loginapi.data.remote.repository.SessionRepositoryImpl
