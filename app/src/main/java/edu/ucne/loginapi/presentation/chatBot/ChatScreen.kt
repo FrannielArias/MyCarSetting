@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.chatBot
 
 import androidx.compose.foundation.layout.Arrangement
@@ -65,19 +64,7 @@ fun ChatBody(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Asistente MyCarSetting")
-                },
-                actions = {
-                    IconButton(onClick = { onEvent(ChatEvent.OnClearConversation) }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Limpiar conversación"
-                        )
-                    }
-                }
-            )
+            ChatTopBar(onClearConversation = { onEvent(ChatEvent.OnClearConversation) })
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
@@ -86,70 +73,102 @@ fun ChatBody(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Cargando conversación...")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.messages, key = { it.id }) { message ->
-                        val isUser = message.role.name == "USER"
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .padding(vertical = 4.dp),
-                                contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = message.content,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            ChatContent(state = state, modifier = Modifier.weight(1f))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .navigationBarsPadding(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = state.inputText,
-                    onValueChange = { onEvent(ChatEvent.OnInputChange(it)) },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Describe el ruido, fallo o problema...") }
+            ChatInputBar(
+                inputText = state.inputText,
+                onInputChange = { onEvent(ChatEvent.OnInputChange(it)) },
+                onSendMessage = { onEvent(ChatEvent.OnSendMessage) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChatTopBar(onClearConversation: () -> Unit) {
+    TopAppBar(
+        title = { Text("Asistente MyCarSetting") },
+        actions = {
+            IconButton(onClick = onClearConversation) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Limpiar conversación"
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = { onEvent(ChatEvent.OnSendMessage) },
-                    enabled = state.inputText.isNotBlank()
+            }
+        }
+    )
+}
+
+@Composable
+private fun ChatContent(
+    state: ChatUiState,
+    modifier: Modifier = Modifier
+) {
+    if (state.isLoading) {
+        Box(
+            modifier = modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Cargando conversación...")
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(state.messages, key = { it.id }) { message ->
+                val isUser = message.role.name == "USER"
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Enviar"
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .padding(vertical = 4.dp),
+                        contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = message.content,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+private fun ChatInputBar(
+    inputText: String,
+    onInputChange: (String) -> Unit,
+    onSendMessage: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .navigationBarsPadding(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = inputText,
+            onValueChange = onInputChange,
+            modifier = Modifier.weight(1f),
+            placeholder = { Text("Describe el ruido, fallo o problema...") }
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Button(
+            onClick = onSendMessage,
+            enabled = inputText.isNotBlank()
+        ) {
+            Icon(
+                imageVector = Icons.Default.Send,
+                contentDescription = "Enviar"
+            )
+        }
+    }
+}
