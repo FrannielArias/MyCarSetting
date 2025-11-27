@@ -29,5 +29,4 @@ interface MaintenanceTaskDao {
 
     @Query("SELECT * FROM maintenance_tasks WHERE isPendingDelete = 1")
     suspend fun getPendingDeleteTasks(): List<MaintenanceTaskEntity>
-
 }
