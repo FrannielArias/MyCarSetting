@@ -1,11 +1,11 @@
 package edu.ucne.loginapi.data.remote.dataSource
 
-import edu.ucne.loginapi.data.remote.UsuariosApi
+import edu.ucne.loginapi.data.remote.apiService.UsuariosApiService
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
 import javax.inject.Inject
 
 class RemoteDataSource @Inject constructor(
-    private val api: UsuariosApi
+    private val api: UsuariosApiService
 ) {
     suspend fun getUsuarios(): List<UsuariosDto> {
         return api.getUsuarios()

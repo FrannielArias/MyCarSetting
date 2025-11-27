@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.data.remote
+package edu.ucne.loginapi.data.remote.apiService
 
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
 import retrofit2.http.Body
@@ -7,7 +7,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-interface UsuariosApi {
+interface UsuariosApiService {
     @GET("api/Usuarios")
     suspend fun getUsuarios(): List<UsuariosDto>
 

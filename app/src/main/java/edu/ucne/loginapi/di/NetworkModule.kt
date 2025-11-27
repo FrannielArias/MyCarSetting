@@ -6,7 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import edu.ucne.loginapi.data.remote.UsuariosApi
+import edu.ucne.loginapi.data.remote.apiService.UsuariosApiService
 import edu.ucne.loginapi.data.remote.apiService.ChatApiService
 import edu.ucne.loginapi.data.remote.apiService.ManualApiService
 import edu.ucne.loginapi.data.remote.apiService.MaintenanceApiService
@@ -47,8 +47,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUsuariosApi(retrofit: Retrofit): UsuariosApi =
-        retrofit.create(UsuariosApi::class.java)
+    fun provideUsuariosApi(retrofit: Retrofit): UsuariosApiService =
+        retrofit.create(UsuariosApiService::class.java)
 
     @Provides
     @Singleton
