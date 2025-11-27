@@ -95,7 +95,7 @@ class ChatViewModel @Inject constructor(
                         it.copy(userMessage = result.message ?: "Error al limpiar conversación")
                     }
                 }
-                is Resource.Loading -> Unit
+                else -> Unit
             }
         }
     }
