@@ -11,6 +11,10 @@ import javax.inject.Inject
 class CarRemoteDataSource @Inject constructor(
     private val api: CarApiService
 ) {
+    companion object {
+        private const val NETWORK_ERROR_MESSAGE = "Network error"
+        private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
+    }
     suspend fun getCars(): Resource<List<UserCar>> {
         return try {
             val response = api.getCars()
@@ -21,7 +25,7 @@ class CarRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -29,13 +33,13 @@ class CarRemoteDataSource @Inject constructor(
         return try {
             val response = api.createCar(car.toCreateRequest())
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE )
         }
     }
 
@@ -43,13 +47,13 @@ class CarRemoteDataSource @Inject constructor(
         return try {
             val response = api.updateCar(car.id, car.toUpdateRequest())
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -62,7 +66,7 @@ class CarRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?:NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -75,7 +79,7 @@ class CarRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 }

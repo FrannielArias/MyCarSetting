@@ -72,7 +72,7 @@ class MaintenanceViewModel @Inject constructor(
             }
             is MaintenanceEvent.OnCompleteTask -> completeTask(event.taskId)
             is MaintenanceEvent.OnDeleteTask -> deleteTask(event.taskId)
-            is MaintenanceEvent.OnTaskClicked -> {}
+            is MaintenanceEvent.OnTaskClicked -> Unit
             is MaintenanceEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -82,6 +82,7 @@ class MaintenanceViewModel @Inject constructor(
     private fun loadInitialData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+
             val car = getCurrentCarUseCase()
             if (car == null) {
                 _state.update {
@@ -92,6 +93,7 @@ class MaintenanceViewModel @Inject constructor(
                 }
                 return@launch
             }
+
             _state.update { it.copy(currentCar = car) }
             observeTasksForCar(car.id)
             _state.update { it.copy(isLoading = false) }
@@ -101,10 +103,12 @@ class MaintenanceViewModel @Inject constructor(
     private fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
+
             val current = _state.value.currentCar
             if (current != null) {
                 observeTasksForCar(current.id)
             }
+
             _state.update { it.copy(isRefreshing = false) }
         }
     }
@@ -129,14 +133,16 @@ class MaintenanceViewModel @Inject constructor(
     fun createTask() {
         val current = _state.value.currentCar ?: return
         val title = _state.value.newTaskTitle.trim()
+
         if (title.isBlank()) {
             _state.update { it.copy(userMessage = "El título es requerido") }
             return
         }
+
         val mileageText = _state.value.newTaskDueMileage.trim()
         val mileage = mileageText.toIntOrNull()
-
         val now = System.currentTimeMillis()
+
         val task = MaintenanceTask(
             carId = current.id,
             type = MaintenanceType.OIL_CHANGE,
@@ -150,7 +156,8 @@ class MaintenanceViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            when (val result = createMaintenanceTaskLocalUseCase(task)) {
+            val result = createMaintenanceTaskLocalUseCase(task)
+            when (result) {
                 is Resource.Success -> {
                     _state.update {
                         it.copy(
@@ -170,14 +177,15 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }
 
     private fun completeTask(taskId: String) {
         viewModelScope.launch {
-            when (val result = markTaskCompletedUseCase(taskId, System.currentTimeMillis())) {
+            val result = markTaskCompletedUseCase(taskId, System.currentTimeMillis())
+            when (result) {
                 is Resource.Success -> {
                     _state.update { it.copy(userMessage = "Tarea completada") }
                     triggerMaintenanceSyncUseCase()
@@ -189,14 +197,15 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }
 
     private fun deleteTask(taskId: String) {
         viewModelScope.launch {
-            when (val result = deleteMaintenanceTaskUseCase(taskId)) {
+            val result = deleteMaintenanceTaskUseCase(taskId)
+            when (result) {
                 is Resource.Success -> {
                     _state.update { it.copy(userMessage = "Tarea eliminada") }
                     triggerMaintenanceSyncUseCase()
@@ -208,7 +217,7 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }

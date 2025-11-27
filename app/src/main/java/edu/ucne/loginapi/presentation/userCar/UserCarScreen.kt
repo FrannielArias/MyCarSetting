@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.userCar
 
 import androidx.compose.foundation.clickable
@@ -43,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.loginapi.domain.model.UserCar
 
 @Composable
 fun UserCarScreen(
@@ -73,9 +73,7 @@ fun UserCarBody(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Mis vehículos")
-                }
+                title = { Text("Mis vehículos") }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -90,95 +88,7 @@ fun UserCarBody(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Cargando vehículos...")
-                }
-            } else if (state.cars.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No tienes vehículos registrados")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(state.cars, key = { it.id }) { car ->
-                        val isCurrent = state.currentCarId == car.id
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onEvent(UserCarEvent.OnSetCurrentCar(car.id))
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        text = "${car.brand} ${car.model}",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Text(
-                                        text = "Año ${car.year}",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    car.plate?.let {
-                                        Text(
-                                            text = "Placa: $it",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                    if (isCurrent) {
-                                        Text(
-                                            text = "Vehículo actual",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            onEvent(UserCarEvent.OnSetCurrentCar(car.id))
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Seleccionar como actual"
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            onEvent(UserCarEvent.OnDeleteCar(car.id))
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Eliminar vehículo"
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            UserCarContent(state = state, onEvent = onEvent)
 
             if (state.showCreateSheet) {
                 ModalBottomSheet(
@@ -191,6 +101,163 @@ fun UserCarBody(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun UserCarContent(
+    state: UserCarUiState,
+    onEvent: (UserCarEvent) -> Unit
+) {
+    when {
+        state.isLoading -> {
+            LoadingState()
+        }
+        state.cars.isEmpty() -> {
+            EmptyState()
+        }
+        else -> {
+            UserCarList(
+                cars = state.cars,
+                currentCarId = state.currentCarId,
+                onEvent = onEvent
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Cargando vehículos...")
+    }
+}
+
+@Composable
+private fun EmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("No tienes vehículos registrados")
+    }
+}
+
+@Composable
+private fun UserCarList(
+    cars: List<UserCar>,
+    currentCarId: String?,
+    onEvent: (UserCarEvent) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(cars, key = { it.id }) { car ->
+            UserCarItem(
+                car = car,
+                isCurrent = currentCarId == car.id,
+                onEvent = onEvent
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserCarItem(
+    car: UserCar,
+    isCurrent: Boolean,
+    onEvent: (UserCarEvent) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onEvent(UserCarEvent.OnSetCurrentCar(car.id))
+            }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CarDetails(
+                car = car,
+                isCurrent = isCurrent,
+                modifier = Modifier.weight(1f)
+            )
+            CarActions(
+                carId = car.id,
+                onEvent = onEvent
+            )
+        }
+    }
+}
+
+@Composable
+private fun CarDetails(
+    car: UserCar,
+    isCurrent: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = "${car.brand} ${car.model}",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Año ${car.year}",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        car.plate?.let {
+            Text(
+                text = "Placa: $it",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        if (isCurrent) {
+            Text(
+                text = "Vehículo actual",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+private fun CarActions(
+    carId: String,
+    onEvent: (UserCarEvent) -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        IconButton(
+            onClick = {
+                onEvent(UserCarEvent.OnSetCurrentCar(carId))
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Seleccionar como actual"
+            )
+        }
+        IconButton(
+            onClick = {
+                onEvent(UserCarEvent.OnDeleteCar(carId))
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Eliminar vehículo"
+            )
         }
     }
 }

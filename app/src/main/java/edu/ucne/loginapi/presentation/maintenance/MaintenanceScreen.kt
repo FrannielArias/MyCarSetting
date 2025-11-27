@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.maintenance
 
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.loginapi.domain.model.MaintenanceTask
-import edu.ucne.loginapi.presentation.maintenance.MaintenanceViewModel
 
 @Composable
 fun MaintenanceScreen(
@@ -217,42 +215,72 @@ fun MaintenanceTaskItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
+                TaskDetails(
+                    task = task,
+                    isOverdue = isOverdue,
                     modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = task.title,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    if (!task.description.isNullOrBlank()) {
-                        Text(
-                            text = task.description,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    if (task.dueMileageKm != null) {
-                        Text(
-                            text = "Próximo a los ${task.dueMileageKm} km",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                Column {
-                    IconButton(onClick = onComplete) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Marcar completada"
-                        )
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar"
-                        )
-                    }
-                }
+                )
+                TaskActions(
+                    onComplete = onComplete,
+                    onDelete = onDelete
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun TaskDetails(
+    task: MaintenanceTask,
+    isOverdue: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = task.title,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        if (!task.description.isNullOrBlank()) {
+            Text(
+                text = task.description,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        if (task.dueMileageKm != null) {
+            val textColor = if (isOverdue) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.primary
+            }
+
+            Text(
+                text = "Próximo a los ${task.dueMileageKm} km",
+                style = MaterialTheme.typography.bodySmall,
+                color = textColor
+            )
+        }
+    }
+}
+
+@Composable
+private fun TaskActions(
+    onComplete: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Column {
+        IconButton(onClick = onComplete) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Marcar completada"
+            )
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Eliminar"
+            )
         }
     }
 }

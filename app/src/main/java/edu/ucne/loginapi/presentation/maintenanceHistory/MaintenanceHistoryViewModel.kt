@@ -72,7 +72,8 @@ class MaintenanceHistoryViewModel @Inject constructor(
 
     private fun deleteRecord(id: String) {
         viewModelScope.launch {
-            when (val result = deleteMaintenanceRecordUseCase(id)) {
+            val result = deleteMaintenanceRecordUseCase(id)
+            when (result) {
                 is Resource.Success -> {
                     _state.update { it.copy(userMessage = "Registro eliminado") }
                 }
@@ -81,7 +82,7 @@ class MaintenanceHistoryViewModel @Inject constructor(
                         it.copy(userMessage = result.message ?: "Error al eliminar registro")
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }
