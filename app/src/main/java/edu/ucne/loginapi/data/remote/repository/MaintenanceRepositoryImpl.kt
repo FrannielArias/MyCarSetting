@@ -34,13 +34,23 @@ class MaintenanceRepositoryImpl @Inject constructor(
         taskDao.getTaskById(id)?.toDomain()
 
     override suspend fun createTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask> {
-        taskDao.upsert(task.toEntity())
-        return Resource.Success(task)
+        val existing = taskDao.getTaskById(task.id)
+        return if (existing == null) {
+            taskDao.upsert(task.toEntity())
+            Resource.Success(task)
+        } else {
+            Resource.Error("La tarea ya existe")
+        }
     }
 
     override suspend fun updateTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask> {
-        taskDao.upsert(task.toEntity())
-        return Resource.Success(task)
+        val existing = taskDao.getTaskById(task.id)
+        return if (existing != null) {
+            taskDao.upsert(task.toEntity())
+            Resource.Success(task)
+        } else {
+            Resource.Error("La tarea no existe")
+        }
     }
 
     override suspend fun markTaskCompleted(taskId: String, completionDateMillis: Long): Resource<Unit> {
