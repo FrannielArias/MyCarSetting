@@ -12,6 +12,11 @@ import javax.inject.Inject
 class MaintenanceRemoteDataSource @Inject constructor(
     private val api: MaintenanceApiService
 ) {
+    companion object {
+        private const val NETWORK_ERROR_MESSAGE = "Network error"
+        private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
+    }
+
     suspend fun getTasksForCar(carId: String): Resource<List<MaintenanceTask>> {
         return try {
             val response = api.getTasksForCar(carId)
@@ -22,7 +27,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -30,13 +35,13 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.createTask(task.toCreateRequest())
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -44,13 +49,13 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.updateTask(task.id, task.toUpdateRequest())
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -63,7 +68,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -77,7 +82,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -85,13 +90,13 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.createHistory(history.toCreateRequest())
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -104,7 +109,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 }

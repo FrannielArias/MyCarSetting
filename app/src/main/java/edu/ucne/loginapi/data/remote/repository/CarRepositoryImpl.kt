@@ -23,13 +23,23 @@ class CarRepositoryImpl @Inject constructor(
         userCarDao.getCar(id)?.toDomain()
 
     override suspend fun addCar(car: UserCar): Resource<Unit> {
-        userCarDao.upsert(car.toEntity())
-        return Resource.Success(Unit)
+        val existing = userCarDao.getCar(car.id)
+        return if (existing == null) {
+            userCarDao.upsert(car.toEntity())
+            Resource.Success(Unit)
+        } else {
+            Resource.Error("El vehículo ya existe")
+        }
     }
 
     override suspend fun updateCar(car: UserCar): Resource<Unit> {
-        userCarDao.upsert(car.toEntity())
-        return Resource.Success(Unit)
+        val existing = userCarDao.getCar(car.id)
+        return if (existing != null) {
+            userCarDao.upsert(car.toEntity())
+            Resource.Success(Unit)
+        } else {
+            Resource.Error("El vehículo no existe")
+        }
     }
 
     override suspend fun deleteCar(id: String): Resource<Unit> {

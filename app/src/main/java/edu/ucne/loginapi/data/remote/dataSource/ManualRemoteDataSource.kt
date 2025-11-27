@@ -10,6 +10,11 @@ import javax.inject.Inject
 class ManualRemoteDataSource @Inject constructor(
     private val api: ManualApiService
 ) {
+    companion object {
+        private const val NETWORK_ERROR_MESSAGE = "Network error"
+        private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
+    }
+
     suspend fun getWarningLights(
         brand: String?,
         model: String?,
@@ -24,7 +29,7 @@ class ManualRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -32,13 +37,13 @@ class ManualRemoteDataSource @Inject constructor(
         return try {
             val response = api.getWarningLightDetail(id)
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -52,7 +57,7 @@ class ManualRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -60,13 +65,13 @@ class ManualRemoteDataSource @Inject constructor(
         return try {
             val response = api.getGuideArticleDetail(id)
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error("Empty response")
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Network error")
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 }

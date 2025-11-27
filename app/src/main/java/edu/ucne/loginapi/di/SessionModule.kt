@@ -10,11 +10,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SessionModule {
+interface SessionModule {
 
     @Binds
     @Singleton
-    abstract fun bindSessionRepository(
+    fun bindSessionRepository(
         impl: SessionRepositoryImpl
     ): SessionRepository
 }
