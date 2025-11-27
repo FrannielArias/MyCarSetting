@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.manual
 
 import androidx.compose.foundation.clickable
@@ -34,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.loginapi.domain.model.GuideArticle
+import edu.ucne.loginapi.domain.model.WarningLight
 
 @Composable
 fun ManualScreen(
@@ -79,93 +80,126 @@ fun ManualBody(
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    TabRow(selectedTabIndex = state.selectedTabIndex) {
-                        Tab(
-                            selected = state.selectedTabIndex == 0,
-                            onClick = { onEvent(ManualEvent.SelectTab(0)) },
-                            text = { Text("Testigos tablero") }
-                        )
-                        Tab(
-                            selected = state.selectedTabIndex == 1,
-                            onClick = { onEvent(ManualEvent.SelectTab(1)) },
-                            text = { Text("Guías y tutoriales") }
-                        )
-                    }
+                ManualContent(state = state, onEvent = onEvent)
 
-                    if (state.selectedTabIndex == 0) {
-                        WarningLightList(
-                            state = state,
-                            onEvent = onEvent
-                        )
-                    } else {
-                        GuideArticleList(
-                            state = state,
-                            onEvent = onEvent
-                        )
-                    }
-                }
-
-                val selectedLight = state.selectedWarningLight
-                val selectedArticle = state.selectedArticle
-
-                if (selectedLight != null || selectedArticle != null) {
-                    ModalBottomSheet(
-                        onDismissRequest = { onEvent(ManualEvent.OnDismissDetail) },
-                        sheetState = sheetState
-                    ) {
-                        if (selectedLight != null) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = selectedLight.name,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Text(
-                                    text = selectedLight.description,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    text = "Acción recomendada:",
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Text(
-                                    text = selectedLight.action,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                        if (selectedArticle != null) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = selectedArticle.title,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Text(
-                                    text = selectedArticle.summary,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    text = selectedArticle.content,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                    }
-                }
+                ManualDetailSheet(
+                    state = state,
+                    sheetState = sheetState,
+                    onEvent = onEvent
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun ManualContent(
+    state: ManualUiState,
+    onEvent: (ManualEvent) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        ManualTabRow(
+            selectedTabIndex = state.selectedTabIndex,
+            onEvent = onEvent
+        )
+
+        if (state.selectedTabIndex == 0) {
+            WarningLightList(state = state, onEvent = onEvent)
+        } else {
+            GuideArticleList(state = state, onEvent = onEvent)
+        }
+    }
+}
+
+@Composable
+private fun ManualTabRow(
+    selectedTabIndex: Int,
+    onEvent: (ManualEvent) -> Unit
+) {
+    TabRow(selectedTabIndex = selectedTabIndex) {
+        Tab(
+            selected = selectedTabIndex == 0,
+            onClick = { onEvent(ManualEvent.SelectTab(0)) },
+            text = { Text("Testigos tablero") }
+        )
+        Tab(
+            selected = selectedTabIndex == 1,
+            onClick = { onEvent(ManualEvent.SelectTab(1)) },
+            text = { Text("Guías y tutoriales") }
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun ManualDetailSheet(
+    state: ManualUiState,
+    sheetState: androidx.compose.material3.SheetState,
+    onEvent: (ManualEvent) -> Unit
+) {
+    val selectedLight = state.selectedWarningLight
+    val selectedArticle = state.selectedArticle
+
+    if (selectedLight != null || selectedArticle != null) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(ManualEvent.OnDismissDetail) },
+            sheetState = sheetState
+        ) {
+            when {
+                selectedLight != null -> WarningLightDetail(light = selectedLight)
+                selectedArticle != null -> GuideArticleDetail(article = selectedArticle)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WarningLightDetail(light: WarningLight) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = light.name,
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(
+            text = light.description,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "Acción recomendada:",
+            style = MaterialTheme.typography.titleSmall
+        )
+        Text(
+            text = light.action,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun GuideArticleDetail(article: GuideArticle) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = article.title,
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(
+            text = article.summary,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = article.content,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 
