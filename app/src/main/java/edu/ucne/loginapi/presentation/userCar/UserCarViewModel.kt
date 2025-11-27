@@ -78,17 +78,15 @@ class UserCarViewModel @Inject constructor(
             UserCarEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
-            is UserCarEvent.OnCarClicked -> {}
+            is UserCarEvent.OnCarClicked -> Unit
         }
     }
 
     private fun loadInitial() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-
             val current = getCurrentCarUseCase()
             _state.update { it.copy(currentCarId = current?.id) }
-
             observeCarsUseCase().collectLatest { cars ->
                 _state.update {
                     it.copy(
@@ -112,7 +110,6 @@ class UserCarViewModel @Inject constructor(
         }
 
         val year = yearText.toInt()
-
         val car = UserCar(
             id = UUID.randomUUID().toString(),
             brand = brand,
@@ -125,7 +122,8 @@ class UserCarViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            when (val result = addUserCarUseCase(car)) {
+            val result = addUserCarUseCase(car)
+            when (result) {
                 is Resource.Success -> {
                     _state.update {
                         it.copy(
@@ -145,14 +143,15 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }
 
     private fun setCurrentCar(carId: String) {
         viewModelScope.launch {
-            when (val result = setCurrentCarUseCase(carId)) {
+            val result = setCurrentCarUseCase(carId)
+            when (result) {
                 is Resource.Success -> {
                     _state.update {
                         it.copy(
@@ -168,14 +167,15 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }
 
     private fun deleteCar(carId: String) {
         viewModelScope.launch {
-            when (val result = deleteUserCarUseCase(carId)) {
+            val result = deleteUserCarUseCase(carId)
+            when (result) {
                 is Resource.Success -> {
                     val newCurrent = if (_state.value.currentCarId == carId) null else _state.value.currentCarId
                     _state.update {
@@ -192,7 +192,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
-                is Resource.Loading -> {}
+                is Resource.Loading -> Unit
             }
         }
     }
