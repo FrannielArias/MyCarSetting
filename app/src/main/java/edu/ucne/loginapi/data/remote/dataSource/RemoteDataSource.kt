@@ -1,6 +1,6 @@
 package edu.ucne.loginapi.data.remote.dataSource
 
-import edu.ucne.loginapi.data.remote.apiService.UsuariosApiService
+import edu.ucne.loginapi.data.remote.UsuariosApiService
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
 import javax.inject.Inject
 

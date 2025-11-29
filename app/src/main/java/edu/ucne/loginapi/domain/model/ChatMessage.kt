@@ -8,10 +8,5 @@ data class ChatMessage(
     val role: ChatRole,
     val content: String,
     val timestampMillis: Long,
-    val isPendingCreate: Boolean = false
+    val isPendingSync: Boolean
 )
-
-enum class ChatRole {
-    USER,
-    ASSISTANT
-}

@@ -1,10 +1,10 @@
 package edu.ucne.loginapi.data.remote.dataSource
 
-import edu.ucne.loginapi.data.mapper.toCreateRequest
-import edu.ucne.loginapi.data.mapper.toDomain
-import edu.ucne.loginapi.data.mapper.toUpdateRequest
+import edu.ucne.loginapi.data.remote.MaintenanceApiService
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.remote.apiService.MaintenanceApiService
+import edu.ucne.loginapi.data.remote.mappers.toCreateRequest
+import edu.ucne.loginapi.data.remote.mappers.toDomain
+import edu.ucne.loginapi.data.remote.mappers.toUpdateRequest
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import javax.inject.Inject

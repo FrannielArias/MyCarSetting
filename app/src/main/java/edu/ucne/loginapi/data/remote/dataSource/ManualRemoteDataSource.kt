@@ -1,8 +1,8 @@
 package edu.ucne.loginapi.data.remote.dataSource
 
-import edu.ucne.loginapi.data.mapper.toDomain
+import edu.ucne.loginapi.data.remote.ManualApiService
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.remote.apiService.ManualApiService
+import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.domain.model.GuideArticle
 import edu.ucne.loginapi.domain.model.WarningLight
 import javax.inject.Inject

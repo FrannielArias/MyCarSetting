@@ -9,9 +9,9 @@ import edu.ucne.loginapi.domain.model.SessionInfo
 import edu.ucne.loginapi.domain.model.Usuarios
 import edu.ucne.loginapi.domain.useCase.ClearSessionUseCase
 import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
+import edu.ucne.loginapi.domain.useCase.LoginUseCase
 import edu.ucne.loginapi.domain.useCase.SaveSessionUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.GetUsuariosUseCase
-import edu.ucne.loginapi.domain.useCase.Usuarios.LoginUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.SaveUsuariosUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +74,7 @@ class UsuarioViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is Resource.Success -> {
                         _uiState.update {
                             it.copy(
@@ -83,6 +84,7 @@ class UsuarioViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(
@@ -111,6 +113,7 @@ class UsuarioViewModel @Inject constructor(
                     )
                 }
             }
+
             is UsuarioEvent.HideBottonSheet -> {
                 _uiState.update {
                     it.copy(
@@ -123,9 +126,11 @@ class UsuarioViewModel @Inject constructor(
                     )
                 }
             }
+
             is UsuarioEvent.UserNameChange -> {
                 _uiState.update { it.copy(userName = event.value, error = null) }
             }
+
             is UsuarioEvent.PasswordChange -> {
                 _uiState.update { it.copy(password = event.value, error = null) }
             }
@@ -195,6 +200,7 @@ class UsuarioViewModel @Inject constructor(
                             }
                         }
                     }
+
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(
@@ -203,6 +209,7 @@ class UsuarioViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
                     }
@@ -268,6 +275,7 @@ class UsuarioViewModel @Inject constructor(
                         }
                         obtenerUsuarios()
                     }
+
                     is Resource.Error -> {
                         Log.e("UsuarioViewModel", "Error: ${result.message}")
                         _uiState.update {
@@ -277,6 +285,7 @@ class UsuarioViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
                     }

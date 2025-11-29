@@ -10,6 +10,7 @@ import edu.ucne.loginapi.presentation.dashboard.DashboardScreen
 import edu.ucne.loginapi.presentation.maintenance.MaintenanceScreen
 import edu.ucne.loginapi.presentation.maintenanceHistory.MaintenanceHistoryScreen
 import edu.ucne.loginapi.presentation.manual.ManualScreen
+import edu.ucne.loginapi.presentation.services.ServicesScreen
 import edu.ucne.loginapi.presentation.userCar.UserCarScreen
 import edu.ucne.loginapi.presentation.usuario.ProfileScreen
 import edu.ucne.loginapi.presentation.usuario.UsuariosScreen
@@ -68,9 +69,6 @@ fun MyCarSettingNavHost(
         composable(AppDestination.Chat.route) {
             ChatScreen()
         }
-        composable(AppDestination.Services.route) {
-            ServicesScreen()
-        }
         composable(AppDestination.Profile.route) {
             ProfileScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -79,11 +77,14 @@ fun MyCarSettingNavHost(
                 },
                 onLogout = {
                     navController.navigate(AppDestination.Login.route) {
-                        popUpTo(AppDestination.Dashboard.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
             )
+        }
+        composable(AppDestination.Services.route) {
+            ServicesScreen()
         }
     }
 }

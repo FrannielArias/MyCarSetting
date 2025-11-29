@@ -13,21 +13,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -52,6 +48,7 @@ import androidx.navigation.NavHostController
 import edu.ucne.franniel_arias_ap2_p2.R
 import edu.ucne.loginapi.domain.model.Usuarios
 import edu.ucne.loginapi.presentation.AppDestination
+import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 
 @Composable
 fun UsuariosScreen(
@@ -103,15 +100,9 @@ fun UsuariosScreenBody(
     state: UsuarioUiState,
     onEvent: (UsuarioEvent) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    Scaffold(
-        topBar = {
-            if (state.isLoggedIn) {
-                LoggedInTopBar(onLogout = { onEvent(UsuarioEvent.Logout) })
-            }
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -119,10 +110,11 @@ fun UsuariosScreenBody(
         ) {
             when {
                 state.isLoading -> {
-                    CircularProgressIndicator(
+                    MyCarLoadingIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
+
                 else -> {
                     LoginContent(state = state, onEvent = onEvent)
                 }
@@ -137,22 +129,6 @@ fun UsuariosScreenBody(
             }
         }
     }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun LoggedInTopBar(onLogout: () -> Unit) {
-    TopAppBar(
-        title = { Text("Mi App") },
-        actions = {
-            IconButton(onClick = onLogout) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Cerrar sesión"
-                )
-            }
-        }
-    )
 }
 
 @Composable
@@ -172,7 +148,7 @@ private fun LoginContent(
         LoginLogoSection()
 
         Text(
-            text = "Iniciar Sesión",
+            text = "Iniciar sesión",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -221,7 +197,11 @@ private fun LoginForm(
         placeholder = { Text("Ingrese su usuario") },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
-        isError = hasError
+        isError = hasError,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Next
+        )
     )
 
     Spacer(modifier = Modifier.height(24.dp))
@@ -236,7 +216,10 @@ private fun LoginForm(
             VisualTransformation.None
         else
             PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
         trailingIcon = {
             PasswordVisibilityToggle(
                 visible = passwordVisible,
@@ -253,10 +236,10 @@ private fun PasswordVisibilityToggle(
     visible: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    IconButton(onClick = { onToggle(!visible) }) {
+    TextButton(onClick = { onToggle(!visible) }) {
         Text(
-            text = if (visible) "👁️" else "👁️‍🗨️",
-            style = MaterialTheme.typography.bodyLarge
+            text = if (visible) "Ocultar" else "Mostrar",
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
@@ -303,7 +286,7 @@ private fun LoginButton(
         shape = MaterialTheme.shapes.extraLarge
     ) {
         Text(
-            text = "Log in",
+            text = "Iniciar sesión",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -317,13 +300,13 @@ private fun RegisterPrompt(onShowSheet: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "No tienes Usuario?",
+            text = "¿No tienes usuario?",
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.width(4.dp))
         TextButton(onClick = onShowSheet) {
             Text(
-                text = "Crealo aquí",
+                text = "Créalo aquí",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 textDecoration = TextDecoration.Underline
@@ -332,11 +315,11 @@ private fun RegisterPrompt(onShowSheet: () -> Unit) {
     }
 }
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun RegisterBottomSheet(
     state: UsuarioUiState,
-    sheetState: androidx.compose.material3.SheetState,
+    sheetState: SheetState,
     onEvent: (UsuarioEvent) -> Unit
 ) {
     ModalBottomSheet(
@@ -351,7 +334,7 @@ private fun RegisterBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Nuevo Usuario",
+                text = "Nuevo usuario",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -396,7 +379,7 @@ private fun RegisterForm(
     OutlinedTextField(
         value = state.userName,
         onValueChange = { onEvent(UsuarioEvent.UserNameChange(it)) },
-        label = { Text("Nombre de Usuario") },
+        label = { Text("Nombre de usuario") },
         placeholder = { Text("Ingrese su nombre de usuario") },
         singleLine = true,
         modifier = Modifier.fillMaxWidth()

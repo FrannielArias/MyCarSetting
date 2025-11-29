@@ -4,24 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.domain.model.ChatMessage
-import edu.ucne.loginapi.domain.model.ChatRole
 import edu.ucne.loginapi.domain.useCase.chatMessages.ClearConversationUseCase
 import edu.ucne.loginapi.domain.useCase.chatMessages.ObserveChatMessagesUseCase
-import edu.ucne.loginapi.domain.useCase.chatMessages.SendChatMessageLocalUseCase
+import edu.ucne.loginapi.domain.useCase.chatMessages.SendChatMessageWithAssistantUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val observeChatMessagesUseCase: ObserveChatMessagesUseCase,
-    private val sendChatMessageLocalUseCase: SendChatMessageLocalUseCase,
+    private val sendChatMessageWithAssistantUseCase: SendChatMessageWithAssistantUseCase,
     private val clearConversationUseCase: ClearConversationUseCase
 ) : ViewModel() {
 
@@ -38,6 +35,7 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.OnInputChange -> {
                 _state.update { it.copy(inputText = event.value) }
             }
+
             ChatEvent.OnSendMessage -> sendMessage()
             ChatEvent.OnClearConversation -> clearConversation()
             ChatEvent.OnUserMessageShown -> {
@@ -64,18 +62,12 @@ class ChatViewModel @Inject constructor(
         val text = _state.value.inputText.trim()
         if (text.isBlank()) return
 
-        val message = ChatMessage(
-            id = UUID.randomUUID().toString(),
-            conversationId = _state.value.conversationId,
-            role = ChatRole.USER,
-            content = text,
-            timestampMillis = System.currentTimeMillis(),
-            isPendingCreate = true
-        )
-
         viewModelScope.launch {
             _state.update { it.copy(inputText = "") }
-            val result = sendChatMessageLocalUseCase(message)
+            val result = sendChatMessageWithAssistantUseCase(
+                conversationId = _state.value.conversationId,
+                text = text
+            )
             if (result is Resource.Error) {
                 _state.update {
                     it.copy(userMessage = result.message ?: "Error al enviar mensaje")
@@ -86,15 +78,23 @@ class ChatViewModel @Inject constructor(
 
     private fun clearConversation() {
         viewModelScope.launch {
-            when (val result = clearConversationUseCase(_state.value.conversationId)) {
+            val conversationId = _state.value.conversationId
+            when (val result = clearConversationUseCase(conversationId)) {
                 is Resource.Success -> {
-                    _state.update { it.copy(userMessage = "Conversación limpiada") }
+                    _state.update {
+                        it.copy(
+                            messages = emptyList(),
+                            userMessage = "Conversación limpiada"
+                        )
+                    }
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(userMessage = result.message ?: "Error al limpiar conversación")
                     }
                 }
+
                 else -> Unit
             }
         }

@@ -46,8 +46,10 @@ class SessionDataStore @Inject constructor(
     suspend fun saveSession(info: SessionInfo) {
         context.sessionDataStore.edit { prefs ->
             prefs[Keys.IS_LOGGED_IN] = info.isLoggedIn
-            if (info.userId != null) prefs[Keys.USER_ID] = info.userId else prefs.remove(Keys.USER_ID)
-            if (info.userName != null) prefs[Keys.USER_NAME] = info.userName else prefs.remove(Keys.USER_NAME)
+            if (info.userId != null) prefs[Keys.USER_ID] =
+                info.userId else prefs.remove(Keys.USER_ID)
+            if (info.userName != null) prefs[Keys.USER_NAME] =
+                info.userName else prefs.remove(Keys.USER_NAME)
         }
     }
 

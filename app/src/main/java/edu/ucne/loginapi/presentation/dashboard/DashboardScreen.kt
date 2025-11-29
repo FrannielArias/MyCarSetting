@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +45,11 @@ fun DashboardScreen(
     onNavigateToProfile: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(DashboardEvent.Refresh)
+    }
+
     DashboardBody(
         state = state,
         onEvent = viewModel::onEvent,
@@ -90,7 +96,6 @@ fun DashboardBody(
         },
         snackbarHost = { SnackbarHost(snackState) }
     ) { padding ->
-
         when {
             state.isLoading -> {
                 Box(
@@ -110,7 +115,24 @@ fun DashboardBody(
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Configura un vehículo para ver tu dashboard")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Sin vehículo configurado",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Configura un vehículo para ver tu dashboard y recordatorios.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Button(onClick = onNavigateToProfile) {
+                            Text(text = "Configurar vehículo")
+                        }
+                    }
                 }
             }
 
@@ -132,16 +154,15 @@ fun DashboardContent(
     onNavigateToMaintenance: () -> Unit
 ) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 32.dp)
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
             Text(
                 text = "Resumen general",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold
             )
         }
 
@@ -150,10 +171,22 @@ fun DashboardContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text("Próximas tareas: ${state.upcomingTasks.size}")
-                    Text("Tareas vencidas: ${state.overdueTasks.size}")
+                    Text(
+                        text = "Estado del mantenimiento",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Próximas tareas: ${state.upcomingTasks.size}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Tareas vencidas: ${state.overdueTasks.size}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
@@ -163,18 +196,18 @@ fun DashboardContent(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onNavigateToMaintenance
             ) {
-                Text("Gestionar Mantenimiento")
+                Text(
+                    text = "Gestionar mantenimiento",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
         }
 
         item {
             Text(
                 text = "Siguientes tareas",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
         }
 
@@ -183,11 +216,20 @@ fun DashboardContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(task.title)
+                    Text(
+                        text = task.title,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     task.dueMileageKm?.let {
-                        Text("A los $it km")
+                        Text(
+                            text = "A los $it km",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
             }
@@ -197,7 +239,8 @@ fun DashboardContent(
             item {
                 Text(
                     text = "No hay tareas próximas",
-                    modifier = Modifier.padding(top = 8.dp)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
