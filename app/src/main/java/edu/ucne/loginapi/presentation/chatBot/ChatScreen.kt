@@ -78,6 +78,7 @@ fun ChatBody(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.08f))
         ) {
             ChatContent(
                 messages = state.messages,
@@ -98,10 +99,17 @@ fun ChatBody(
 private fun ChatTopBar(onClearConversation: () -> Unit) {
     TopAppBar(
         title = {
-            Text(
-                text = "Asistente MyCarSetting",
-                style = MaterialTheme.typography.titleLarge
-            )
+            Column {
+                Text(
+                    text = "Asistente MyCarSetting",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "Describe el ruido, fallo o problema de tu vehículo",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         },
         actions = {
             IconButton(onClick = onClearConversation) {
@@ -158,6 +166,11 @@ private fun ChatContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = "Ejemplos:\n- \"Escucho un ruido metálico al frenar\"\n- \"Se encendió la luz de check engine\"\n- \"Mi carro tarda en encender en las mañanas\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -166,7 +179,7 @@ private fun ChatContent(
             LazyColumn(
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages, key = { it.id }) { message ->
@@ -177,22 +190,27 @@ private fun ChatContent(
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.8f)
-                                .padding(vertical = 4.dp)
-                                .clip(MaterialTheme.shapes.large)
+                                .fillMaxWidth(0.85f)
+                                .padding(vertical = 2.dp)
+                                .clip(MaterialTheme.shapes.extraLarge)
                                 .background(
                                     if (isUser) {
-                                        MaterialTheme.colorScheme.primaryContainer
+                                        MaterialTheme.colorScheme.primary
                                     } else {
-                                        MaterialTheme.colorScheme.surfaceVariant
+                                        MaterialTheme.colorScheme.surface
                                     }
                                 )
-                                .padding(12.dp),
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
                             contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
                         ) {
                             Text(
                                 text = message.content,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (isUser) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                }
                             )
                         }
                     }
@@ -219,7 +237,8 @@ private fun ChatInputBar(
             value = inputText,
             onValueChange = onInputChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Describe el ruido, fallo o problema...") }
+            placeholder = { Text("Describe el ruido, fallo o problema...") },
+            maxLines = 4
         )
         Spacer(modifier = Modifier.width(8.dp))
         Button(

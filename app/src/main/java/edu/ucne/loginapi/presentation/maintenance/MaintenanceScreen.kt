@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -41,10 +42,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.loginapi.domain.model.MaintenanceTask
+import androidx.compose.ui.text.input.KeyboardType
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun MaintenanceScreen(
@@ -95,7 +101,7 @@ fun MaintenanceBody(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = { onEvent(MaintenanceEvent.ShowCreateSheet) }) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar tarea")
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar recordatorio")
             }
         }
     ) { padding ->
@@ -173,7 +179,7 @@ fun MaintenanceContent(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
-            items(state.overdueTasks, key = { it.id }) { task ->
+            items(state.overdueTasks, key = { "overdue-${it.id}" }) { task ->
                 MaintenanceTaskItem(
                     task = task,
                     isOverdue = true,
@@ -190,7 +196,7 @@ fun MaintenanceContent(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
-            items(state.upcomingTasks, key = { it.id }) { task ->
+            items(state.upcomingTasks, key = { "upcoming-${it.id}" }) { task ->
                 MaintenanceTaskItem(
                     task = task,
                     isOverdue = false,
@@ -208,11 +214,21 @@ fun MaintenanceContent(
                         .padding(vertical = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No hay recordatorios de mantenimiento",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "No hay recordatorios de mantenimiento",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Pulsa el botón + para agregar el primero.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -258,17 +274,45 @@ private fun TaskDetails(
     isOverdue: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val dateText = task.dueDateMillis?.let {
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        formatter.format(Date(it))
+    }
+
     Column(modifier = modifier) {
         Text(
             text = task.title,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
         if (!task.description.isNullOrBlank()) {
             Text(
                 text = task.description,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = task.type.name,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            if (dateText != null) {
+                Text(
+                    text = dateText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         if (task.dueMileageKm != null) {
@@ -319,51 +363,97 @@ fun MaintenanceCreateSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Nuevo recordatorio",
-            style = MaterialTheme.typography.titleLarge
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = "Nuevo recordatorio",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
 
-        OutlinedTextField(
-            value = state.newTaskTitle,
-            onValueChange = { onEvent(MaintenanceEvent.OnNewTitleChange(it)) },
-            label = { Text("Título") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            state.currentCar?.let { car ->
+                Text(
+                    text = "${car.brand} ${car.model}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-        OutlinedTextField(
-            value = state.newTaskDescription,
-            onValueChange = { onEvent(MaintenanceEvent.OnNewDescriptionChange(it)) },
-            label = { Text("Descripción (opcional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            Text(
+                text = "Configura un recordatorio rápido para que no olvides tu próximo mantenimiento.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
-        OutlinedTextField(
-            value = state.newTaskDueMileage,
-            onValueChange = { onEvent(MaintenanceEvent.OnNewDueMileageChange(it)) },
-            label = { Text("Kilometraje objetivo (opcional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = state.newTaskTitle,
+                    onValueChange = { onEvent(MaintenanceEvent.OnNewTitleChange(it)) },
+                    label = { Text("Título") },
+                    placeholder = { Text("Ej. Cambio de aceite") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-        Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = state.newTaskDescription,
+                    onValueChange = { onEvent(MaintenanceEvent.OnNewDescriptionChange(it)) },
+                    label = { Text("Descripción (opcional)") },
+                    placeholder = { Text("Agrega detalles si lo necesitas") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = state.newTaskDueMileage,
+                    onValueChange = { onEvent(MaintenanceEvent.OnNewDueMileageChange(it)) },
+                    label = { Text("Kilometraje objetivo (opcional)") },
+                    placeholder = { Text("Ej. 150 000") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = "Puedes dejar el kilometraje vacío si es un recordatorio por fecha.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Button(
                 onClick = { onEvent(MaintenanceEvent.HideCreateSheet) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                 Text("Cancelar")
             }
+
             Button(
                 onClick = onCreateTask,
                 enabled = state.newTaskTitle.isNotBlank(),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                 Text("Guardar")
             }

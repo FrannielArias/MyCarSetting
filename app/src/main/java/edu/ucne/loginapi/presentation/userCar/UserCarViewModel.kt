@@ -40,6 +40,7 @@ class UserCarViewModel @Inject constructor(
     fun onEvent(event: UserCarEvent) {
         when (event) {
             UserCarEvent.LoadInitialData -> loadInitial()
+
             UserCarEvent.ShowCreateSheet -> {
                 _state.update { it.copy(showCreateSheet = true) }
             }
@@ -82,7 +83,9 @@ class UserCarViewModel @Inject constructor(
 
             is UserCarEvent.OnSetCurrentCar -> setCurrentCar(event.carId)
             is UserCarEvent.OnDeleteCar -> deleteCar(event.carId)
+
             UserCarEvent.OnSaveCar -> saveCar()
+
             UserCarEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -94,8 +97,10 @@ class UserCarViewModel @Inject constructor(
     private fun loadInitial() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+
             val current = getCurrentCarUseCase()
             _state.update { it.copy(currentCarId = current?.id) }
+
             observeCarsUseCase().collectLatest { cars ->
                 _state.update {
                     it.copy(
@@ -110,15 +115,24 @@ class UserCarViewModel @Inject constructor(
     private fun saveCar() {
         val brand = _state.value.brand.trim()
         val model = _state.value.model.trim()
-        val yearText = _state.value.yearText.trim()
+        val rawYearText = _state.value.yearText.trim()
 
-        val validationResult = validateCarDataUseCase(brand, model, yearText)
+        // Soporta tanto "2015" como "2007-2011" (toma los últimos 4 dígitos)
+        val normalizedYearText = rawYearText.takeLast(4).filter { it.isDigit() }
+        if (normalizedYearText.length != 4) {
+            _state.update {
+                it.copy(userMessage = "Año inválido, debe ser un año como 2015")
+            }
+            return
+        }
+
+        val validationResult = validateCarDataUseCase(brand, model, normalizedYearText)
         if (!validationResult.successful) {
             _state.update { it.copy(userMessage = validationResult.errorMessage) }
             return
         }
 
-        val year = yearText.toInt()
+        val year = normalizedYearText.toInt()
         val car = UserCar(
             id = UUID.randomUUID().toString(),
             brand = brand,

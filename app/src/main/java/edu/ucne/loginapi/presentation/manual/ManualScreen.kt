@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -113,7 +116,10 @@ private fun ManualContent(
     state: ManualUiState,
     onEvent: (ManualEvent) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         ManualTabRow(
             selectedTabIndex = state.selectedTabIndex,
             onEvent = onEvent
@@ -160,9 +166,16 @@ private fun ManualDetailSheet(
             onDismissRequest = { onEvent(ManualEvent.OnDismissDetail) },
             sheetState = sheetState
         ) {
-            when {
-                selectedLight != null -> WarningLightDetail(light = selectedLight)
-                selectedArticle != null -> GuideArticleDetail(article = selectedArticle)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                when {
+                    selectedLight != null -> WarningLightDetail(light = selectedLight)
+                    selectedArticle != null -> GuideArticleDetail(article = selectedArticle)
+                }
             }
         }
     }
@@ -172,9 +185,8 @@ private fun ManualDetailSheet(
 private fun WarningLightDetail(light: WarningLight) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
             text = light.name,
@@ -185,8 +197,9 @@ private fun WarningLightDetail(light: WarningLight) {
             style = MaterialTheme.typography.bodyMedium
         )
         Text(
-            text = "Acción recomendada:",
-            style = MaterialTheme.typography.titleSmall
+            text = "Acción recomendada",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
             text = light.action,
@@ -199,9 +212,8 @@ private fun WarningLightDetail(light: WarningLight) {
 private fun GuideArticleDetail(article: GuideArticle) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
             text = article.title,
@@ -209,8 +221,10 @@ private fun GuideArticleDetail(article: GuideArticle) {
         )
         Text(
             text = article.summary,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = article.content,
             style = MaterialTheme.typography.bodyMedium
@@ -223,10 +237,26 @@ fun WarningLightList(
     state: ManualUiState,
     onEvent: (ManualEvent) -> Unit
 ) {
+    if (state.warningLights.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No hay testigos de tablero registrados.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(state.warningLights, key = { it.id }) { light ->
@@ -235,7 +265,12 @@ fun WarningLightList(
                     .fillMaxWidth()
                     .clickable {
                         onEvent(ManualEvent.OnWarningLightClicked(light.id))
-                    }
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = MaterialTheme.shapes.large
             ) {
                 Row(
                     modifier = Modifier
@@ -244,7 +279,8 @@ fun WarningLightList(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
                             text = light.name,
@@ -253,7 +289,8 @@ fun WarningLightList(
                         Text(
                             text = light.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2
                         )
                     }
                 }
@@ -267,10 +304,26 @@ fun GuideArticleList(
     state: ManualUiState,
     onEvent: (ManualEvent) -> Unit
 ) {
+    if (state.guideArticles.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No hay guías disponibles por el momento.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(state.guideArticles, key = { it.id }) { article ->
@@ -279,12 +332,18 @@ fun GuideArticleList(
                     .fillMaxWidth()
                     .clickable {
                         onEvent(ManualEvent.OnGuideClicked(article.id))
-                    }
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = MaterialTheme.shapes.large
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = article.title,
@@ -293,7 +352,8 @@ fun GuideArticleList(
                     Text(
                         text = article.summary,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
                     )
                 }
             }

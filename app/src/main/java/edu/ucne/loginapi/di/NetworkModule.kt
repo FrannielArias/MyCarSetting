@@ -10,6 +10,7 @@ import edu.ucne.loginapi.data.remote.ChatApi
 import edu.ucne.loginapi.data.remote.MaintenanceApiService
 import edu.ucne.loginapi.data.remote.ManualApiService
 import edu.ucne.loginapi.data.remote.UsuariosApiService
+import edu.ucne.loginapi.data.remote.VehicleCatalogApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -65,5 +66,13 @@ object NetworkModule {
     fun provideChatApi(
         retrofit: Retrofit
     ): ChatApi = retrofit.create(ChatApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideVehicleCatalogApiService(
+        retrofit: Retrofit
+    ): VehicleCatalogApiService =
+        retrofit.create(VehicleCatalogApiService::class.java)
+
 
 }

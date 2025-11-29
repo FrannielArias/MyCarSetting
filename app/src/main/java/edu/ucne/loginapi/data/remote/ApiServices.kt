@@ -12,6 +12,9 @@ import edu.ucne.loginapi.data.remote.dto.UpdateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.UpdateUserCarRequest
 import edu.ucne.loginapi.data.remote.dto.UserCarDto
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
+import edu.ucne.loginapi.data.remote.dto.VehicleBrandDto
+import edu.ucne.loginapi.data.remote.dto.VehicleModelDto
+import edu.ucne.loginapi.data.remote.dto.VehicleYearRangeDto
 import edu.ucne.loginapi.data.remote.dto.WarningLightDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -128,4 +131,20 @@ interface ManualApiService {
     suspend fun getGuideArticleDetail(
         @Path("id") id: String
     ): Response<GuideArticleDto>
+}
+
+interface VehicleCatalogApiService {
+
+    @GET("vehicle/brands")
+    suspend fun getBrands(): Response<List<VehicleBrandDto>>
+
+    @GET("vehicle/models")
+    suspend fun getModels(
+        @Query("brandId") brandId: String
+    ): Response<List<VehicleModelDto>>
+
+    @GET("vehicle/years")
+    suspend fun getYearRanges(
+        @Query("modelId") modelId: String
+    ): Response<List<VehicleYearRangeDto>>
 }

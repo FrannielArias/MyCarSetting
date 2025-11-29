@@ -31,6 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,7 +75,13 @@ fun MaintenanceHistoryBody(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Historial de mantenimiento") }
+                title = {
+                    Text(
+                        text = state.currentCar?.let { "Historial · ${it.brand} ${it.model}" }
+                            ?: "Historial de mantenimiento",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -100,21 +108,45 @@ private fun MaintenanceHistoryContent(
 ) {
     when {
         state.isLoading -> {
-            CircularProgressIndicator(modifier = modifier)
+            Column(
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CircularProgressIndicator()
+                Text(
+                    text = "Cargando historial...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         state.currentCar == null -> {
             Text(
                 text = "Configura un vehículo para ver el historial",
-                modifier = modifier
+                modifier = modifier,
+                style = MaterialTheme.typography.bodyLarge
             )
         }
 
-        state.records.isEmpty() && !state.isLoading -> {
-            Text(
-                text = "No hay registros de mantenimiento",
-                modifier = modifier
-            )
+        state.records.isEmpty() -> {
+            Column(
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "No hay registros de mantenimiento",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Cada vez que completes un mantenimiento, agrega un registro desde la app.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         else -> {
@@ -173,7 +205,7 @@ private fun MaintenanceHistoryItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar"
+                    contentDescription = "Eliminar registro"
                 )
             }
         }
@@ -190,11 +222,15 @@ private fun RecordDetails(
     Column(modifier = modifier) {
         Text(
             text = record.taskType.name,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
+
         Text(
             text = dateText,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         record.mileageKm?.let {
@@ -207,14 +243,26 @@ private fun RecordDetails(
         if (!record.workshopName.isNullOrBlank()) {
             Text(
                 text = record.workshopName,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        if (!record.notes.isNullOrBlank()) {
+            Text(
+                text = record.notes,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         if (!costText.isNullOrBlank()) {
             Text(
                 text = costText,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }

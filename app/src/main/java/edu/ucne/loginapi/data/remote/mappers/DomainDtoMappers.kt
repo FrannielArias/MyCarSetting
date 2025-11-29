@@ -17,6 +17,9 @@ import edu.ucne.loginapi.data.remote.dto.UpdateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.UpdateUserCarRequest
 import edu.ucne.loginapi.data.remote.dto.UserCarDto
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
+import edu.ucne.loginapi.data.remote.dto.VehicleBrandDto
+import edu.ucne.loginapi.data.remote.dto.VehicleModelDto
+import edu.ucne.loginapi.data.remote.dto.VehicleYearRangeDto
 import edu.ucne.loginapi.data.remote.dto.WarningLightDto
 import edu.ucne.loginapi.domain.model.ChatMessage
 import edu.ucne.loginapi.domain.model.ChatRole
@@ -29,6 +32,9 @@ import edu.ucne.loginapi.domain.model.MaintenanceType
 import edu.ucne.loginapi.domain.model.UsageType
 import edu.ucne.loginapi.domain.model.UserCar
 import edu.ucne.loginapi.domain.model.Usuarios
+import edu.ucne.loginapi.domain.model.VehicleBrand
+import edu.ucne.loginapi.domain.model.VehicleModel
+import edu.ucne.loginapi.domain.model.VehicleYearRange
 import edu.ucne.loginapi.domain.model.WarningLight
 import java.util.UUID
 
@@ -375,3 +381,24 @@ fun ChatMessage.toDto(): ChatMessageDto {
         content = content
     )
 }
+fun VehicleBrandDto.toDomain(): VehicleBrand =
+    VehicleBrand(
+        id = id,
+        name = name
+    )
+
+fun VehicleModelDto.toDomain(): VehicleModel =
+    VehicleModel(
+        id = id,
+        brandId = brandId,
+        name = name
+    )
+
+fun VehicleYearRangeDto.toDomain(): VehicleYearRange =
+    VehicleYearRange(
+        id = id,
+        modelId = modelId,
+        fromYear = fromYear,
+        toYear = toYear
+    )
+

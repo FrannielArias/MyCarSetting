@@ -7,12 +7,15 @@ import edu.ucne.loginapi.data.remote.dataSource.MaintenanceRemoteDataSource
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
+import edu.ucne.loginapi.domain.model.MaintenanceStatus
 import edu.ucne.loginapi.domain.model.MaintenanceTask
+import edu.ucne.loginapi.domain.model.MaintenanceType
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 
 class MaintenanceRepositoryImpl @Inject constructor(
@@ -57,7 +60,33 @@ class MaintenanceRepositoryImpl @Inject constructor(
         taskId: String,
         completionDateMillis: Long
     ): Resource<Unit> {
-        return Resource.Success(Unit)
+        return try {
+            val taskEntity = taskDao.getTaskById(taskId)
+                ?: return Resource.Error("Tarea no encontrada")
+
+            val updatedTask = taskEntity.copy(
+                status = MaintenanceStatus.COMPLETED.name,
+                updatedAtMillis = completionDateMillis
+            )
+            taskDao.upsert(updatedTask)
+
+            val historyRecord = MaintenanceHistory(
+                id = UUID.randomUUID().toString(),
+                carId = taskEntity.carId,
+                taskType = MaintenanceType.valueOf(taskEntity.type),
+                serviceDateMillis = completionDateMillis,
+                mileageKm = taskEntity.dueMileageKm,
+                workshopName = null,
+                cost = null,
+                notes = taskEntity.description
+            )
+
+            historyDao.upsert(historyRecord.toEntity())
+
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "Error al completar tarea")
+        }
     }
 
     override suspend fun deleteTaskLocal(id: String): Resource<Unit> {
@@ -76,14 +105,23 @@ class MaintenanceRepositoryImpl @Inject constructor(
         historyDao.getHistoryById(id)?.toDomain()
 
     override suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory> {
-        historyDao.upsert(record.toEntity())
-        return Resource.Success(record)
+        return try {
+            historyDao.upsert(record.toEntity())
+            Resource.Success(record)
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "Error al guardar historial", record)
+        }
     }
 
     override suspend fun deleteRecord(id: String): Resource<Unit> {
-        historyDao.delete(id)
-        return Resource.Success(Unit)
+        return try {
+            historyDao.delete(id)
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "Error al eliminar historial")
+        }
     }
+
 
     override suspend fun syncFromRemote(carId: String): Resource<Unit> {
         return Resource.Success(Unit)
