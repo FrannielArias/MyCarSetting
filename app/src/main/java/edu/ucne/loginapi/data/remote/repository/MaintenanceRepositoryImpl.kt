@@ -1,9 +1,9 @@
-package edu.ucne.loginapi.data.repository
+package edu.ucne.loginapi.data.remote.repository
 
 import edu.ucne.loginapi.data.dao.MaintenanceHistoryDao
 import edu.ucne.loginapi.data.dao.MaintenanceTaskDao
-import edu.ucne.loginapi.data.remote.dataSource.MaintenanceRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.remote.dataSource.MaintenanceRemoteDataSource
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
@@ -11,9 +11,9 @@ import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class MaintenanceRepositoryImpl @Inject constructor(
     private val taskDao: MaintenanceTaskDao,
@@ -53,7 +53,10 @@ class MaintenanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun markTaskCompleted(taskId: String, completionDateMillis: Long): Resource<Unit> {
+    override suspend fun markTaskCompleted(
+        taskId: String,
+        completionDateMillis: Long
+    ): Resource<Unit> {
         return Resource.Success(Unit)
     }
 
@@ -73,7 +76,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
         historyDao.getHistoryById(id)?.toDomain()
 
     override suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory> {
-        historyDao.insert(record.toEntity())
+        historyDao.upsert(record.toEntity())
         return Resource.Success(record)
     }
 

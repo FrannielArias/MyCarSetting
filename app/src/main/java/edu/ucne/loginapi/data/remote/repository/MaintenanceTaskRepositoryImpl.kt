@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.data
+package edu.ucne.loginapi.data.remote.repository
 
 import edu.ucne.loginapi.data.dao.MaintenanceTaskDao
 import edu.ucne.loginapi.data.remote.Resource
@@ -7,9 +7,9 @@ import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceStatus
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class MaintenanceTaskRepositoryImpl @Inject constructor(
     private val maintenanceTaskDao: MaintenanceTaskDao
@@ -64,9 +64,13 @@ class MaintenanceTaskRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun markTaskCompleted(taskId: String, completionDateMillis: Long): Resource<Unit> {
+    override suspend fun markTaskCompleted(
+        taskId: String,
+        completionDateMillis: Long
+    ): Resource<Unit> {
         return try {
-            val entity = maintenanceTaskDao.getTaskById(taskId) ?: return Resource.Error("Tarea no encontrada")
+            val entity = maintenanceTaskDao.getTaskById(taskId)
+                ?: return Resource.Error("Tarea no encontrada")
             val domain = entity.toDomain()
             val updated = domain.copy(
                 status = MaintenanceStatus.COMPLETED,

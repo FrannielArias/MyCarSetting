@@ -6,10 +6,10 @@ import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.UserCar
 import edu.ucne.loginapi.domain.repository.UserCarRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class UserCarRepositoryImpl @Inject constructor(
     private val userCarDao: UserCarDao

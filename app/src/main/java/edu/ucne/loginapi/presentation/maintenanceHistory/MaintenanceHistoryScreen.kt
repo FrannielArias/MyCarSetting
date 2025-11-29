@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,11 @@ fun MaintenanceHistoryScreen(
     viewModel: MaintenanceHistoryViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(MaintenanceHistoryEvent.Refresh)
+    }
+
     MaintenanceHistoryBody(
         state = state,
         onEvent = viewModel::onEvent
@@ -96,18 +102,21 @@ private fun MaintenanceHistoryContent(
         state.isLoading -> {
             CircularProgressIndicator(modifier = modifier)
         }
+
         state.currentCar == null -> {
             Text(
                 text = "Configura un vehículo para ver el historial",
                 modifier = modifier
             )
         }
-        state.records.isEmpty() -> {
+
+        state.records.isEmpty() && !state.isLoading -> {
             Text(
                 text = "No hay registros de mantenimiento",
                 modifier = modifier
             )
         }
+
         else -> {
             MaintenanceHistoryList(
                 records = state.records,

@@ -10,5 +10,5 @@ data class ChatMessageEntity(
     val role: String,
     val content: String,
     val timestampMillis: Long,
-    val isPendingCreate: Boolean
+    val isPendingSync: Boolean
 )

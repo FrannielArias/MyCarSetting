@@ -7,12 +7,12 @@ import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.MaintenanceStatus
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.model.MaintenanceType
-import edu.ucne.loginapi.domain.useCase.maintenance.CreateMaintenanceTaskLocalUseCase
-import edu.ucne.loginapi.domain.useCase.maintenance.DeleteMaintenanceTaskUseCase
-import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.MarkTaskCompletedUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.CreateMaintenanceTaskLocalUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.DeleteMaintenanceTaskUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.TriggerMaintenanceSyncUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +51,7 @@ class MaintenanceViewModel @Inject constructor(
             is MaintenanceEvent.ShowCreateSheet -> {
                 _state.update { it.copy(showCreateSheet = true) }
             }
+
             is MaintenanceEvent.HideCreateSheet -> {
                 _state.update {
                     it.copy(
@@ -61,15 +62,19 @@ class MaintenanceViewModel @Inject constructor(
                     )
                 }
             }
+
             is MaintenanceEvent.OnNewTitleChange -> {
                 _state.update { it.copy(newTaskTitle = event.value) }
             }
+
             is MaintenanceEvent.OnNewDescriptionChange -> {
                 _state.update { it.copy(newTaskDescription = event.value) }
             }
+
             is MaintenanceEvent.OnNewDueMileageChange -> {
                 _state.update { it.copy(newTaskDueMileage = event.value) }
             }
+
             is MaintenanceEvent.OnCompleteTask -> completeTask(event.taskId)
             is MaintenanceEvent.OnDeleteTask -> deleteTask(event.taskId)
             is MaintenanceEvent.OnTaskClicked -> Unit
@@ -87,6 +92,9 @@ class MaintenanceViewModel @Inject constructor(
             if (car == null) {
                 _state.update {
                     it.copy(
+                        currentCar = null,
+                        upcomingTasks = emptyList(),
+                        overdueTasks = emptyList(),
                         isLoading = false,
                         userMessage = "No hay vehículo configurado"
                     )
@@ -104,9 +112,18 @@ class MaintenanceViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
 
-            val current = _state.value.currentCar
-            if (current != null) {
-                observeTasksForCar(current.id)
+            val car = getCurrentCarUseCase()
+            _state.update { it.copy(currentCar = car) }
+
+            if (car != null) {
+                observeTasksForCar(car.id)
+            } else {
+                _state.update {
+                    it.copy(
+                        upcomingTasks = emptyList(),
+                        overdueTasks = emptyList()
+                    )
+                }
             }
 
             _state.update { it.copy(isRefreshing = false) }
@@ -170,6 +187,7 @@ class MaintenanceViewModel @Inject constructor(
                     }
                     triggerMaintenanceSyncUseCase()
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -177,6 +195,7 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Loading -> Unit
             }
         }
@@ -190,6 +209,7 @@ class MaintenanceViewModel @Inject constructor(
                     _state.update { it.copy(userMessage = "Tarea completada") }
                     triggerMaintenanceSyncUseCase()
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -197,6 +217,7 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Loading -> Unit
             }
         }
@@ -210,6 +231,7 @@ class MaintenanceViewModel @Inject constructor(
                     _state.update { it.copy(userMessage = "Tarea eliminada") }
                     triggerMaintenanceSyncUseCase()
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -217,6 +239,7 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Loading -> Unit
             }
         }

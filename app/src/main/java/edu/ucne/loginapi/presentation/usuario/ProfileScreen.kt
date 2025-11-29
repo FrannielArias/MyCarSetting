@@ -3,11 +3,13 @@ package edu.ucne.loginapi.presentation.usuario
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -45,7 +47,12 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi cuenta") },
+                title = {
+                    Text(
+                        text = "Mi cuenta",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -90,23 +97,33 @@ private fun ProfileBody(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "Sesión activa",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                Icon(
+                    imageVector = Icons.Default.DirectionsCar,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Sesión activa",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = userName,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
         }
 
@@ -129,12 +146,18 @@ private fun ProfileBody(
                     onClick = onNavigateToUserCar,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DirectionsCar,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.height(0.dp).padding(horizontal = 4.dp))
-                    Text("Configurar vehículos")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsCar,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Configurar vehículos")
+                    }
                 }
             }
         }
@@ -143,16 +166,20 @@ private fun ProfileBody(
 
         Button(
             onClick = onLogoutClick,
-            modifier = Modifier
-                .fillMaxWidth()
-
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(
-                imageVector = Icons.Default.ExitToApp,
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.height(0.dp).padding(horizontal = 4.dp))
-            Text("Cerrar sesión")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Cerrar sesión")
+            }
         }
     }
 }

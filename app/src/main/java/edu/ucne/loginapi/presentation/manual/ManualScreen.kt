@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.manual
 
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -65,7 +67,12 @@ fun ManualBody(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Manual y ayuda") }
+                title = {
+                    Text(
+                        text = "Manual y ayuda",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -76,9 +83,18 @@ fun ManualBody(
                 .fillMaxSize()
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        text = "Cargando información...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             } else {
                 ManualContent(state = state, onEvent = onEvent)
 
@@ -131,10 +147,9 @@ private fun ManualTabRow(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 private fun ManualDetailSheet(
     state: ManualUiState,
-    sheetState: androidx.compose.material3.SheetState,
+    sheetState: SheetState,
     onEvent: (ManualEvent) -> Unit
 ) {
     val selectedLight = state.selectedWarningLight
@@ -237,7 +252,8 @@ fun WarningLightList(
                         )
                         Text(
                             text = light.description,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -276,11 +292,11 @@ fun GuideArticleList(
                     )
                     Text(
                         text = article.summary,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
     }
 }
-

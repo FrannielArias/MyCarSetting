@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.maintenance
 
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +51,11 @@ fun MaintenanceScreen(
     viewModel: MaintenanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(MaintenanceEvent.Refresh)
+    }
+
     MaintenanceBody(
         state = state,
         onEvent = viewModel::onEvent,
@@ -79,7 +85,8 @@ fun MaintenanceBody(
             TopAppBar(
                 title = {
                     Text(
-                        text = state.currentCar?.let { "${it.brand} ${it.model}" } ?: "Mantenimiento",
+                        text = state.currentCar?.let { "${it.brand} ${it.model}" }
+                            ?: "Mantenimiento",
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
@@ -99,17 +106,32 @@ fun MaintenanceBody(
         ) {
             when {
                 state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                state.currentCar == null -> {
-                    Text(
-                        text = "Configura un vehículo para ver recordatorios",
+                    Column(
                         modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Cargando recordatorios...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
+
+                state.currentCar == null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Configura un vehículo para ver recordatorios",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+
                 else -> {
                     MaintenanceContent(
                         state = state,
@@ -188,7 +210,8 @@ fun MaintenanceContent(
                 ) {
                     Text(
                         text = "No hay recordatorios de mantenimiento",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -269,7 +292,9 @@ private fun TaskActions(
     onComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         IconButton(onClick = onComplete) {
             Icon(
                 imageVector = Icons.Default.Check,

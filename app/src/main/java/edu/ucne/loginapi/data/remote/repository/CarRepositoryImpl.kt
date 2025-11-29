@@ -1,15 +1,15 @@
-package edu.ucne.loginapi.data.repository
+package edu.ucne.loginapi.data.remote.repository
 
 import edu.ucne.loginapi.data.dao.UserCarDao
-import edu.ucne.loginapi.data.remote.dataSource.CarRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.remote.dataSource.CarRemoteDataSource
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.UserCar
 import edu.ucne.loginapi.domain.repository.CarRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class CarRepositoryImpl @Inject constructor(
     private val userCarDao: UserCarDao,
@@ -61,6 +61,7 @@ class CarRepositoryImpl @Inject constructor(
                 userCarDao.replaceAll(cars.map { it.toEntity() })
                 Resource.Success(Unit)
             }
+
             is Resource.Error -> Resource.Error(result.message ?: "Error al sincronizar vehículos")
             is Resource.Loading -> Resource.Loading()
         }

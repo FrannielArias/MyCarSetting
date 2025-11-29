@@ -1,13 +1,13 @@
-package edu.ucne.loginapi.data.repository
+package edu.ucne.loginapi.data.remote.repository
 
-import edu.ucne.loginapi.data.remote.dataSource.ManualRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.remote.dataSource.ManualRemoteDataSource
 import edu.ucne.loginapi.domain.model.GuideArticle
 import edu.ucne.loginapi.domain.model.WarningLight
 import edu.ucne.loginapi.domain.repository.ManualRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
 
 class ManualRepositoryImpl @Inject constructor(
     private val remote: ManualRemoteDataSource

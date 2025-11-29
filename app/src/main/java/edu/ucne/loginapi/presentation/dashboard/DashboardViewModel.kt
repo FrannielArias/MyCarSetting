@@ -3,9 +3,9 @@ package edu.ucne.loginapi.presentation.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +49,16 @@ class DashboardViewModel @Inject constructor(
             val car = getCurrentCarUseCase()
             _state.update { it.copy(currentCar = car) }
 
-            if (car != null) observeTasks(car.id)
+            if (car != null) {
+                observeTasks(car.id)
+            } else {
+                _state.update {
+                    it.copy(
+                        upcomingTasks = emptyList(),
+                        overdueTasks = emptyList()
+                    )
+                }
+            }
 
             _state.update { it.copy(isLoading = false) }
         }
@@ -60,7 +69,18 @@ class DashboardViewModel @Inject constructor(
             _state.update { it.copy(isRefreshing = true) }
 
             val car = getCurrentCarUseCase()
-            if (car != null) observeTasks(car.id)
+            _state.update { it.copy(currentCar = car) }
+
+            if (car != null) {
+                observeTasks(car.id)
+            } else {
+                _state.update {
+                    it.copy(
+                        upcomingTasks = emptyList(),
+                        overdueTasks = emptyList()
+                    )
+                }
+            }
 
             _state.update { it.copy(isRefreshing = false) }
         }

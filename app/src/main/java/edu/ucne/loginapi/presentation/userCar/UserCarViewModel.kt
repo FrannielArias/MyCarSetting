@@ -11,14 +11,14 @@ import edu.ucne.loginapi.domain.useCase.user.AddUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.user.DeleteUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.user.ObserveCarsUseCase
 import edu.ucne.loginapi.domain.validation.ValidateCarDataUseCase
-import java.util.UUID
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
+import javax.inject.Inject
 
 @HiltViewModel
 class UserCarViewModel @Inject constructor(
@@ -43,6 +43,7 @@ class UserCarViewModel @Inject constructor(
             UserCarEvent.ShowCreateSheet -> {
                 _state.update { it.copy(showCreateSheet = true) }
             }
+
             UserCarEvent.HideCreateSheet -> {
                 _state.update {
                     it.copy(
@@ -54,30 +55,38 @@ class UserCarViewModel @Inject constructor(
                     )
                 }
             }
+
             is UserCarEvent.OnBrandChange -> {
                 _state.update { it.copy(brand = event.value) }
             }
+
             is UserCarEvent.OnModelChange -> {
                 _state.update { it.copy(model = event.value) }
             }
+
             is UserCarEvent.OnYearChange -> {
                 _state.update { it.copy(yearText = event.value) }
             }
+
             is UserCarEvent.OnPlateChange -> {
                 _state.update { it.copy(plate = event.value) }
             }
+
             is UserCarEvent.OnFuelTypeChange -> {
                 _state.update { it.copy(fuelType = event.value) }
             }
+
             is UserCarEvent.OnUsageTypeChange -> {
                 _state.update { it.copy(usageType = event.value) }
             }
+
             is UserCarEvent.OnSetCurrentCar -> setCurrentCar(event.carId)
             is UserCarEvent.OnDeleteCar -> deleteCar(event.carId)
             UserCarEvent.OnSaveCar -> saveCar()
             UserCarEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
+
             is UserCarEvent.OnCarClicked -> Unit
         }
     }
@@ -136,6 +145,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -143,6 +153,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Loading -> Unit
             }
         }
@@ -160,6 +171,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -167,6 +179,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Loading -> Unit
             }
         }
@@ -177,7 +190,8 @@ class UserCarViewModel @Inject constructor(
             val result = deleteUserCarUseCase(carId)
             when (result) {
                 is Resource.Success -> {
-                    val newCurrent = if (_state.value.currentCarId == carId) null else _state.value.currentCarId
+                    val newCurrent =
+                        if (_state.value.currentCarId == carId) null else _state.value.currentCarId
                     _state.update {
                         it.copy(
                             currentCarId = newCurrent,
@@ -185,6 +199,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -192,6 +207,7 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
+
                 is Resource.Loading -> Unit
             }
         }

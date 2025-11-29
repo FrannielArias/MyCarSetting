@@ -1,6 +1,8 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.chatBot
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,26 +18,30 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.loginapi.domain.model.ChatMessage
+import edu.ucne.loginapi.domain.model.ChatRole
 
 @Composable
 fun ChatScreen(
@@ -73,7 +79,11 @@ fun ChatBody(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            ChatContent(state = state, modifier = Modifier.weight(1f))
+            ChatContent(
+                messages = state.messages,
+                isLoading = state.isLoading,
+                modifier = Modifier.weight(1f)
+            )
 
             ChatInputBar(
                 inputText = state.inputText,
@@ -87,7 +97,12 @@ fun ChatBody(
 @Composable
 private fun ChatTopBar(onClearConversation: () -> Unit) {
     TopAppBar(
-        title = { Text("Asistente MyCarSetting") },
+        title = {
+            Text(
+                text = "Asistente MyCarSetting",
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
         actions = {
             IconButton(onClick = onClearConversation) {
                 Icon(
@@ -101,39 +116,85 @@ private fun ChatTopBar(onClearConversation: () -> Unit) {
 
 @Composable
 private fun ChatContent(
-    state: ChatUiState,
+    messages: List<ChatMessage>,
+    isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
-    if (state.isLoading) {
-        Box(
-            modifier = modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Cargando conversación...")
-        }
-    } else {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(state.messages, key = { it.id }) { message ->
-                val isUser = message.role.name == "USER"
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+    when {
+        isLoading -> {
+            Box(
+                modifier = modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .padding(vertical = 4.dp),
-                        contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+                    CircularProgressIndicator()
+                    Text(
+                        text = "Cargando conversación...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        messages.isEmpty() -> {
+            Box(
+                modifier = modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Empieza una conversación",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "Describe el ruido, fallo o problema para recibir ayuda.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        else -> {
+            LazyColumn(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(messages, key = { it.id }) { message ->
+                    val isUser = message.role == ChatRole.USER
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
                     ) {
-                        Text(
-                            text = message.content,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f)
+                                .padding(vertical = 4.dp)
+                                .clip(MaterialTheme.shapes.large)
+                                .background(
+                                    if (isUser) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    }
+                                )
+                                .padding(12.dp),
+                            contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = message.content,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
             }

@@ -13,11 +13,8 @@ interface ChatMessageDao {
     @Query("SELECT * FROM chat_messages WHERE conversationId = :conversationId ORDER BY timestampMillis ASC")
     fun observeMessages(conversationId: String): Flow<List<ChatMessageEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
-    suspend fun insert(message: ChatMessageEntity)
-
-    @Query("SELECT * FROM chat_messages WHERE isPendingCreate = 1")
-    suspend fun getPendingMessages(): List<ChatMessageEntity>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMessage(message: ChatMessageEntity)
 
     @Query("DELETE FROM chat_messages WHERE conversationId = :conversationId")
     suspend fun clearConversation(conversationId: String)

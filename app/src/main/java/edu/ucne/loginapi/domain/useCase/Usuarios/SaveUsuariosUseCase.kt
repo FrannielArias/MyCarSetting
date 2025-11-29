@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class SaveUsuariosUseCase @Inject constructor(
     private val repository: UsuariosRepository
-){
+) {
     suspend operator fun invoke(usuarios: Usuarios): Resource<Unit> {
         return repository.saveUsuarios(usuarios)
     }

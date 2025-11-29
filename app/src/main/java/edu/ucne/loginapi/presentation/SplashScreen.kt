@@ -1,38 +1,43 @@
 package edu.ucne.loginapi.presentation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.delay
+import edu.ucne.franniel_arias_ap2_p2.R
+import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 
 @Composable
 fun SplashScreen(
     navController: NavHostController,
     viewModel: SplashViewModel = hiltViewModel()
 ) {
-    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+    val state = viewModel.state.collectAsStateWithLifecycle().value
 
-    LaunchedEffect(startDestination) {
-        val destination = startDestination ?: return@LaunchedEffect
-        delay(1000)
-        navController.navigate(destination.route) {
-            popUpTo(AppDestination.Splash.route) { inclusive = true }
-            launchSingleTop = true
+    LaunchedEffect(state.isCheckingSession) {
+        if (!state.isCheckingSession) {
+            val destination = if (state.isLoggedIn) {
+                AppDestination.Dashboard.route
+            } else {
+                AppDestination.Login.route
+            }
+
+            navController.navigate(destination) {
+                popUpTo(AppDestination.Splash.route) { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -43,13 +48,13 @@ fun SplashScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "MyCarSetting",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
+            Image(
+                painter = painterResource(id = R.drawable.mycar_logo),
+                contentDescription = null,
+                modifier = Modifier.size(140.dp)
             )
-            Spacer(modifier = Modifier.height(24.dp))
-            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(32.dp))
+            MyCarLoadingIndicator()
         }
     }
 }

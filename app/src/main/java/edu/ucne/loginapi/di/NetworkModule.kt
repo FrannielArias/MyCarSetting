@@ -6,14 +6,14 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import edu.ucne.loginapi.data.remote.apiService.UsuariosApiService
-import edu.ucne.loginapi.data.remote.apiService.ChatApiService
-import edu.ucne.loginapi.data.remote.apiService.ManualApiService
-import edu.ucne.loginapi.data.remote.apiService.MaintenanceApiService
-import javax.inject.Singleton
+import edu.ucne.loginapi.data.remote.ChatApi
+import edu.ucne.loginapi.data.remote.MaintenanceApiService
+import edu.ucne.loginapi.data.remote.ManualApiService
+import edu.ucne.loginapi.data.remote.UsuariosApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,11 +52,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideChatApiService(retrofit: Retrofit): ChatApiService =
-        retrofit.create(ChatApiService::class.java)
-
-    @Provides
-    @Singleton
     fun provideManualApiService(retrofit: Retrofit): ManualApiService =
         retrofit.create(ManualApiService::class.java)
 
@@ -64,4 +59,11 @@ object NetworkModule {
     @Singleton
     fun provideMaintenanceApiService(retrofit: Retrofit): MaintenanceApiService =
         retrofit.create(MaintenanceApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideChatApi(
+        retrofit: Retrofit
+    ): ChatApi = retrofit.create(ChatApi::class.java)
+
 }

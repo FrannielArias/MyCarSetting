@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.userCar
 
 import androidx.compose.foundation.clickable
@@ -114,9 +115,11 @@ private fun UserCarContent(
         state.isLoading -> {
             LoadingState()
         }
+
         state.cars.isEmpty() -> {
             EmptyState()
         }
+
         else -> {
             UserCarList(
                 cars = state.cars,

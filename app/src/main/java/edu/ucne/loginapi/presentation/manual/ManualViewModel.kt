@@ -36,6 +36,7 @@ class ManualViewModel @Inject constructor(
             is ManualEvent.SelectTab -> {
                 _state.update { it.copy(selectedTabIndex = event.index) }
             }
+
             is ManualEvent.OnWarningLightClicked -> loadWarningDetail(event.id)
             is ManualEvent.OnGuideClicked -> loadGuideDetail(event.id)
             ManualEvent.OnDismissDetail -> {
@@ -46,6 +47,7 @@ class ManualViewModel @Inject constructor(
                     )
                 }
             }
+
             ManualEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -54,32 +56,57 @@ class ManualViewModel @Inject constructor(
 
     private fun loadInitial() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(isLoading = true, userMessage = null) }
 
-            val lights = getWarningLightsUseCase().first()
-            val guides = getGuideArticlesUseCase(null).first()
+            try {
+                val lights = getWarningLightsUseCase().first()
+                val guides = getGuideArticlesUseCase(null).first()
 
-            _state.update {
-                it.copy(
-                    warningLights = lights,
-                    guideArticles = guides,
-                    isLoading = false
-                )
+                _state.update {
+                    it.copy(
+                        warningLights = lights,
+                        guideArticles = guides,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        userMessage = e.message ?: "Error al cargar el manual"
+                    )
+                }
             }
         }
     }
 
     private fun loadWarningDetail(id: String) {
         viewModelScope.launch {
-            val detail = getWarningLightDetailUseCase(id).first()
-            _state.update { it.copy(selectedWarningLight = detail) }
+            try {
+                val detail = getWarningLightDetailUseCase(id).first()
+                _state.update { it.copy(selectedWarningLight = detail, selectedArticle = null) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        userMessage = e.message ?: "Error al cargar el detalle del testigo"
+                    )
+                }
+            }
         }
     }
 
     private fun loadGuideDetail(id: String) {
         viewModelScope.launch {
-            val detail = getGuideArticleDetailUseCase(id).first()
-            _state.update { it.copy(selectedArticle = detail) }
+            try {
+                val detail = getGuideArticleDetailUseCase(id).first()
+                _state.update { it.copy(selectedArticle = detail, selectedWarningLight = null) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        userMessage = e.message ?: "Error al cargar la guía"
+                    )
+                }
+            }
         }
     }
 }
