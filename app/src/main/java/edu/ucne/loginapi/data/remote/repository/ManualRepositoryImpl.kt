@@ -13,18 +13,14 @@ class ManualRepositoryImpl @Inject constructor(
     private val remote: ManualRemoteDataSource
 ) : ManualRepository {
 
-    override fun getWarningLights(
-        brand: String?,
-        model: String?,
-        year: Int?
-    ): Flow<List<WarningLight>> = flow {
-        when (val result = remote.getWarningLights(brand, model, year)) {
+    override fun getWarningLights(): Flow<List<WarningLight>> = flow {
+        when (val result = remote.getWarningLights()) {
             is Resource.Success -> emit(result.data.orEmpty())
             is Resource.Error, is Resource.Loading -> emit(emptyList())
         }
     }
 
-    override fun getWarningLightDetail(id: String): Flow<WarningLight?> = flow {
+    override fun getWarningLightDetail(id: Int): Flow<WarningLight?> = flow {
         when (val result = remote.getWarningLightDetail(id)) {
             is Resource.Success -> emit(result.data)
             else -> emit(null)
@@ -38,7 +34,7 @@ class ManualRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getGuideArticleDetail(id: String): Flow<GuideArticle?> = flow {
+    override fun getGuideArticleDetail(id: Int): Flow<GuideArticle?> = flow {
         when (val result = remote.getGuideArticleDetail(id)) {
             is Resource.Success -> emit(result.data)
             else -> emit(null)

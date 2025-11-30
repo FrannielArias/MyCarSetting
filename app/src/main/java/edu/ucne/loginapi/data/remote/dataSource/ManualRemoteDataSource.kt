@@ -15,13 +15,9 @@ class ManualRemoteDataSource @Inject constructor(
         private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
     }
 
-    suspend fun getWarningLights(
-        brand: String?,
-        model: String?,
-        year: Int?
-    ): Resource<List<WarningLight>> {
+    suspend fun getWarningLights(): Resource<List<WarningLight>> {
         return try {
-            val response = api.getWarningLights(brand, model, year)
+            val response = api.getWarningLights()
             if (response.isSuccessful) {
                 val body = response.body().orEmpty()
                 Resource.Success(body.map { it.toDomain() })
@@ -33,11 +29,12 @@ class ManualRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getWarningLightDetail(id: String): Resource<WarningLight> {
+    suspend fun getWarningLightDetail(id: Int): Resource<WarningLight> {
         return try {
             val response = api.getWarningLightDetail(id)
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
+                val body = response.body()
+                    ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
@@ -61,11 +58,12 @@ class ManualRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getGuideArticleDetail(id: String): Resource<GuideArticle> {
+    suspend fun getGuideArticleDetail(id: Int): Resource<GuideArticle> {
         return try {
             val response = api.getGuideArticleDetail(id)
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
+                val body = response.body()
+                    ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")

@@ -8,6 +8,6 @@ import kotlinx.coroutines.flow.Flow
 class GetWarningLightDetailUseCase @Inject constructor(
     private val repository: ManualRepository
 ) {
-    operator fun invoke(id: String): Flow<WarningLight?> =
+    operator fun invoke(id: Int): Flow<WarningLight?> =
         repository.getWarningLightDetail(id)
 }

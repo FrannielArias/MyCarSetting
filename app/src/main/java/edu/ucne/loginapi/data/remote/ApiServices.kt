@@ -110,26 +110,22 @@ interface MaintenanceApiService {
 
 //Api Manual
 interface ManualApiService {
-    @GET("api/manual/warningLights")
-    suspend fun getWarningLights(
-        @Query("brand") brand: String?,
-        @Query("model") model: String?,
-        @Query("year") year: Int?
-    ): Response<List<WarningLightDto>>
+    @GET("api/WarningLight")
+    suspend fun getWarningLights(): Response<List<WarningLightDto>>
 
-    @GET("api/manual/warningLights/{id}")
+    @GET("api/WarningLight/{id}")
     suspend fun getWarningLightDetail(
-        @Path("id") id: String
+        @Path("id") id: Int
     ): Response<WarningLightDto>
 
-    @GET("api/manual/guides")
+    @GET("api/GuideArticle")
     suspend fun getGuideArticles(
         @Query("category") category: String?
     ): Response<List<GuideArticleDto>>
 
-    @GET("api/manual/guides/{id}")
+    @GET("api/GuideArticle/{id}")
     suspend fun getGuideArticleDetail(
-        @Path("id") id: String
+        @Path("id") id: Int  // ← Int
     ): Response<GuideArticleDto>
 }
 

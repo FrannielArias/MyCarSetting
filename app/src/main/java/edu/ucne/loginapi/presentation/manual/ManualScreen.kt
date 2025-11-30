@@ -117,8 +117,7 @@ private fun ManualContent(
     onEvent: (ManualEvent) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         ManualTabRow(
             selectedTabIndex = state.selectedTabIndex,
@@ -184,8 +183,7 @@ private fun ManualDetailSheet(
 @Composable
 private fun WarningLightDetail(light: WarningLight) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -211,8 +209,7 @@ private fun WarningLightDetail(light: WarningLight) {
 @Composable
 private fun GuideArticleDetail(article: GuideArticle) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -264,6 +261,7 @@ fun WarningLightList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
+                        // ✅ light.id es Int, coincide con OnWarningLightClicked(id: Int)
                         onEvent(ManualEvent.OnWarningLightClicked(light.id))
                     },
                 colors = CardDefaults.cardColors(
@@ -331,6 +329,7 @@ fun GuideArticleList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
+                        // ✅ article.id es String, coincide con OnGuideClicked(id: String)
                         onEvent(ManualEvent.OnGuideClicked(article.id))
                     },
                 colors = CardDefaults.cardColors(
