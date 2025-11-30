@@ -1,3 +1,6 @@
+// ========================================
+// VIEWMODEL - ACTUALIZADO
+// ========================================
 package edu.ucne.loginapi.presentation.userCar
 
 import androidx.lifecycle.ViewModel
@@ -5,6 +8,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.UserCar
+import edu.ucne.loginapi.domain.model.VehicleBrand
+import edu.ucne.loginapi.domain.model.VehicleModel
+import edu.ucne.loginapi.domain.model.VehicleYearRange
+import edu.ucne.loginapi.domain.useCase.Vehiculo.GetVehicleBrandsUseCase
+import edu.ucne.loginapi.domain.useCase.Vehiculo.GetVehicleModelsByBrandUseCase
+import edu.ucne.loginapi.domain.useCase.Vehiculo.GetVehicleYearRangesByModelUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.SetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.user.AddUserCarUseCase
@@ -15,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -27,7 +37,11 @@ class UserCarViewModel @Inject constructor(
     private val setCurrentCarUseCase: SetCurrentCarUseCase,
     private val deleteUserCarUseCase: DeleteUserCarUseCase,
     private val getCurrentCarUseCase: GetCurrentCarUseCase,
-    private val validateCarDataUseCase: ValidateCarDataUseCase
+    private val validateCarDataUseCase: ValidateCarDataUseCase,
+    // ✅ Nuevos Use Cases para el catálogo
+    private val getVehicleBrandsUseCase: GetVehicleBrandsUseCase,
+    private val getVehicleModelsByBrandUseCase: GetVehicleModelsByBrandUseCase,
+    private val getVehicleYearRangesByModelUseCase: GetVehicleYearRangesByModelUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserCarUiState())
@@ -42,6 +56,7 @@ class UserCarViewModel @Inject constructor(
             UserCarEvent.LoadInitialData -> loadInitial()
 
             UserCarEvent.ShowCreateSheet -> {
+                loadBrands()
                 _state.update { it.copy(showCreateSheet = true) }
             }
 
@@ -49,25 +64,19 @@ class UserCarViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         showCreateSheet = false,
-                        brand = "",
-                        model = "",
-                        yearText = "",
+                        selectedBrandId = null,
+                        selectedModelId = null,
+                        selectedYearRangeId = null,
+                        models = emptyList(),
+                        yearRanges = emptyList(),
                         plate = ""
                     )
                 }
             }
 
-            is UserCarEvent.OnBrandChange -> {
-                _state.update { it.copy(brand = event.value) }
-            }
-
-            is UserCarEvent.OnModelChange -> {
-                _state.update { it.copy(model = event.value) }
-            }
-
-            is UserCarEvent.OnYearChange -> {
-                _state.update { it.copy(yearText = event.value) }
-            }
+            is UserCarEvent.OnBrandSelected -> onBrandSelected(event.brand)
+            is UserCarEvent.OnModelSelected -> onModelSelected(event.model)
+            is UserCarEvent.OnYearRangeSelected -> onYearRangeSelected(event.yearRange)
 
             is UserCarEvent.OnPlateChange -> {
                 _state.update { it.copy(plate = event.value) }
@@ -112,32 +121,130 @@ class UserCarViewModel @Inject constructor(
         }
     }
 
-    private fun saveCar() {
-        val brand = _state.value.brand.trim()
-        val model = _state.value.model.trim()
-        val rawYearText = _state.value.yearText.trim()
+    // ✅ Cargar marcas desde la API
+    private fun loadBrands() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoadingCatalog = true) }
+            try {
+                val brands = getVehicleBrandsUseCase().first()
+                _state.update {
+                    it.copy(
+                        brands = brands,
+                        isLoadingCatalog = false
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoadingCatalog = false,
+                        userMessage = "Error al cargar marcas: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
 
-        // Soporta tanto "2015" como "2007-2011" (toma los últimos 4 dígitos)
-        val normalizedYearText = rawYearText.takeLast(4).filter { it.isDigit() }
-        if (normalizedYearText.length != 4) {
+    // ✅ Cuando selecciona una marca, cargar sus modelos
+    private fun onBrandSelected(brand: VehicleBrand) {
+        viewModelScope.launch {
             _state.update {
-                it.copy(userMessage = "Año inválido, debe ser un año como 2015")
+                it.copy(
+                    selectedBrandId = brand.id,
+                    selectedModelId = null,
+                    selectedYearRangeId = null,
+                    models = emptyList(),
+                    yearRanges = emptyList(),
+                    isLoadingCatalog = true
+                )
+            }
+
+            try {
+                val models = getVehicleModelsByBrandUseCase(brand.id).first()
+                _state.update {
+                    it.copy(
+                        models = models,
+                        isLoadingCatalog = false
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoadingCatalog = false,
+                        userMessage = "Error al cargar modelos: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    // ✅ Cuando selecciona un modelo, cargar sus rangos de años
+    private fun onModelSelected(model: VehicleModel) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    selectedModelId = model.id,
+                    selectedYearRangeId = null,
+                    yearRanges = emptyList(),
+                    isLoadingCatalog = true
+                )
+            }
+
+            try {
+                val yearRanges = getVehicleYearRangesByModelUseCase(model.id).first()
+                _state.update {
+                    it.copy(
+                        yearRanges = yearRanges,
+                        isLoadingCatalog = false
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoadingCatalog = false,
+                        userMessage = "Error al cargar años: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    // ✅ Guardar el rango de año seleccionado
+    private fun onYearRangeSelected(yearRange: VehicleYearRange) {
+        _state.update {
+            it.copy(selectedYearRangeId = yearRange.id)
+        }
+    }
+
+    private fun saveCar() {
+        val selectedBrandId = _state.value.selectedBrandId
+        val selectedModelId = _state.value.selectedModelId
+        val selectedYearRangeId = _state.value.selectedYearRangeId
+
+        if (selectedBrandId == null || selectedModelId == null || selectedYearRangeId == null) {
+            _state.update {
+                it.copy(userMessage = "Debes seleccionar marca, modelo y año")
             }
             return
         }
 
-        val validationResult = validateCarDataUseCase(brand, model, normalizedYearText)
-        if (!validationResult.successful) {
-            _state.update { it.copy(userMessage = validationResult.errorMessage) }
+        // Obtener los datos seleccionados
+        val selectedBrand = _state.value.brands.find { it.id == selectedBrandId }
+        val selectedModel = _state.value.models.find { it.id == selectedModelId }
+        val selectedYearRange = _state.value.yearRanges.find { it.id == selectedYearRangeId }
+
+        if (selectedBrand == null || selectedModel == null || selectedYearRange == null) {
+            _state.update {
+                it.copy(userMessage = "Error: datos de vehículo inválidos")
+            }
             return
         }
 
-        val year = normalizedYearText.toInt()
+        // Usar el año final del rango (toYear)
         val car = UserCar(
             id = UUID.randomUUID().toString(),
-            brand = brand,
-            model = model,
-            year = year,
+            brand = selectedBrand.name,
+            model = selectedModel.name,
+            year = selectedYearRange.toYear, // ✅ Usar toYear como representativo
             plate = _state.value.plate.ifBlank { null },
             fuelType = _state.value.fuelType,
             usageType = _state.value.usageType,
@@ -151,9 +258,11 @@ class UserCarViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             showCreateSheet = false,
-                            brand = "",
-                            model = "",
-                            yearText = "",
+                            selectedBrandId = null,
+                            selectedModelId = null,
+                            selectedYearRangeId = null,
+                            models = emptyList(),
+                            yearRanges = emptyList(),
                             plate = "",
                             userMessage = "Vehículo guardado"
                         )

@@ -37,7 +37,7 @@ class ManualViewModel @Inject constructor(
                 _state.update { it.copy(selectedTabIndex = event.index) }
             }
             is ManualEvent.OnWarningLightClicked -> loadWarningDetail(event.id)
-            is ManualEvent.OnGuideClicked -> loadGuideDetail(event.id)  // ← Int
+            is ManualEvent.OnGuideClicked -> loadGuideDetail(event.id)
             ManualEvent.OnDismissDetail -> {
                 _state.update {
                     it.copy(

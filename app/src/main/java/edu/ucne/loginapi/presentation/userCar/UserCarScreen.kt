@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -50,6 +52,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.loginapi.domain.model.UserCar
+import edu.ucne.loginapi.domain.model.VehicleBrand
+import edu.ucne.loginapi.domain.model.VehicleModel
+import edu.ucne.loginapi.domain.model.VehicleYearRange
 
 @Composable
 fun UserCarScreen(
@@ -210,32 +215,14 @@ private fun UserCarItem(
     }
 }
 
+// ========================================
+// NUEVO SHEET CON DATOS DE API
+// ========================================
 @Composable
 private fun NewCarSheet(
     state: UserCarUiState,
     onEvent: (UserCarEvent) -> Unit
 ) {
-    val brands = listOf("Toyota", "Honda", "Hyundai")
-    val modelsByBrand = mapOf(
-        "Toyota" to listOf("Camry", "Corolla", "Yaris"),
-        "Honda" to listOf("Civic", "CRV", "Fit"),
-        "Hyundai" to listOf("Elantra", "Tucson", "Accent")
-    )
-    val yearsByModel = mapOf(
-        "Camry" to listOf("2007-2011", "2012-2017", "2018-2024"),
-        "Corolla" to listOf("2006-2010", "2011-2015", "2016-2024"),
-        "Yaris" to listOf("2008-2013", "2014-2020"),
-        "Civic" to listOf("2006-2011", "2012-2016", "2017-2024"),
-        "CRV" to listOf("2007-2011", "2012-2016", "2017-2024"),
-        "Fit" to listOf("2008-2013", "2014-2020"),
-        "Elantra" to listOf("2007-2012", "2013-2017", "2018-2024"),
-        "Tucson" to listOf("2009-2013", "2014-2018", "2019-2024"),
-        "Accent" to listOf("2006-2011", "2012-2017", "2018-2023")
-    )
-
-    val availableModels = modelsByBrand[state.brand].orEmpty()
-    val availableYearRanges = yearsByModel[state.model].orEmpty()
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -247,32 +234,33 @@ private fun NewCarSheet(
             style = MaterialTheme.typography.titleLarge
         )
 
-        BrandDropdownField(
-            selectedBrand = state.brand,
-            brands = brands,
+        // ✅ Selector de Marca con datos reales de la API
+        VehicleBrandDropdown(
+            brands = state.brands,
+            selectedBrandId = state.selectedBrandId,
+            isLoading = state.isLoadingCatalog,
             onBrandSelected = { brand ->
-                onEvent(UserCarEvent.OnBrandChange(brand))
-                onEvent(UserCarEvent.OnModelChange(""))
-                onEvent(UserCarEvent.OnYearChange(""))
+                onEvent(UserCarEvent.OnBrandSelected(brand))
             }
         )
 
-        ModelDropdownField(
-            selectedModel = state.model,
-            models = availableModels,
-            enabled = brands.isNotEmpty() && state.brand.isNotBlank(),
+        // ✅ Selector de Modelo (habilitado solo si hay una marca seleccionada)
+        VehicleModelDropdown(
+            models = state.models,
+            selectedModelId = state.selectedModelId,
+            enabled = state.selectedBrandId != null && !state.isLoadingCatalog,
             onModelSelected = { model ->
-                onEvent(UserCarEvent.OnModelChange(model))
-                onEvent(UserCarEvent.OnYearChange(""))
+                onEvent(UserCarEvent.OnModelSelected(model))
             }
         )
 
-        YearRangeDropdownField(
-            selectedRange = state.yearText,
-            yearRanges = availableYearRanges,
-            enabled = availableModels.isNotEmpty() && state.model.isNotBlank(),
-            onYearRangeSelected = { range ->
-                onEvent(UserCarEvent.OnYearChange(range))
+        // ✅ Selector de Año (habilitado solo si hay un modelo seleccionado)
+        VehicleYearRangeDropdown(
+            yearRanges = state.yearRanges,
+            selectedYearRangeId = state.selectedYearRangeId,
+            enabled = state.selectedModelId != null && !state.isLoadingCatalog,
+            onYearRangeSelected = { yearRange ->
+                onEvent(UserCarEvent.OnYearRangeSelected(yearRange))
             }
         )
 
@@ -292,70 +280,102 @@ private fun NewCarSheet(
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = { onEvent(UserCarEvent.OnSaveCar) },
-                enabled = state.brand.isNotBlank() &&
-                        state.model.isNotBlank() &&
-                        state.yearText.isNotBlank(),
+                enabled = state.selectedBrandId != null &&
+                        state.selectedModelId != null &&
+                        state.selectedYearRangeId != null &&
+                        !state.isLoadingCatalog,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Guardar")
+                if (state.isLoadingCatalog) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Guardar")
+                }
             }
         }
     }
 }
 
+// ========================================
+// DROPDOWNS ACTUALIZADOS CON DATOS REALES
+// ========================================
+
 @Composable
-private fun BrandDropdownField(
-    selectedBrand: String,
-    brands: List<String>,
-    onBrandSelected: (String) -> Unit
+private fun VehicleBrandDropdown(
+    brands: List<VehicleBrand>,
+    selectedBrandId: Int?,
+    isLoading: Boolean,
+    onBrandSelected: (VehicleBrand) -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val selectedBrand = brands.find { it.id == selectedBrandId }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = {
-            if (brands.isNotEmpty()) {
+            if (brands.isNotEmpty() && !isLoading) {
                 expanded = !expanded
             }
         }
     ) {
         OutlinedTextField(
-            value = selectedBrand,
+            value = selectedBrand?.name ?: "",
             onValueChange = {},
             readOnly = true,
             label = { Text("Marca") },
+            placeholder = {
+                if (isLoading) Text("Cargando...")
+                else if (brands.isEmpty()) Text("No hay marcas disponibles")
+                else Text("Selecciona una marca")
+            },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            }
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
+            },
+            enabled = !isLoading && brands.isNotEmpty()
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            brands.forEach { brand ->
-                DropdownMenuItem(
-                    text = { Text(brand) },
-                    onClick = {
-                        expanded = false
-                        onBrandSelected(brand)
-                    }
-                )
+
+        if (brands.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                brands.forEach { brand ->
+                    DropdownMenuItem(
+                        text = { Text(brand.name) },
+                        onClick = {
+                            expanded = false
+                            onBrandSelected(brand)
+                        }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ModelDropdownField(
-    selectedModel: String,
-    models: List<String>,
+private fun VehicleModelDropdown(
+    models: List<VehicleModel>,
+    selectedModelId: Int?,
     enabled: Boolean,
-    onModelSelected: (String) -> Unit
+    onModelSelected: (VehicleModel) -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val selectedModel = models.find { it.id == selectedModelId }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -366,43 +386,54 @@ private fun ModelDropdownField(
         }
     ) {
         OutlinedTextField(
-            value = selectedModel,
+            value = selectedModel?.name ?: "",
             onValueChange = {},
             readOnly = true,
             label = { Text("Modelo") },
+            placeholder = {
+                when {
+                    !enabled -> Text("Primero selecciona una marca")
+                    models.isEmpty() -> Text("No hay modelos disponibles")
+                    else -> Text("Selecciona un modelo")
+                }
+            },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
-            enabled = enabled
+            enabled = enabled && models.isNotEmpty()
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            models.forEach { model ->
-                DropdownMenuItem(
-                    text = { Text(model) },
-                    onClick = {
-                        expanded = false
-                        onModelSelected(model)
-                    }
-                )
+
+        if (models.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                models.forEach { model ->
+                    DropdownMenuItem(
+                        text = { Text(model.name) },
+                        onClick = {
+                            expanded = false
+                            onModelSelected(model)
+                        }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun YearRangeDropdownField(
-    selectedRange: String,
-    yearRanges: List<String>,
+private fun VehicleYearRangeDropdown(
+    yearRanges: List<VehicleYearRange>,
+    selectedYearRangeId: Int?,
     enabled: Boolean,
-    onYearRangeSelected: (String) -> Unit
+    onYearRangeSelected: (VehicleYearRange) -> Unit
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val selectedYearRange = yearRanges.find { it.id == selectedYearRangeId }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -413,30 +444,40 @@ private fun YearRangeDropdownField(
         }
     ) {
         OutlinedTextField(
-            value = selectedRange,
+            value = selectedYearRange?.let { "${it.fromYear} - ${it.toYear}" } ?: "",
             onValueChange = {},
             readOnly = true,
             label = { Text("Año de caja") },
+            placeholder = {
+                when {
+                    !enabled -> Text("Primero selecciona un modelo")
+                    yearRanges.isEmpty() -> Text("No hay años disponibles")
+                    else -> Text("Selecciona un rango de años")
+                }
+            },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
-            enabled = enabled
+            enabled = enabled && yearRanges.isNotEmpty()
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            yearRanges.forEach { range ->
-                DropdownMenuItem(
-                    text = { Text(range) },
-                    onClick = {
-                        expanded = false
-                        onYearRangeSelected(range)
-                    }
-                )
+
+        if (yearRanges.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                yearRanges.forEach { yearRange ->
+                    DropdownMenuItem(
+                        text = { Text("${yearRange.fromYear} - ${yearRange.toYear}") },
+                        onClick = {
+                            expanded = false
+                            onYearRangeSelected(yearRange)
+                        }
+                    )
+                }
             }
         }
     }
