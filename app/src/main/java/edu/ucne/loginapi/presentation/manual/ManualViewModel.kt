@@ -36,9 +36,8 @@ class ManualViewModel @Inject constructor(
             is ManualEvent.SelectTab -> {
                 _state.update { it.copy(selectedTabIndex = event.index) }
             }
-
             is ManualEvent.OnWarningLightClicked -> loadWarningDetail(event.id)
-            is ManualEvent.OnGuideClicked -> loadGuideDetail(event.id)
+            is ManualEvent.OnGuideClicked -> loadGuideDetail(event.id)  // ← Int
             ManualEvent.OnDismissDetail -> {
                 _state.update {
                     it.copy(
@@ -47,7 +46,6 @@ class ManualViewModel @Inject constructor(
                     )
                 }
             }
-
             ManualEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -80,11 +78,16 @@ class ManualViewModel @Inject constructor(
         }
     }
 
-    private fun loadWarningDetail(id: String) {
+    private fun loadWarningDetail(id: Int) {
         viewModelScope.launch {
             try {
                 val detail = getWarningLightDetailUseCase(id).first()
-                _state.update { it.copy(selectedWarningLight = detail, selectedArticle = null) }
+                _state.update {
+                    it.copy(
+                        selectedWarningLight = detail,
+                        selectedArticle = null
+                    )
+                }
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
@@ -95,11 +98,16 @@ class ManualViewModel @Inject constructor(
         }
     }
 
-    private fun loadGuideDetail(id: String) {
+    private fun loadGuideDetail(id: Int) {  // ← Int
         viewModelScope.launch {
             try {
                 val detail = getGuideArticleDetailUseCase(id).first()
-                _state.update { it.copy(selectedArticle = detail, selectedWarningLight = null) }
+                _state.update {
+                    it.copy(
+                        selectedArticle = detail,
+                        selectedWarningLight = null
+                    )
+                }
             } catch (e: Exception) {
                 _state.update {
                     it.copy(

@@ -8,6 +8,6 @@ import javax.inject.Inject
 class GetGuideArticleDetailUseCase @Inject constructor(
     private val repository: ManualRepository
 ) {
-    operator fun invoke(id: String): Flow<GuideArticle?> =
+    operator fun invoke(id: Int): Flow<GuideArticle?> =
         repository.getGuideArticleDetail(id)
 }
