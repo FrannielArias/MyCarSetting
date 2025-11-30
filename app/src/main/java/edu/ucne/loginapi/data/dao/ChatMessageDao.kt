@@ -10,7 +10,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChatMessageDao {
 
-    @Query("SELECT * FROM chat_messages WHERE conversationId = :conversationId ORDER BY timestampMillis ASC")
+    @Query("""
+        SELECT *
+        FROM chat_messages
+        WHERE conversationId = :conversationId
+        ORDER BY timestampMillis ASC
+    """)
     fun observeMessages(conversationId: String): Flow<List<ChatMessageEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

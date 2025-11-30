@@ -1,12 +1,10 @@
 package edu.ucne.loginapi.presentation.Services
 
+import ServiceItem
+import ServicesUiState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import edu.ucne.loginapi.presentation.Services.ServiceCategory
-import edu.ucne.loginapi.presentation.Services.ServiceItem
-import edu.ucne.loginapi.presentation.Services.ServicesEvent
-import edu.ucne.loginapi.presentation.Services.ServicesUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,8 +26,13 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
     fun onEvent(event: ServicesEvent) {
         when (event) {
             ServicesEvent.LoadInitialData -> loadInitial()
+
             is ServicesEvent.OnCategorySelected -> {
                 _state.update { it.copy(selectedCategory = event.category) }
+            }
+
+            is ServicesEvent.OnServiceClicked -> {
+                _state.update { it.copy(userMessage = "Seleccionaste ${event.id}") }
             }
 
             ServicesEvent.OnUserMessageShown -> {
@@ -37,6 +40,7 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
             }
         }
     }
+
 
     private fun loadInitial() {
         viewModelScope.launch {
@@ -51,7 +55,9 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
                     category = ServiceCategory.TALLER,
                     description = "Mecánica general, frenos y suspensión",
                     distanceText = "A 1.2 km",
-                    isOpen = true
+                    isOpen = true,
+                    latitude = 18.4861,
+                    longitude = -69.9312
                 ),
                 ServiceItem(
                     id = "2",
@@ -59,7 +65,9 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
                     category = ServiceCategory.MANTENIMIENTO,
                     description = "Cambio de aceite y filtros sin cita",
                     distanceText = "A 850 m",
-                    isOpen = true
+                    isOpen = true,
+                    latitude = 18.4880,
+                    longitude = -69.9285
                 ),
                 ServiceItem(
                     id = "3",
@@ -67,7 +75,9 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
                     category = ServiceCategory.LAVADO,
                     description = "Lavado completo y detallado interior",
                     distanceText = "A 2.3 km",
-                    isOpen = false
+                    isOpen = false,
+                    latitude = 18.4835,
+                    longitude = -69.9350
                 ),
                 ServiceItem(
                     id = "4",
@@ -75,7 +85,9 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
                     category = ServiceCategory.EMERGENCIA,
                     description = "Gomas, pinchazos y alineación básica",
                     distanceText = "A 1.8 km",
-                    isOpen = true
+                    isOpen = true,
+                    latitude = 18.4900,
+                    longitude = -69.9330
                 )
             )
 

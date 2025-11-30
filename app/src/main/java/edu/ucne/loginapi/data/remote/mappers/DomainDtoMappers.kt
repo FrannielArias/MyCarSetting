@@ -357,7 +357,7 @@ fun ChatMessageEntity.toDomain(): ChatMessage {
     return ChatMessage(
         id = id,
         conversationId = conversationId,
-        role = ChatRole.valueOf(role),
+        role = role.toChatRole(),
         content = content,
         timestampMillis = timestampMillis,
         isPendingSync = isPendingSync

@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:name="edu.ucne.loginapi.MyCarSettingApplication"
         android:allowBackup="true"
@@ -12,6 +15,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.LoginApi">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAewp5oGGUUFX77ktKtUfWj2CjR8aLK6Ck" />
+
         <activity
             android:name="edu.ucne.loginapi.MainActivity"
             android:exported="true"
@@ -19,10 +27,10 @@
             android:theme="@style/Theme.LoginApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

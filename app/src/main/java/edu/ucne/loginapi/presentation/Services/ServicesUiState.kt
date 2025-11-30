@@ -1,5 +1,3 @@
-package edu.ucne.loginapi.presentation.Services
-
 data class ServicesUiState(
     val isLoading: Boolean = true,
     val services: List<ServiceItem> = emptyList(),
@@ -13,7 +11,9 @@ data class ServiceItem(
     val category: ServiceCategory,
     val description: String,
     val distanceText: String,
-    val isOpen: Boolean
+    val isOpen: Boolean,
+    val latitude: Double,
+    val longitude: Double
 )
 
 enum class ServiceCategory {

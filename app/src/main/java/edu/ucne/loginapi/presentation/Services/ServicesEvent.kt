@@ -1,7 +1,10 @@
 package edu.ucne.loginapi.presentation.Services
 
+import ServiceCategory
+
 sealed interface ServicesEvent {
-    object LoadInitialData : ServicesEvent
+    data object LoadInitialData : ServicesEvent
     data class OnCategorySelected(val category: ServiceCategory?) : ServicesEvent
-    object OnUserMessageShown : ServicesEvent
+    data class OnServiceClicked(val id: String) : ServicesEvent
+    data object OnUserMessageShown : ServicesEvent
 }
