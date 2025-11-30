@@ -2,6 +2,7 @@
 
 package edu.ucne.loginapi.presentation.maintenance
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -43,14 +45,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.loginapi.domain.model.MaintenanceTask
-import androidx.compose.ui.text.input.KeyboardType
+import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -114,18 +119,9 @@ fun MaintenanceBody(
         ) {
             when {
                 state.isLoading -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        CircularProgressIndicator()
-                        Text(
-                            text = "Cargando recordatorios...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    MyCarLoadingIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
 
                 state.currentCar == null -> {
@@ -374,6 +370,11 @@ fun MaintenanceCreateSheet(
         "Revisión general"
     )
 
+    val context = LocalContext.current
+    val dateFormatter = remember {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -428,6 +429,45 @@ fun MaintenanceCreateSheet(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
+
+        OutlinedTextField(
+            value = state.newTaskDueDateText,
+            onValueChange = {},
+            label = { Text("Fecha objetivo (opcional)") },
+            placeholder = { Text("Selecciona una fecha") },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                if (state.newTaskDueDateMillis != null) {
+                    TextButton(onClick = { onEvent(MaintenanceEvent.OnClearNewDueDate) }) {
+                        Text("Limpiar")
+                    }
+                }
+            }
+        )
+
+        Button(
+            onClick = {
+                val calendar = Calendar.getInstance()
+                DatePickerDialog(
+                    context,
+                    { _, year, month, dayOfMonth ->
+                        val cal = Calendar.getInstance()
+                        cal.set(year, month, dayOfMonth, 0, 0, 0)
+                        cal.set(Calendar.MILLISECOND, 0)
+                        val millis = cal.timeInMillis
+                        val formatted = dateFormatter.format(Date(millis))
+                        onEvent(MaintenanceEvent.OnNewDueDateSelected(millis, formatted))
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+                ).show()
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Seleccionar fecha")
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 

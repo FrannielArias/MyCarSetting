@@ -7,11 +7,16 @@ sealed interface MaintenanceEvent {
     object Refresh : MaintenanceEvent
     object ShowCreateSheet : MaintenanceEvent
     object HideCreateSheet : MaintenanceEvent
+
     data class OnNewTitleChange(val value: String) : MaintenanceEvent
     data class OnNewDescriptionChange(val value: String) : MaintenanceEvent
     data class OnNewDueMileageChange(val value: String) : MaintenanceEvent
+    data class OnNewDueDateSelected(val millis: Long, val formatted: String) : MaintenanceEvent
+    object OnClearNewDueDate : MaintenanceEvent
+
     data class OnCompleteTask(val taskId: String) : MaintenanceEvent
     data class OnDeleteTask(val taskId: String) : MaintenanceEvent
     data class OnTaskClicked(val task: MaintenanceTask) : MaintenanceEvent
+
     object OnUserMessageShown : MaintenanceEvent
 }

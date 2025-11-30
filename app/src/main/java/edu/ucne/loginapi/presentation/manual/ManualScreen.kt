@@ -40,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.loginapi.domain.model.GuideArticle
 import edu.ucne.loginapi.domain.model.WarningLight
+import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 
 @Composable
 fun ManualScreen(
@@ -86,18 +87,9 @@ fun ManualBody(
                 .fillMaxSize()
         ) {
             if (state.isLoading) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CircularProgressIndicator()
-                    Text(
-                        text = "Cargando información...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                MyCarLoadingIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
             } else {
                 ManualContent(state = state, onEvent = onEvent)
 

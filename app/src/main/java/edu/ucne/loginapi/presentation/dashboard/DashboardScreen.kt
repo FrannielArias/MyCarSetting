@@ -16,10 +16,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -39,11 +39,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.loginapi.domain.model.MaintenanceTask
+import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onNavigateToMaintenance: () -> Unit,
+    onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -56,6 +62,7 @@ fun DashboardScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateToMaintenance = onNavigateToMaintenance,
+        onNavigateToHistory = onNavigateToHistory,
         onNavigateToProfile = onNavigateToProfile
     )
 }
@@ -65,6 +72,7 @@ fun DashboardBody(
     state: DashboardUiState,
     onEvent: (DashboardEvent) -> Unit,
     onNavigateToMaintenance: () -> Unit,
+    onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
     val snackState = remember { SnackbarHostState() }
@@ -79,53 +87,52 @@ fun DashboardBody(
     Scaffold(
         snackbarHost = { SnackbarHost(snackState) }
     ) { padding ->
-        when {
-            state.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
+            when {
+                state.isLoading -> {
+                    MyCarLoadingIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
-            }
 
-            state.currentCar == null -> {
-                Box(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                state.currentCar == null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Sin vehículo configurado",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "Configura un vehículo para ver tu garage, recordatorios y recomendaciones.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Button(onClick = onNavigateToProfile) {
-                            Text(text = "Configurar vehículo")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "Sin vehículo configurado",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Configura un vehículo para ver tu garage, recordatorios y recomendaciones.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(onClick = onNavigateToProfile) {
+                                Text(text = "Configurar vehículo")
+                            }
                         }
                     }
                 }
-            }
 
-            else -> {
-                DashboardContent(
-                    state = state,
-                    modifier = Modifier.padding(padding),
-                    onNavigateToMaintenance = onNavigateToMaintenance,
-                    onNavigateToProfile = onNavigateToProfile
-                )
+                else -> {
+                    DashboardContent(
+                        state = state,
+                        onNavigateToMaintenance = onNavigateToMaintenance,
+                        onNavigateToHistory = onNavigateToHistory,
+                        onNavigateToProfile = onNavigateToProfile
+                    )
+                }
             }
         }
     }
@@ -134,12 +141,12 @@ fun DashboardBody(
 @Composable
 fun DashboardContent(
     state: DashboardUiState,
-    modifier: Modifier = Modifier,
     onNavigateToMaintenance: () -> Unit,
+    onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -155,8 +162,11 @@ fun DashboardContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    val userName = state.userName.ifBlank { "Usuario" }
+
                     Text(
-                        text = state.currentCar?.brand ?: "Bienvenido a MyCarSetting",
+                        text = userName,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -175,7 +185,9 @@ fun DashboardContent(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                 Column(
                     modifier = Modifier
@@ -188,19 +200,32 @@ fun DashboardContent(
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    Text(
-                        text = "${state.currentCar?.brand} ${state.currentCar?.model}",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    state.currentCar?.year?.let { year ->
-                        Text(
-                            text = "$year • ${state.currentCar.usageType}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsCar,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = "${state.currentCar?.brand} ${state.currentCar?.model}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            state.currentCar?.year?.let { year ->
+                                Text(
+                                    text = "$year • ${state.currentCar.usageType}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
                     }
+
                     val nextTask = state.upcomingTasks.firstOrNull()
                     if (nextTask != null) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -211,6 +236,13 @@ fun DashboardContent(
                         )
                         Text(
                             text = nextTask.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "No hay mantenimientos próximos",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -228,13 +260,13 @@ fun DashboardContent(
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToMaintenance
                 ) {
-                    Text(text = "Historial Mant.")
+                    Text(text = "Mantenimiento")
                 }
                 FilledTonalButton(
                     modifier = Modifier.weight(1f),
-                    onClick = {}
+                    onClick = onNavigateToHistory
                 ) {
-                    Text(text = "Testigos Tablero")
+                    Text(text = "Historial mant.")
                 }
             }
         }
@@ -248,25 +280,10 @@ fun DashboardContent(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "Próximas tareas: ${state.upcomingTasks.size}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "Tareas vencidas: ${state.overdueTasks.size}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+            MaintenanceStatusCard(
+                upcoming = state.upcomingTasks.size,
+                overdue = state.overdueTasks.size
+            )
         }
 
         item {
@@ -290,31 +307,7 @@ fun DashboardContent(
         }
 
         items(state.upcomingTasks.take(3)) { task ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = task.title,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    task.dueMileageKm?.let {
-                        Text(
-                            text = "A los $it km",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            UpcomingTaskCard(task = task)
         }
 
         if (state.upcomingTasks.isEmpty()) {
@@ -322,6 +315,108 @@ fun DashboardContent(
                 Text(
                     text = "No hay tareas próximas. ¡Tu vehículo está al día!",
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MaintenanceStatusCard(
+    upcoming: Int,
+    overdue: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = MaterialTheme.shapes.extraLarge
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Resumen",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Próximas tareas",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = upcoming.toString(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column {
+                    Text(
+                        text = "Tareas vencidas",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = overdue.toString(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (overdue > 0)
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UpcomingTaskCard(task: MaintenanceTask) {
+    val formatter = remember {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    }
+    val dateText = task.dueDateMillis?.let { millis ->
+        formatter.format(Date(millis))
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = task.title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (task.dueMileageKm != null) {
+                Text(
+                    text = "A los ${task.dueMileageKm} km",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (dateText != null) {
+                Text(
+                    text = "Fecha objetivo: $dateText",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

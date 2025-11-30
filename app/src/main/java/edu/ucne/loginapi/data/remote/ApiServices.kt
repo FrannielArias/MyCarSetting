@@ -129,6 +129,7 @@ interface ManualApiService {
     ): Response<GuideArticleDto>
 }
 
+//Api Vehiculo
 interface VehicleCatalogApiService {
 
     @GET("vehicle/brands")

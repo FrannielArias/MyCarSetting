@@ -13,5 +13,7 @@ data class MaintenanceUiState(
     val newTaskTitle: String = "",
     val newTaskDescription: String = "",
     val newTaskDueMileage: String = "",
+    val newTaskDueDateMillis: Long? = null,
+    val newTaskDueDateText: String = "",
     val userMessage: String? = null
 )

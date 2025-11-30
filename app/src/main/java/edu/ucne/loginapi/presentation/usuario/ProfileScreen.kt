@@ -96,7 +96,8 @@ private fun ProfileBody(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            ),
+            shape = MaterialTheme.shapes.extraLarge
         ) {
             Row(
                 modifier = Modifier
@@ -115,13 +116,13 @@ private fun ProfileBody(
                 ) {
                     Text(
                         text = "Sesión activa",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
                         text = userName,
                         style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
@@ -132,7 +133,8 @@ private fun ProfileBody(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
-            )
+            ),
+            shape = MaterialTheme.shapes.extraLarge
         ) {
             Column(
                 modifier = Modifier

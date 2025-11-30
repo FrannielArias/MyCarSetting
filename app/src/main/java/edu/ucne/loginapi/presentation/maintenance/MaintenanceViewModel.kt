@@ -14,6 +14,7 @@ import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.CreateMaintenanceTaskLocalUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.DeleteMaintenanceTaskUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.TriggerMaintenanceSyncUseCase
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class MaintenanceViewModel @Inject constructor(
@@ -48,6 +48,7 @@ class MaintenanceViewModel @Inject constructor(
         when (event) {
             is MaintenanceEvent.LoadInitialData -> loadInitialData()
             is MaintenanceEvent.Refresh -> refresh()
+
             is MaintenanceEvent.ShowCreateSheet -> {
                 _state.update { it.copy(showCreateSheet = true) }
             }
@@ -58,7 +59,9 @@ class MaintenanceViewModel @Inject constructor(
                         showCreateSheet = false,
                         newTaskTitle = "",
                         newTaskDescription = "",
-                        newTaskDueMileage = ""
+                        newTaskDueMileage = "",
+                        newTaskDueDateMillis = null,
+                        newTaskDueDateText = ""
                     )
                 }
             }
@@ -75,9 +78,28 @@ class MaintenanceViewModel @Inject constructor(
                 _state.update { it.copy(newTaskDueMileage = event.value) }
             }
 
+            is MaintenanceEvent.OnNewDueDateSelected -> {
+                _state.update {
+                    it.copy(
+                        newTaskDueDateMillis = event.millis,
+                        newTaskDueDateText = event.formatted
+                    )
+                }
+            }
+
+            is MaintenanceEvent.OnClearNewDueDate -> {
+                _state.update {
+                    it.copy(
+                        newTaskDueDateMillis = null,
+                        newTaskDueDateText = ""
+                    )
+                }
+            }
+
             is MaintenanceEvent.OnCompleteTask -> completeTask(event.taskId)
             is MaintenanceEvent.OnDeleteTask -> deleteTask(event.taskId)
             is MaintenanceEvent.OnTaskClicked -> Unit
+
             is MaintenanceEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -162,10 +184,10 @@ class MaintenanceViewModel @Inject constructor(
 
         val task = MaintenanceTask(
             carId = current.id,
-            type = MaintenanceType.OIL_CHANGE,
+            type = edu.ucne.loginapi.domain.model.MaintenanceType.OIL_CHANGE,
             title = title,
             description = _state.value.newTaskDescription.ifBlank { null },
-            dueDateMillis = null,
+            dueDateMillis = _state.value.newTaskDueDateMillis,
             dueMileageKm = mileage,
             status = MaintenanceStatus.UPCOMING,
             createdAtMillis = now,
@@ -182,6 +204,8 @@ class MaintenanceViewModel @Inject constructor(
                             newTaskTitle = "",
                             newTaskDescription = "",
                             newTaskDueMileage = "",
+                            newTaskDueDateMillis = null,
+                            newTaskDueDateText = "",
                             userMessage = "Tarea creada localmente"
                         )
                     }

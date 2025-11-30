@@ -5,6 +5,7 @@ import edu.ucne.loginapi.domain.model.UserCar
 
 data class DashboardUiState(
     val isLoading: Boolean = true,
+    val userName: String = "",
     val isRefreshing: Boolean = false,
     val currentCar: UserCar? = null,
     val upcomingTasks: List<MaintenanceTask> = emptyList(),

@@ -46,13 +46,13 @@ fun MyCarSettingNavHost(
         composable(AppDestination.Login.route) {
             UsuariosScreen(navController = navController)
         }
-        composable(AppDestination.Register.route) {
-            RegisterScreen(navController = navController)
-        }
         composable(AppDestination.Dashboard.route) {
             DashboardScreen(
                 onNavigateToMaintenance = {
                     navController.navigate(AppDestination.Maintenance.route)
+                },
+                onNavigateToHistory = {
+                    navController.navigate(AppDestination.History.route)
                 },
                 onNavigateToProfile = {
                     navController.navigate(AppDestination.Profile.route)

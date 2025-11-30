@@ -3,9 +3,11 @@ package edu.ucne.loginapi.presentation.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,13 +15,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getCurrentCarUseCase: GetCurrentCarUseCase,
     private val observeUpcomingTasksForCarUseCase: ObserveUpcomingTasksForCarUseCase,
-    private val observeOverdueTasksForCarUseCase: ObserveOverdueTasksForCarUseCase
+    private val observeOverdueTasksForCarUseCase: ObserveOverdueTasksForCarUseCase,
+    private val getSessionUseCase: GetSessionUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardUiState())
@@ -29,6 +31,7 @@ class DashboardViewModel @Inject constructor(
     private var overdueJob: Job? = null
 
     init {
+        observeSession()                 // 👈 nuevo
         onEvent(DashboardEvent.LoadInitialData)
     }
 
@@ -38,6 +41,14 @@ class DashboardViewModel @Inject constructor(
             DashboardEvent.Refresh -> refresh()
             DashboardEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
+            }
+        }
+    }
+
+    private fun observeSession() {
+        viewModelScope.launch {
+            getSessionUseCase().collectLatest { session ->
+                _state.update { it.copy(userName = session?.userName.orEmpty()) }
             }
         }
     }
