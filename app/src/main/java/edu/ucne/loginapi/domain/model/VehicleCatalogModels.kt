@@ -1,19 +1,19 @@
 package edu.ucne.loginapi.domain.model
 
 data class VehicleBrand(
-    val id: String,
+    val id: Int,
     val name: String
 )
 
 data class VehicleModel(
-    val id: String,
-    val brandId: String,
+    val id: Int,
+    val brandId: Int,
     val name: String
 )
 
 data class VehicleYearRange(
-    val id: String,
-    val modelId: String,
+    val id: Int,
+    val modelId: Int,
     val fromYear: Int,
     val toYear: Int
 ) {
