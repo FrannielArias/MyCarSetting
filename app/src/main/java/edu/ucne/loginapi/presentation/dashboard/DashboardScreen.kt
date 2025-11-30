@@ -49,6 +49,7 @@ import java.util.Locale
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onNavigateToMaintenance: () -> Unit,
+    onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -61,6 +62,7 @@ fun DashboardScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateToMaintenance = onNavigateToMaintenance,
+        onNavigateToHistory = onNavigateToHistory,
         onNavigateToProfile = onNavigateToProfile
     )
 }
@@ -70,6 +72,7 @@ fun DashboardBody(
     state: DashboardUiState,
     onEvent: (DashboardEvent) -> Unit,
     onNavigateToMaintenance: () -> Unit,
+    onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
     val snackState = remember { SnackbarHostState() }
@@ -126,6 +129,7 @@ fun DashboardBody(
                     DashboardContent(
                         state = state,
                         onNavigateToMaintenance = onNavigateToMaintenance,
+                        onNavigateToHistory = onNavigateToHistory,
                         onNavigateToProfile = onNavigateToProfile
                     )
                 }
@@ -138,6 +142,7 @@ fun DashboardBody(
 fun DashboardContent(
     state: DashboardUiState,
     onNavigateToMaintenance: () -> Unit,
+    onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
     LazyColumn(
@@ -174,7 +179,6 @@ fun DashboardContent(
                 }
             }
         }
-
 
         item {
             Card(
@@ -256,13 +260,13 @@ fun DashboardContent(
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToMaintenance
                 ) {
-                    Text(text = "Historial Mant.")
+                    Text(text = "Mantenimiento")
                 }
                 FilledTonalButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { onNavigateToMaintenance() }
+                    onClick = onNavigateToHistory
                 ) {
-                    Text(text = "Testigos Tablero")
+                    Text(text = "Historial mant.")
                 }
             }
         }

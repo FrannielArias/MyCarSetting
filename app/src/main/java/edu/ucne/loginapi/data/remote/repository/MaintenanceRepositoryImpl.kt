@@ -27,12 +27,21 @@ class MaintenanceRepositoryImpl @Inject constructor(
 
     override fun observeUpcomingTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
         observeTasksForCar(carId).map { tasks ->
-            tasks.filter { it.status == MaintenanceStatus.UPCOMING }
+            val now = System.currentTimeMillis()
+            tasks.filter { task ->
+                task.status != MaintenanceStatus.COMPLETED &&
+                        (task.dueDateMillis == null || task.dueDateMillis >= now)
+            }
         }
 
     override fun observeOverdueTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
         observeTasksForCar(carId).map { tasks ->
-            tasks.filter { it.status == MaintenanceStatus.OVERDUE }
+            val now = System.currentTimeMillis()
+            tasks.filter { task ->
+                task.status != MaintenanceStatus.COMPLETED &&
+                        task.dueDateMillis != null &&
+                        task.dueDateMillis < now
+            }
         }
 
     override suspend fun getTaskById(id: String): MaintenanceTask? =
@@ -69,8 +78,19 @@ class MaintenanceRepositoryImpl @Inject constructor(
             status = MaintenanceStatus.COMPLETED,
             updatedAtMillis = completionDateMillis
         )
-
         taskDao.upsert(updated.toEntity())
+
+        val historyRecord = MaintenanceHistory(
+            carId = task.carId,
+            taskType = task.type,
+            serviceDateMillis = completionDateMillis,
+            mileageKm = task.dueMileageKm,
+            cost = null,
+            workshopName = null,
+            notes = task.title
+        )
+        historyDao.upsert(historyRecord.toEntity())
+
         return Resource.Success(Unit)
     }
 
@@ -80,7 +100,6 @@ class MaintenanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun postPendingTasks(): Resource<Unit> {
-        // Aquí iría la lógica de sync con API si la necesitas
         return Resource.Success(Unit)
     }
 
