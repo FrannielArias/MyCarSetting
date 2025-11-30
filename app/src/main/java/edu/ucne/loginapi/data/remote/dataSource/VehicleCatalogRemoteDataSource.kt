@@ -11,7 +11,6 @@ import javax.inject.Inject
 class VehicleCatalogRemoteDataSource @Inject constructor(
     private val api: VehicleCatalogApiService
 ) {
-
     companion object {
         private const val NETWORK_ERROR_MESSAGE = "Error de red"
         private const val EMPTY_RESPONSE_MESSAGE = "Respuesta vacía"
@@ -31,9 +30,10 @@ class VehicleCatalogRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getModels(brandId: String): Resource<List<VehicleModel>> {
+    // ✅ Corregido: brandId es Int
+    suspend fun getModelsByBrand(brandId: Int): Resource<List<VehicleModel>> {
         return try {
-            val response = api.getModels(brandId)
+            val response = api.getModelsByBrand(brandId)
             if (response.isSuccessful) {
                 val body = response.body().orEmpty()
                 Resource.Success(body.map { it.toDomain() })
@@ -45,9 +45,10 @@ class VehicleCatalogRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getYearRanges(modelId: String): Resource<List<VehicleYearRange>> {
+    // ✅ Corregido: modelId es Int
+    suspend fun getYearRangesByModel(modelId: Int): Resource<List<VehicleYearRange>> {
         return try {
-            val response = api.getYearRanges(modelId)
+            val response = api.getYearRangesByModel(modelId)
             if (response.isSuccessful) {
                 val body = response.body().orEmpty()
                 Resource.Success(body.map { it.toDomain() })
