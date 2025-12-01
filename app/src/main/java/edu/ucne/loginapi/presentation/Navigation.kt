@@ -23,7 +23,17 @@ sealed class AppDestination(val route: String) {
     object Login : AppDestination("login")
     object Register : AppDestination("register")
     object Dashboard : AppDestination("dashboard")
-    object Maintenance : AppDestination("maintenance")
+
+    object Maintenance : AppDestination("maintenance") {
+        fun createRoute(taskId: String? = null): String {
+            return if (taskId.isNullOrBlank()) {
+                route
+            } else {
+                "$route?taskId=$taskId"
+            }
+        }
+    }
+
     object UserCar : AppDestination("user_car")
     object History : AppDestination("history")
     object Manual : AppDestination("manual")
@@ -55,19 +65,32 @@ fun MyCarSettingNavHost(
         }
         composable(AppDestination.Dashboard.route) {
             DashboardScreen(
-                onNavigateToMaintenance = {
-                    navController.navigate(AppDestination.Maintenance.route)
+                onNavigateToMaintenance = { taskId ->
+                    navController.navigate(AppDestination.Maintenance.createRoute(taskId))
                 },
                 onNavigateToHistory = {
                     navController.navigate(AppDestination.History.route)
                 },
                 onNavigateToProfile = {
                     navController.navigate(AppDestination.Profile.route)
+                },
+                onNavigateToChat = { conversationId ->
+                    navController.navigate(AppDestination.Chat.createRoute(conversationId))
                 }
             )
         }
-        composable(AppDestination.Maintenance.route) {
-            MaintenanceScreen()
+        composable(
+            route = AppDestination.Maintenance.route + "?taskId={taskId}",
+            arguments = listOf(
+                navArgument("taskId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")
+            MaintenanceScreen(focusedTaskId = taskId)
         }
         composable(AppDestination.UserCar.route) {
             UserCarScreen()

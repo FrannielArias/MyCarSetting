@@ -215,9 +215,6 @@ private fun UserCarItem(
     }
 }
 
-// ========================================
-// NUEVO SHEET CON DATOS DE API
-// ========================================
 @Composable
 private fun NewCarSheet(
     state: UserCarUiState,
@@ -299,10 +296,6 @@ private fun NewCarSheet(
         }
     }
 }
-
-// ========================================
-// DROPDOWNS ACTUALIZADOS CON DATOS REALES
-// ========================================
 
 @Composable
 private fun VehicleBrandDropdown(

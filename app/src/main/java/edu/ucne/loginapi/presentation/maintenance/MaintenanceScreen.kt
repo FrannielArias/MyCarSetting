@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -61,7 +61,8 @@ import java.util.Locale
 
 @Composable
 fun MaintenanceScreen(
-    viewModel: MaintenanceViewModel = hiltViewModel()
+    viewModel: MaintenanceViewModel = hiltViewModel(),
+    focusedTaskId: String? = null
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -71,6 +72,7 @@ fun MaintenanceScreen(
 
     MaintenanceBody(
         state = state,
+        focusedTaskId = focusedTaskId,
         onEvent = viewModel::onEvent,
         onCreateTask = { viewModel.createTask() }
     )
@@ -79,6 +81,7 @@ fun MaintenanceScreen(
 @Composable
 fun MaintenanceBody(
     state: MaintenanceUiState,
+    focusedTaskId: String? = null,
     onEvent: (MaintenanceEvent) -> Unit,
     onCreateTask: () -> Unit
 ) {
@@ -139,6 +142,7 @@ fun MaintenanceBody(
                 else -> {
                     MaintenanceContent(
                         state = state,
+                        focusedTaskId = focusedTaskId,
                         onEvent = onEvent
                     )
                 }
@@ -163,6 +167,7 @@ fun MaintenanceBody(
 @Composable
 fun MaintenanceContent(
     state: MaintenanceUiState,
+    focusedTaskId: String?,
     onEvent: (MaintenanceEvent) -> Unit
 ) {
     val overdueTasks = state.overdueTasks
@@ -185,6 +190,7 @@ fun MaintenanceContent(
                 MaintenanceTaskItem(
                     task = task,
                     isOverdue = true,
+                    isFocused = task.id == focusedTaskId,
                     onComplete = { onEvent(MaintenanceEvent.OnCompleteTask(task.id)) },
                     onDelete = { onEvent(MaintenanceEvent.OnDeleteTask(task.id)) }
                 )
@@ -202,6 +208,7 @@ fun MaintenanceContent(
                 MaintenanceTaskItem(
                     task = task,
                     isOverdue = false,
+                    isFocused = task.id == focusedTaskId,
                     onComplete = { onEvent(MaintenanceEvent.OnCompleteTask(task.id)) },
                     onDelete = { onEvent(MaintenanceEvent.OnDeleteTask(task.id)) }
                 )
@@ -241,17 +248,39 @@ fun MaintenanceContent(
 fun MaintenanceTaskItem(
     task: MaintenanceTask,
     isOverdue: Boolean,
+    isFocused: Boolean,
     onComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val containerColor =
+        if (isFocused) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surface
+
+    val contentColor =
+        if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer
+        else MaterialTheme.colorScheme.onSurface
+
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            if (isFocused) {
+                Text(
+                    text = "Sugerido desde el panel",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -259,6 +288,7 @@ fun MaintenanceTaskItem(
                 TaskDetails(
                     task = task,
                     isOverdue = isOverdue,
+                    isFocused = isFocused,
                     modifier = Modifier.weight(1f)
                 )
                 TaskActions(
@@ -274,6 +304,7 @@ fun MaintenanceTaskItem(
 private fun TaskDetails(
     task: MaintenanceTask,
     isOverdue: Boolean,
+    isFocused: Boolean,
     modifier: Modifier = Modifier
 ) {
     val dateText = task.dueDateMillis?.let {
@@ -318,10 +349,10 @@ private fun TaskDetails(
         }
 
         if (task.dueMileageKm != null) {
-            val textColor = if (isOverdue) {
-                MaterialTheme.colorScheme.error
-            } else {
-                MaterialTheme.colorScheme.primary
+            val textColor = when {
+                isOverdue -> MaterialTheme.colorScheme.error
+                isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
+                else -> MaterialTheme.colorScheme.primary
             }
 
             Text(

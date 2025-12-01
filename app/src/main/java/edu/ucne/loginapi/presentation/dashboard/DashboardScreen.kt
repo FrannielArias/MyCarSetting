@@ -2,6 +2,7 @@
 
 package edu.ucne.loginapi.presentation.dashboard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -40,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.loginapi.domain.model.MaintenanceTask
+import edu.ucne.loginapi.domain.model.VehicleAlert
+import edu.ucne.loginapi.domain.model.VehicleAlertLevel
 import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -48,9 +52,10 @@ import java.util.Locale
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onNavigateToMaintenance: () -> Unit,
+    onNavigateToMaintenance: (String?) -> Unit,
     onNavigateToHistory: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToChat: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -63,7 +68,8 @@ fun DashboardScreen(
         onEvent = viewModel::onEvent,
         onNavigateToMaintenance = onNavigateToMaintenance,
         onNavigateToHistory = onNavigateToHistory,
-        onNavigateToProfile = onNavigateToProfile
+        onNavigateToProfile = onNavigateToProfile,
+        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -71,9 +77,10 @@ fun DashboardScreen(
 fun DashboardBody(
     state: DashboardUiState,
     onEvent: (DashboardEvent) -> Unit,
-    onNavigateToMaintenance: () -> Unit,
+    onNavigateToMaintenance: (String?) -> Unit,
     onNavigateToHistory: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToChat: (String) -> Unit
 ) {
     val snackState = remember { SnackbarHostState() }
 
@@ -130,7 +137,8 @@ fun DashboardBody(
                         state = state,
                         onNavigateToMaintenance = onNavigateToMaintenance,
                         onNavigateToHistory = onNavigateToHistory,
-                        onNavigateToProfile = onNavigateToProfile
+                        onNavigateToProfile = onNavigateToProfile,
+                        onNavigateToChat = onNavigateToChat
                     )
                 }
             }
@@ -141,10 +149,15 @@ fun DashboardBody(
 @Composable
 fun DashboardContent(
     state: DashboardUiState,
-    onNavigateToMaintenance: () -> Unit,
+    onNavigateToMaintenance: (String?) -> Unit,
     onNavigateToHistory: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToChat: (String) -> Unit
 ) {
+    val conversationId = remember(state.currentCar?.id) {
+        "maintenance_${state.currentCar?.id ?: "default"}"
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -258,7 +271,7 @@ fun DashboardContent(
             ) {
                 FilledTonalButton(
                     modifier = Modifier.weight(1f),
-                    onClick = onNavigateToMaintenance
+                    onClick = { onNavigateToMaintenance(null) }
                 ) {
                     Text(text = "Mantenimiento")
                 }
@@ -273,23 +286,87 @@ fun DashboardContent(
 
         item {
             Text(
-                text = "Estado del mantenimiento",
+                text = "Salud del mantenimiento",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
         item {
-            MaintenanceStatusCard(
+            VehicleHealthCard(
                 upcoming = state.upcomingTasks.size,
                 overdue = state.overdueTasks.size
             )
         }
 
         item {
+            Text(
+                text = "Alertas inteligentes",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        items(state.alerts.take(3)) { alert ->
+            VehicleAlertCard(
+                alert = alert,
+                onClick = { onNavigateToMaintenance(alert.relatedTaskId) }
+            )
+        }
+
+        if (state.alerts.isEmpty()) {
+            item {
+                Text(
+                    text = "No hay alertas por el momento.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        item {
+            Text(
+                text = "Asistente de mantenimiento",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToChat(conversationId) },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                shape = MaterialTheme.shapes.large,
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Habla con el asistente",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Haz preguntas sobre tus tareas próximas, vencidas y el mantenimiento de tu vehículo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        item {
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onNavigateToMaintenance
+                onClick = { onNavigateToMaintenance(null) }
             ) {
                 Text(
                     text = "Gestionar mantenimiento",
@@ -319,14 +396,55 @@ fun DashboardContent(
                 )
             }
         }
+
+        item {
+            Text(
+                text = "Tareas vencidas más urgentes",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        items(state.overdueTasks.take(3)) { task ->
+            OverdueTaskCard(
+                task = task,
+                onClick = { onNavigateToMaintenance(task.id) }
+            )
+        }
+
+        if (state.overdueTasks.isEmpty()) {
+            item {
+                Text(
+                    text = "No tienes tareas vencidas. ¡Buen trabajo!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun MaintenanceStatusCard(
+private fun VehicleHealthCard(
     upcoming: Int,
     overdue: Int
 ) {
+    val totalTasks = upcoming + overdue
+    val rawScore = when {
+        totalTasks == 0 -> 100
+        overdue == 0 -> 90
+        else -> (90 - overdue * 15).coerceIn(20, 90)
+    }
+    val healthScore = rawScore.coerceIn(0, 100)
+    val progress = healthScore / 100f
+
+    val statusText = when {
+        healthScore >= 90 -> "Excelente"
+        healthScore >= 75 -> "Bueno"
+        healthScore >= 55 -> "Regular"
+        else -> "Crítico"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -338,13 +456,52 @@ private fun MaintenanceStatusCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Resumen",
+                text = "Panel de salud del vehículo",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "$healthScore%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(2f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                    )
+                    Text(
+                        text = "Basado en tareas próximas y vencidas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -376,6 +533,49 @@ private fun MaintenanceStatusCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun VehicleAlertCard(
+    alert: VehicleAlert,
+    onClick: () -> Unit
+) {
+    val (background, foreground) = when (alert.level) {
+        VehicleAlertLevel.CRITICAL -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        VehicleAlertLevel.IMPORTANT -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        VehicleAlertLevel.RECOMMENDATION -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        VehicleAlertLevel.INFO -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = background
+        ),
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = alert.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = foreground
+            )
+            Text(
+                text = alert.message,
+                style = MaterialTheme.typography.bodySmall,
+                color = foreground
+            )
         }
     }
 }
@@ -420,6 +620,62 @@ private fun UpcomingTaskCard(task: MaintenanceTask) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun OverdueTaskCard(
+    task: MaintenanceTask,
+    onClick: () -> Unit
+) {
+    val formatter = remember {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    }
+    val dateText = task.dueDateMillis?.let { millis ->
+        formatter.format(Date(millis))
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = task.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            if (task.dueMileageKm != null) {
+                Text(
+                    text = "A los ${task.dueMileageKm} km",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            if (dateText != null) {
+                Text(
+                    text = "Vencida desde: $dateText",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            Text(
+                text = "Recomendación: atiende esta tarea lo antes posible.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
         }
     }
 }
