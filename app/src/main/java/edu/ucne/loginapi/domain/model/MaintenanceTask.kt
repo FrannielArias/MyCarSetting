@@ -11,6 +11,7 @@ data class MaintenanceTask(
     val description: String?,
     val dueDateMillis: Long?,
     val dueMileageKm: Int?,
+    val severity: MaintenanceSeverity = MaintenanceSeverity.MEDIUM,
     val status: MaintenanceStatus,
     val createdAtMillis: Long,
     val updatedAtMillis: Long,
@@ -38,4 +39,11 @@ enum class MaintenanceStatus {
     UPCOMING,
     OVERDUE,
     COMPLETED
+}
+
+enum class MaintenanceSeverity {
+    LOW,
+    MEDIUM,
+    HIGH,
+    CRITICAL
 }

@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
-class ChatSyncWorker(
-    context: Context,
+class SyncWorker(
+    appContext: Context,
     params: WorkerParameters
-) : CoroutineWorker(context, params) {
+) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
         return Result.success()

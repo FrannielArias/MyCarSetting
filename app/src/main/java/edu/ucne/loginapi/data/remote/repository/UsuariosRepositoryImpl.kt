@@ -38,16 +38,34 @@ class UsuariosRepositoryImpl @Inject constructor(
             if (usuarios.usuarioId != null && usuarios.usuarioId != 0) {
                 Log.d("UsuariosRepository", "Actualizando usuario con ID: ${usuarios.usuarioId}")
                 remoteDataSource.updateUsuarios(dto)
+                Log.d("UsuariosRepository", "Actualizado exitosamente")
+                Resource.Success(Unit)
             } else {
+                Log.d("UsuariosRepository", "Validando nombre de usuario único: ${usuarios.userName}")
+
+                val existingUsuarios = remoteDataSource.getUsuarios()
+                val userNameAlreadyExists = existingUsuarios.any { existing ->
+                    existing.userName.trim().equals(usuarios.userName.trim(), ignoreCase = true)
+                }
+
+                if (userNameAlreadyExists) {
+                    Log.d("UsuariosRepository", "Nombre de usuario ya existe en la API")
+                    return Resource.Error("El nombre de usuario ya está en uso")
+                }
+
                 Log.d("UsuariosRepository", "Creando nuevo usuario")
                 remoteDataSource.saveUsuarios(dto)
+                Log.d("UsuariosRepository", "Creado exitosamente")
+                Resource.Success(Unit)
             }
-
-            Log.d("UsuariosRepository", "Guardado exitosamente")
-            Resource.Success(Unit)
         } catch (e: HttpException) {
-            Log.e("UsuariosRepository", "HTTP Error: ${e.code()} - ${e.message()}")
-            Resource.Error("Error de servidor: ${e.message}")
+            Log.e("UsuariosRepository", "HTTP Error: ${e.code()} - ${e.message()}", e)
+            val message = when (e.code()) {
+                409 -> "El nombre de usuario ya está en uso"
+                400 -> "Datos inválidos, verifica la información"
+                else -> "Error de servidor: ${e.message()}"
+            }
+            Resource.Error(message)
         } catch (e: Exception) {
             Log.e("UsuariosRepository", "Error: ${e.message}", e)
             Resource.Error("Error desconocido: ${e.localizedMessage}")

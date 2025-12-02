@@ -1,12 +1,13 @@
-package edu.ucne.loginapi.data.repository
+package edu.ucne.loginapi.data.remote.repository
 
 import edu.ucne.loginapi.data.dao.MaintenanceHistoryDao
 import edu.ucne.loginapi.data.dao.MaintenanceTaskDao
-import edu.ucne.loginapi.data.remote.dataSource.MaintenanceRemoteDataSource
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.remote.dataSource.MaintenanceRemoteDataSource
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
+import edu.ucne.loginapi.domain.model.MaintenanceStatus
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceRepository
@@ -25,10 +26,23 @@ class MaintenanceRepositoryImpl @Inject constructor(
         taskDao.observeTasksForCar(carId).map { list -> list.map { it.toDomain() } }
 
     override fun observeUpcomingTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
-        observeTasksForCar(carId)
+        observeTasksForCar(carId).map { tasks ->
+            val now = System.currentTimeMillis()
+            tasks.filter { task ->
+                task.status != MaintenanceStatus.COMPLETED &&
+                        (task.dueDateMillis == null || task.dueDateMillis >= now)
+            }
+        }
 
     override fun observeOverdueTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
-        observeTasksForCar(carId)
+        observeTasksForCar(carId).map { tasks ->
+            val now = System.currentTimeMillis()
+            tasks.filter { task ->
+                task.status != MaintenanceStatus.COMPLETED &&
+                        task.dueDateMillis != null &&
+                        task.dueDateMillis < now
+            }
+        }
 
     override suspend fun getTaskById(id: String): MaintenanceTask? =
         taskDao.getTaskById(id)?.toDomain()
@@ -53,7 +67,30 @@ class MaintenanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun markTaskCompleted(taskId: String, completionDateMillis: Long): Resource<Unit> {
+    override suspend fun markTaskCompleted(
+        taskId: String,
+        completionDateMillis: Long
+    ): Resource<Unit> {
+        val task = getTaskById(taskId)
+            ?: return Resource.Error("La tarea no existe")
+
+        val updated = task.copy(
+            status = MaintenanceStatus.COMPLETED,
+            updatedAtMillis = completionDateMillis
+        )
+        taskDao.upsert(updated.toEntity())
+
+        val historyRecord = MaintenanceHistory(
+            carId = task.carId,
+            taskType = task.type,
+            serviceDateMillis = completionDateMillis,
+            mileageKm = task.dueMileageKm,
+            cost = null,
+            workshopName = null,
+            notes = task.title
+        )
+        historyDao.upsert(historyRecord.toEntity())
+
         return Resource.Success(Unit)
     }
 
@@ -73,7 +110,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
         historyDao.getHistoryById(id)?.toDomain()
 
     override suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory> {
-        historyDao.insert(record.toEntity())
+        historyDao.upsert(record.toEntity())
         return Resource.Success(record)
     }
 

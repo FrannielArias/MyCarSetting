@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.data
+package edu.ucne.loginapi.data.remote.repository
 
 import edu.ucne.loginapi.data.dao.MaintenanceHistoryDao
 import edu.ucne.loginapi.data.remote.Resource
@@ -6,9 +6,9 @@ import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.data.remote.mappers.toEntity
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class MaintenanceHistoryRepositoryImpl @Inject constructor(
     private val maintenanceHistoryDao: MaintenanceHistoryDao
@@ -26,7 +26,7 @@ class MaintenanceHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory> {
         return try {
-            maintenanceHistoryDao.insert(record.toEntity())
+            maintenanceHistoryDao.upsert(record.toEntity())
             Resource.Success(record)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "Error al guardar historial", record)

@@ -6,7 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,17 +15,16 @@ class SplashViewModel @Inject constructor(
     private val getSessionUseCase: GetSessionUseCase
 ) : ViewModel() {
 
-    private val _startDestination = MutableStateFlow<AppDestination?>(null)
-    val startDestination: StateFlow<AppDestination?> = _startDestination
+    private val _state = MutableStateFlow(SplashUiState())
+    val state: StateFlow<SplashUiState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val session = getSessionUseCase().first()
-            _startDestination.value = if (session.isLoggedIn) {
-                AppDestination.Dashboard
-            } else {
-                AppDestination.Login
-            }
+            val session = getSessionUseCase()
+            _state.value = SplashUiState(
+                isCheckingSession = false,
+                isLoggedIn = session != null
+            )
         }
     }
 }

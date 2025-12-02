@@ -10,7 +10,7 @@ data class MaintenanceHistoryEntity(
     val taskType: String,
     val serviceDateMillis: Long,
     val mileageKm: Int?,
-    val cost: Double?,
     val workshopName: String?,
+    val cost: Double?,
     val notes: String?
 )

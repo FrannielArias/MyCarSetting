@@ -4,20 +4,22 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import edu.ucne.loginapi.data.remote.repository.UsuariosRepositoryImpl
+import edu.ucne.loginapi.data.remote.repository.CarRepositoryImpl
+import edu.ucne.loginapi.data.remote.repository.ChatRepositoryImpl
+import edu.ucne.loginapi.data.remote.repository.MaintenanceRepositoryImpl
+import edu.ucne.loginapi.data.remote.repository.ManualRepositoryImpl
 import edu.ucne.loginapi.data.remote.repository.UserCarRepositoryImpl
-import edu.ucne.loginapi.data.repository.CarRepositoryImpl
-import edu.ucne.loginapi.data.repository.ChatRepositoryImpl
-import edu.ucne.loginapi.data.repository.ManualRepositoryImpl
-import edu.ucne.loginapi.data.repository.MaintenanceRepositoryImpl
+import edu.ucne.loginapi.data.remote.repository.UsuariosRepositoryImpl
+import edu.ucne.loginapi.data.remote.repository.VehicleCatalogRepositoryImpl
 import edu.ucne.loginapi.domain.repository.CarRepository
 import edu.ucne.loginapi.domain.repository.ChatRepository
-import edu.ucne.loginapi.domain.repository.ManualRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
+import edu.ucne.loginapi.domain.repository.ManualRepository
 import edu.ucne.loginapi.domain.repository.UserCarRepository
 import edu.ucne.loginapi.domain.repository.UsuariosRepository
+import edu.ucne.loginapi.domain.repository.VehicleCatalogRepository
 import javax.inject.Singleton
 
 @Module
@@ -55,4 +57,10 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindUserCarRepository(impl: UserCarRepositoryImpl): UserCarRepository
+
+    @Binds
+    abstract fun bindVehicleCatalogRepository(
+        impl: VehicleCatalogRepositoryImpl
+    ): VehicleCatalogRepository
+
 }

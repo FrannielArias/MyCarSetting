@@ -1,10 +1,10 @@
 package edu.ucne.loginapi.data.remote.dataSource
 
-import edu.ucne.loginapi.data.mapper.toCreateRequest
-import edu.ucne.loginapi.data.mapper.toDomain
-import edu.ucne.loginapi.data.mapper.toUpdateRequest
+import edu.ucne.loginapi.data.remote.CarApiService
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.remote.apiService.CarApiService
+import edu.ucne.loginapi.data.remote.mappers.toCreateRequest
+import edu.ucne.loginapi.data.remote.mappers.toDomain
+import edu.ucne.loginapi.data.remote.mappers.toUpdateRequest
 import edu.ucne.loginapi.domain.model.UserCar
 import javax.inject.Inject
 
@@ -15,6 +15,7 @@ class CarRemoteDataSource @Inject constructor(
         private const val NETWORK_ERROR_MESSAGE = "Network error"
         private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
     }
+
     suspend fun getCars(): Resource<List<UserCar>> {
         return try {
             val response = api.getCars()
@@ -39,7 +40,7 @@ class CarRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE )
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 
@@ -66,7 +67,7 @@ class CarRemoteDataSource @Inject constructor(
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?:NETWORK_ERROR_MESSAGE)
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
 

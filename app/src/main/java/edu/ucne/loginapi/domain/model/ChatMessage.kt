@@ -1,17 +1,10 @@
 package edu.ucne.loginapi.domain.model
 
-import java.util.UUID
-
 data class ChatMessage(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String,
     val conversationId: String,
     val role: ChatRole,
     val content: String,
     val timestampMillis: Long,
-    val isPendingCreate: Boolean = false
+    val isPendingSync: Boolean
 )
-
-enum class ChatRole {
-    USER,
-    ASSISTANT
-}

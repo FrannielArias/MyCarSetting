@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase.Usuarios
+package edu.ucne.loginapi.domain.useCase
 
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.Usuarios

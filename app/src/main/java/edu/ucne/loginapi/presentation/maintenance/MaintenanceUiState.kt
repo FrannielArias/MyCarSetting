@@ -1,5 +1,6 @@
 package edu.ucne.loginapi.presentation.maintenance
 
+import edu.ucne.loginapi.domain.model.MaintenanceSeverity
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.model.UserCar
 
@@ -13,5 +14,8 @@ data class MaintenanceUiState(
     val newTaskTitle: String = "",
     val newTaskDescription: String = "",
     val newTaskDueMileage: String = "",
+    val newTaskDueDateMillis: Long? = null,
+    val newTaskDueDateText: String = "",
+    val newTaskSeverity: MaintenanceSeverity = MaintenanceSeverity.MEDIUM,
     val userMessage: String? = null
 )
