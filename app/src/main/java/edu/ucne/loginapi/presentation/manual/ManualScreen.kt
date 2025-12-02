@@ -68,6 +68,7 @@ fun ManualBody(
         }
     }
 
+
     Scaffold(
         topBar = {
             TopAppBar(
