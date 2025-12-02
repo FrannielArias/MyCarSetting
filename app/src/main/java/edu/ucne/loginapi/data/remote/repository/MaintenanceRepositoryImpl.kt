@@ -22,7 +22,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
     private val remote: MaintenanceRemoteDataSource
 ) : MaintenanceRepository, MaintenanceTaskRepository, MaintenanceHistoryRepository {
 
-    override fun observeTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
+    fun observeTasksForCar(carId: Int): Flow<List<MaintenanceTask>> =
         taskDao.observeTasksForCar(carId).map { list -> list.map { it.toDomain() } }
 
     override fun observeUpcomingTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
@@ -34,7 +34,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
             }
         }
 
-    override fun observeOverdueTasksForCar(carId: String): Flow<List<MaintenanceTask>> =
+    override fun observeOverdueTasksForCar(carId: Int): Flow<List<MaintenanceTask>> =
         observeTasksForCar(carId).map { tasks ->
             val now = System.currentTimeMillis()
             tasks.filter { task ->

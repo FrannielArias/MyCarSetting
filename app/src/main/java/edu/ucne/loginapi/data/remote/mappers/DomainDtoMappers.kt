@@ -64,18 +64,6 @@ fun ChatRole.toDto(): String = name
 fun String.toChatRole(): ChatRole =
     runCatching { ChatRole.valueOf(this) }.getOrElse { ChatRole.ASSISTANT }
 
-fun UserCarDto.toDomain(): UserCar =
-    UserCar(
-        id = id,
-        brand = brand,
-        model = model,
-        year = year,
-        plate = plate,
-        fuelType = fuelType.toFuelType(),
-        usageType = usageType.toUsageType(),
-        isCurrent = isCurrent
-    )
-
 fun UserCar.toDto(): UserCarDto =
     UserCarDto(
         id = id,
@@ -88,6 +76,19 @@ fun UserCar.toDto(): UserCarDto =
         isCurrent = isCurrent
     )
 
+fun UserCarDto.toDomain(): UserCar =
+    UserCar(
+        id = id,
+        brand = brand ?: "",
+        model = model ?: "",
+        year = year,
+        plate = plate,
+        fuelType = (fuelType ?: "GASOLINE").toFuelType(),
+        usageType = (usageType ?: "PERSONAL").toUsageType(),
+        isCurrent = isCurrent,
+        remoteId = remoteId
+    )
+
 fun UserCar.toCreateRequest(): CreateUserCarRequest =
     CreateUserCarRequest(
         brand = brand,
@@ -95,11 +96,13 @@ fun UserCar.toCreateRequest(): CreateUserCarRequest =
         year = year,
         plate = plate,
         fuelType = fuelType.toDto(),
-        usageType = usageType.toDto()
+        usageType = usageType.toDto(),
+        isCurrent = isCurrent
     )
 
 fun UserCar.toUpdateRequest(): UpdateUserCarRequest =
     UpdateUserCarRequest(
+        id = id,
         brand = brand,
         model = model,
         year = year,
@@ -248,6 +251,33 @@ fun ChatResponseDto.toResponseDomain(conversationId: String): ChatMessage =
         isPendingSync = false
     )
 
+fun UserCarEntity.toDomain(): UserCar =
+    UserCar(
+        id = id,
+        brand = brand,
+        model = model,
+        year = year,
+        plate = plate,
+        fuelType = fuelType.toFuelType(),
+        usageType = usageType.toUsageType(),
+        isCurrent = isCurrent,
+        remoteId = remoteId
+    )
+
+fun UserCar.toEntity(): UserCarEntity =
+    UserCarEntity(
+        id = id,
+        brand = brand,
+        model = model,
+        year = year,
+        plate = plate,
+        fuelType = fuelType.toDto(),
+        usageType = usageType.toDto(),
+        isCurrent = isCurrent,
+        remoteId = remoteId,
+        pendingSync = false
+    )
+
 fun UsuariosDto.toDomain(): Usuarios =
     Usuarios(
         usuarioId = usuarioId,
@@ -262,33 +292,6 @@ fun Usuarios.toDto(): UsuariosDto =
         password = password
     )
 
-fun UserCarEntity.toDomain(): UserCar {
-    return UserCar(
-        id = id,
-        brand = brand,
-        model = model,
-        year = year,
-        plate = plate,
-        fuelType = FuelType.valueOf(fuelType),
-        usageType = UsageType.valueOf(usageType),
-        isCurrent = isCurrent,
-        remoteId = remoteId
-    )
-}
-
-fun UserCar.toEntity(): UserCarEntity {
-    return UserCarEntity(
-        id = id,
-        brand = brand,
-        model = model,
-        year = year,
-        plate = plate,
-        fuelType = fuelType.name,
-        usageType = usageType.name,
-        isCurrent = isCurrent,
-        remoteId = remoteId
-    )
-}
 
 fun MaintenanceTaskEntity.toDomain(): MaintenanceTask {
     return MaintenanceTask(

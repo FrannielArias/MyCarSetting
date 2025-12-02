@@ -8,7 +8,7 @@ interface MaintenanceTaskRepository {
 
     fun observeTasksForCar(carId: String): Flow<List<MaintenanceTask>>
     fun observeUpcomingTasksForCar(carId: String): Flow<List<MaintenanceTask>>
-    fun observeOverdueTasksForCar(carId: String): Flow<List<MaintenanceTask>>
+    fun observeOverdueTasksForCar(carId: Int): Flow<List<MaintenanceTask>>
     suspend fun getTaskById(id: String): MaintenanceTask?
     suspend fun createTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask>
     suspend fun updateTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask>
