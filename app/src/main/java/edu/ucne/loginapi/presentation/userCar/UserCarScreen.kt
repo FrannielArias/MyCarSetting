@@ -98,7 +98,7 @@ fun UserCarScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Cargando vehículos...")
+                        CircularProgressIndicator()
                     }
                 }
 
@@ -145,9 +145,9 @@ fun UserCarScreen(
 @Composable
 private fun UserCarList(
     cars: List<UserCar>,
-    currentCarId: String?,
-    onSetCurrent: (String) -> Unit,
-    onDelete: (String) -> Unit
+    currentCarId: Int?,
+    onSetCurrent: (Int) -> Unit,
+    onDelete: (Int) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -202,7 +202,9 @@ private fun UserCarItem(
             IconButton(onClick = onSetCurrent) {
                 Icon(
                     imageVector = if (isCurrent) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = "Seleccionar vehículo actual"
+                    contentDescription = "Seleccionar vehículo actual",
+                    tint = if (isCurrent) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface
                 )
             }
             IconButton(onClick = onDelete) {
@@ -231,7 +233,6 @@ private fun NewCarSheet(
             style = MaterialTheme.typography.titleLarge
         )
 
-        // ✅ Selector de Marca con datos reales de la API
         VehicleBrandDropdown(
             brands = state.brands,
             selectedBrandId = state.selectedBrandId,
@@ -241,7 +242,6 @@ private fun NewCarSheet(
             }
         )
 
-        // ✅ Selector de Modelo (habilitado solo si hay una marca seleccionada)
         VehicleModelDropdown(
             models = state.models,
             selectedModelId = state.selectedModelId,
@@ -251,7 +251,6 @@ private fun NewCarSheet(
             }
         )
 
-        // ✅ Selector de Año (habilitado solo si hay un modelo seleccionado)
         VehicleYearRangeDropdown(
             yearRanges = state.yearRanges,
             selectedYearRangeId = state.selectedYearRangeId,
@@ -294,6 +293,8 @@ private fun NewCarSheet(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -440,7 +441,7 @@ private fun VehicleYearRangeDropdown(
             value = selectedYearRange?.let { "${it.fromYear} - ${it.toYear}" } ?: "",
             onValueChange = {},
             readOnly = true,
-            label = { Text("Año de caja") },
+            label = { Text("Año") },
             placeholder = {
                 when {
                     !enabled -> Text("Primero selecciona un modelo")

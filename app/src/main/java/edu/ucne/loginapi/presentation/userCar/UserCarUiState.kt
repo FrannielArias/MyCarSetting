@@ -13,17 +13,14 @@ data class UserCarUiState(
     val currentCarId: String? = null,
     val showCreateSheet: Boolean = false,
 
-    // ✅ Catálogo de vehículos desde API
     val brands: List<VehicleBrand> = emptyList(),
     val models: List<VehicleModel> = emptyList(),
     val yearRanges: List<VehicleYearRange> = emptyList(),
 
-    // ✅ Selección actual (IDs como Int)
     val selectedBrandId: Int? = null,
     val selectedModelId: Int? = null,
     val selectedYearRangeId: Int? = null,
 
-    // Datos del formulario
     val plate: String = "",
     val fuelType: FuelType = FuelType.GASOLINE,
     val usageType: UsageType = UsageType.PERSONAL,
