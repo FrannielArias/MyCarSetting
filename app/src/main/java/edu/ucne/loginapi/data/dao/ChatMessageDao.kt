@@ -2,7 +2,6 @@ package edu.ucne.loginapi.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import edu.ucne.loginapi.data.entity.ChatMessageEntity
 import kotlinx.coroutines.flow.Flow
@@ -10,15 +9,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChatMessageDao {
 
-    @Query("""
-        SELECT *
-        FROM chat_messages
-        WHERE conversationId = :conversationId
-        ORDER BY timestampMillis ASC
-    """)
+    @Query(
+        "SELECT * FROM chat_messages " +
+                "WHERE conversationId = :conversationId " +
+                "ORDER BY timestamp ASC"
+    )
     fun observeMessages(conversationId: String): Flow<List<ChatMessageEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insertMessage(message: ChatMessageEntity)
 
     @Query("DELETE FROM chat_messages WHERE conversationId = :conversationId")

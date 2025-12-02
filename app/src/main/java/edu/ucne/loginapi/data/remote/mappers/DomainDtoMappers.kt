@@ -359,23 +359,22 @@ fun MaintenanceHistory.toEntity(): MaintenanceHistoryEntity {
 
 fun ChatMessageEntity.toDomain(): ChatMessage {
     return ChatMessage(
-        id = id,
+        id = id.toString(),
         conversationId = conversationId,
         role = role.toChatRole(),
         content = content,
-        timestampMillis = timestampMillis,
-        isPendingSync = isPendingSync
+        timestampMillis = timestamp,
+        isPendingSync = false
     )
 }
 
 fun ChatMessage.toEntity(): ChatMessageEntity {
     return ChatMessageEntity(
-        id = id,
+        id = 0L,
         conversationId = conversationId,
         role = role.name,
         content = content,
-        timestampMillis = timestampMillis,
-        isPendingSync = isPendingSync
+        timestamp = timestampMillis
     )
 }
 

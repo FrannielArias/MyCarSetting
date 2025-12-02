@@ -7,6 +7,7 @@ import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.useCase.MaintenanceHistory.GetMaintenanceHistoryForCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.DeleteMaintenanceRecordUseCase
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class MaintenanceHistoryViewModel @Inject constructor(
@@ -37,6 +37,9 @@ class MaintenanceHistoryViewModel @Inject constructor(
             MaintenanceHistoryEvent.LoadInitialData -> loadInitial()
             MaintenanceHistoryEvent.Refresh -> refresh()
             is MaintenanceHistoryEvent.OnDeleteRecord -> deleteRecord(event.id)
+            is MaintenanceHistoryEvent.OnTypeFilterSelected -> {
+                _state.update { it.copy(selectedType = event.type) }
+            }
             MaintenanceHistoryEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -53,11 +56,7 @@ class MaintenanceHistoryViewModel @Inject constructor(
             if (car != null) {
                 observeHistory(car.id)
             } else {
-                _state.update {
-                    it.copy(
-                        records = emptyList()
-                    )
-                }
+                _state.update { it.copy(records = emptyList()) }
             }
 
             _state.update { it.copy(isLoading = false) }
@@ -74,11 +73,7 @@ class MaintenanceHistoryViewModel @Inject constructor(
             if (car != null) {
                 observeHistory(car.id)
             } else {
-                _state.update {
-                    it.copy(
-                        records = emptyList()
-                    )
-                }
+                _state.update { it.copy(records = emptyList()) }
             }
 
             _state.update { it.copy(isRefreshing = false) }
@@ -101,13 +96,11 @@ class MaintenanceHistoryViewModel @Inject constructor(
                 is Resource.Success -> {
                     _state.update { it.copy(userMessage = "Registro eliminado") }
                 }
-
                 is Resource.Error -> {
                     _state.update {
                         it.copy(userMessage = result.message ?: "Error al eliminar registro")
                     }
                 }
-
                 is Resource.Loading -> Unit
             }
         }

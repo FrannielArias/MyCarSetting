@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,11 +90,15 @@ fun ChatBody(
             ChatContent(
                 messages = state.messages,
                 isLoading = state.isLoading,
-                modifier = Modifier.weight(1f)
+                isSending = state.isSending,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
             )
 
             ChatInputBar(
                 inputText = state.inputText,
+                isSending = state.isSending,
                 onInputChange = { onEvent(ChatEvent.OnInputChange(it)) },
                 onSendMessage = { onEvent(ChatEvent.OnSendMessage) }
             )
@@ -109,12 +114,16 @@ private fun ChatTopBar(onClearConversation: () -> Unit) {
             Column {
                 Text(
                     text = "Asistente MyCarSetting",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = "Describe el ruido, fallo o problema de tu vehículo",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
@@ -133,12 +142,13 @@ private fun ChatTopBar(onClearConversation: () -> Unit) {
 private fun ChatContent(
     messages: List<ChatMessage>,
     isLoading: Boolean,
+    isSending: Boolean,
     modifier: Modifier = Modifier
 ) {
     when {
         isLoading -> {
             Box(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier,
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -156,7 +166,7 @@ private fun ChatContent(
         }
         messages.isEmpty() -> {
             Box(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier,
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -181,43 +191,37 @@ private fun ChatContent(
             }
         }
         else -> {
-            LazyColumn(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(messages, key = { it.id }) { message ->
-                    val isUser = message.role == ChatRole.USER
+            Column(modifier = modifier) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(messages, key = { it.id }) { message ->
+                        ChatMessageBubble(message = message)
+                    }
+                }
+
+                if (isSending) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.85f)
-                                .padding(vertical = 2.dp)
-                                .clip(MaterialTheme.shapes.extraLarge)
-                                .background(
-                                    if (isUser) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.surface
-                                    }
-                                )
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = message.content,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (isUser) {
-                                    MaterialTheme.colorScheme.onPrimary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                }
-                            )
-                        }
+                        CircularProgressIndicator(
+                            modifier = Modifier.width(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Asistente escribiendo...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -226,8 +230,44 @@ private fun ChatContent(
 }
 
 @Composable
+private fun ChatMessageBubble(message: ChatMessage) {
+    val isUser = message.role == ChatRole.USER
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .padding(vertical = 2.dp)
+                .clip(MaterialTheme.shapes.extraLarge)
+                .background(
+                    if (isUser) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    }
+                )
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+        ) {
+            Text(
+                text = message.content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isUser) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
+    }
+}
+
+@Composable
 private fun ChatInputBar(
     inputText: String,
+    isSending: Boolean,
     onInputChange: (String) -> Unit,
     onSendMessage: () -> Unit
 ) {
@@ -243,17 +283,25 @@ private fun ChatInputBar(
             onValueChange = onInputChange,
             modifier = Modifier.weight(1f),
             placeholder = { Text("Describe el ruido, fallo o problema...") },
-            maxLines = 4
+            maxLines = 4,
+            enabled = !isSending
         )
         Spacer(modifier = Modifier.width(8.dp))
         Button(
             onClick = onSendMessage,
-            enabled = inputText.isNotBlank()
+            enabled = inputText.isNotBlank() && !isSending
         ) {
-            Icon(
-                imageVector = Icons.Default.Send,
-                contentDescription = "Enviar"
-            )
+            if (isSending) {
+                CircularProgressIndicator(
+                    modifier = Modifier.width(16.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Enviar"
+                )
+            }
         }
     }
 }

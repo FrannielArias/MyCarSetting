@@ -43,11 +43,10 @@ class ChatViewModel @Inject constructor(
         val currentId = _state.value.conversationId
         if (currentId == conversationId && currentId.isNotBlank()) return
         _state.update { it.copy(conversationId = conversationId) }
-        loadMessages()
+        loadMessages(conversationId)
     }
 
-    private fun loadMessages() {
-        val conversationId = _state.value.conversationId
+    private fun loadMessages(conversationId: String) {
         if (conversationId.isBlank()) return
 
         viewModelScope.launch {
@@ -69,14 +68,21 @@ class ChatViewModel @Inject constructor(
         if (text.isBlank() || conversationId.isBlank()) return
 
         viewModelScope.launch {
-            _state.update { it.copy(inputText = "") }
-            val result = sendChatMessageWithAssistantUseCase(
-                conversationId = conversationId,
-                text = text
-            )
-            if (result is Resource.Error) {
-                _state.update {
-                    it.copy(userMessage = result.message ?: "Error al enviar mensaje")
+            _state.update { it.copy(inputText = "", isSending = true) }
+            when (val result = sendChatMessageWithAssistantUseCase(conversationId, text)) {
+                is Resource.Error -> {
+                    _state.update {
+                        it.copy(
+                            isSending = false,
+                            userMessage = result.message ?: "Error al enviar mensaje"
+                        )
+                    }
+                }
+                is Resource.Success -> {
+                    _state.update { it.copy(isSending = false) }
+                }
+                else -> {
+                    _state.update { it.copy(isSending = false) }
                 }
             }
         }
