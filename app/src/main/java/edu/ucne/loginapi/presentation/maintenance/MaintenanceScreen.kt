@@ -4,6 +4,7 @@ package edu.ucne.loginapi.presentation.maintenance
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -22,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -54,6 +59,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import edu.ucne.loginapi.domain.model.MaintenanceSeverity
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
@@ -259,10 +267,12 @@ private fun MaintenanceSummaryBanner(
     overdueCount: Int,
     upcomingCount: Int
 ) {
-    val (container, content) = when {
-        overdueCount > 0 -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        upcomingCount > 0 -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    val container: Color
+    val content: Color
+    val icon = when {
+        overdueCount > 0 -> Icons.Filled.Warning
+        upcomingCount > 0 -> Icons.Filled.Info
+        else -> Icons.Filled.Check
     }
 
     val title: String
@@ -270,16 +280,22 @@ private fun MaintenanceSummaryBanner(
 
     when {
         overdueCount > 0 -> {
+            container = MaterialTheme.colorScheme.errorContainer
+            content = MaterialTheme.colorScheme.onErrorContainer
             title = "Tienes $overdueCount tareas vencidas"
             message = "Te recomendamos atender al menos una esta semana para evitar problemas en tu vehículo."
         }
 
         upcomingCount > 0 -> {
+            container = MaterialTheme.colorScheme.primaryContainer
+            content = MaterialTheme.colorScheme.onPrimaryContainer
             title = "Tienes $upcomingCount tareas próximas"
             message = "Si las completas a tiempo, mantendrás tu vehículo en buen estado y evitarás fallas futuras."
         }
 
         else -> {
+            container = MaterialTheme.colorScheme.surfaceVariant
+            content = MaterialTheme.colorScheme.onSurfaceVariant
             title = "Todo al día"
             message = "No tienes tareas pendientes. Mantén tus registros actualizados para seguir así."
         }
@@ -291,23 +307,45 @@ private fun MaintenanceSummaryBanner(
             containerColor = container,
             contentColor = content
         ),
-        shape = MaterialTheme.shapes.large
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(content.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = content
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = content
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = content.copy(alpha = 0.9f)
+                )
+            }
         }
     }
 }
@@ -320,49 +358,89 @@ fun MaintenanceTaskItem(
     onComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val containerColor =
-        if (isFocused) MaterialTheme.colorScheme.primaryContainer
-        else MaterialTheme.colorScheme.surface
+    val containerColor = when {
+        isFocused -> MaterialTheme.colorScheme.primaryContainer
+        isOverdue -> MaterialTheme.colorScheme.errorContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
 
-    val contentColor =
-        if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer
-        else MaterialTheme.colorScheme.onSurface
+    val contentColor = when {
+        isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
+        isOverdue -> MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
-        )
+        ),
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (isFocused) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
-                    text = "Sugerido desde el panel",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = task.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = contentColor
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                val statusLabel = if (isOverdue) "Vencida" else "Próxima"
+                val statusColor = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                InfoTag(
+                    text = statusLabel,
+                    background = statusColor.copy(alpha = 0.12f),
+                    contentColor = statusColor
+                )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            if (!task.description.isNullOrBlank()) {
+                Text(
+                    text = task.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = contentColor.copy(alpha = 0.9f)
+                )
+            }
+
+            TaskDetails(
+                task = task,
+                isOverdue = isOverdue,
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                TaskDetails(
-                    task = task,
-                    isOverdue = isOverdue,
-                    isFocused = isFocused,
-                    modifier = Modifier.weight(1f)
-                )
-                TaskActions(
-                    onComplete = onComplete,
-                    onDelete = onDelete
-                )
+                IconButton(onClick = onComplete) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Marcar completada",
+                        tint = contentColor
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Eliminar",
+                        tint = contentColor
+                    )
+                }
             }
         }
     }
@@ -372,7 +450,6 @@ fun MaintenanceTaskItem(
 private fun TaskDetails(
     task: MaintenanceTask,
     isOverdue: Boolean,
-    isFocused: Boolean,
     modifier: Modifier = Modifier
 ) {
     val dateText = task.dueDateMillis?.let {
@@ -381,59 +458,44 @@ private fun TaskDetails(
     }
 
     Column(modifier = modifier) {
-        Text(
-            text = task.title,
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        if (!task.description.isNullOrBlank()) {
-            Text(
-                text = task.description,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
+            InfoTag(
                 text = task.displayType(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                background = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (dateText != null) {
-                Text(
+                InfoTag(
                     text = dateText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    background = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Text(
+            val severityColor = when (task.severity) {
+                MaintenanceSeverity.LOW -> MaterialTheme.colorScheme.primary
+                MaintenanceSeverity.MEDIUM -> MaterialTheme.colorScheme.tertiary
+                MaintenanceSeverity.HIGH -> MaterialTheme.colorScheme.error
+                MaintenanceSeverity.CRITICAL -> MaterialTheme.colorScheme.error
+            }
+
+            InfoTag(
                 text = task.severityLabel(),
-                style = MaterialTheme.typography.bodySmall,
-                color = when (task.severity) {
-                    MaintenanceSeverity.LOW -> MaterialTheme.colorScheme.primary
-                    MaintenanceSeverity.MEDIUM -> MaterialTheme.colorScheme.tertiary
-                    MaintenanceSeverity.HIGH -> MaterialTheme.colorScheme.error
-                    MaintenanceSeverity.CRITICAL -> MaterialTheme.colorScheme.error
-                }
+                background = severityColor.copy(alpha = 0.12f),
+                contentColor = severityColor
             )
         }
 
         if (task.dueMileageKm != null) {
             val textColor = when {
                 isOverdue -> MaterialTheme.colorScheme.error
-                isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
                 else -> MaterialTheme.colorScheme.primary
             }
-
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Próximo a los ${task.dueMileageKm} km",
                 style = MaterialTheme.typography.bodySmall,
@@ -444,25 +506,25 @@ private fun TaskDetails(
 }
 
 @Composable
-private fun TaskActions(
-    onComplete: () -> Unit,
-    onDelete: () -> Unit
+private fun InfoTag(
+    text: String,
+    background: Color,
+    contentColor: Color
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(background)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
     ) {
-        IconButton(onClick = onComplete) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Marcar completada"
-            )
-        }
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Eliminar"
-            )
-        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -641,7 +703,7 @@ fun MaintenanceCreateSheet(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            TextButton(
                 onClick = { onEvent(MaintenanceEvent.HideCreateSheet) },
                 modifier = Modifier.weight(1f)
             ) {
@@ -679,6 +741,7 @@ private fun SeverityChip(
         }
     }
 }
+
 private fun MaintenanceTask.displayType(): String {
     return when (type.name) {
         "OIL_CHANGE" -> "Cambio de aceite"

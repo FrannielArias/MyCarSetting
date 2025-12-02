@@ -13,6 +13,7 @@ data class MaintenanceTaskEntity(
     val description: String?,
     val dueDateMillis: Long?,
     val dueMileageKm: Int?,
+    val severity: String,
     val status: String,
     val createdAtMillis: Long,
     val updatedAtMillis: Long,

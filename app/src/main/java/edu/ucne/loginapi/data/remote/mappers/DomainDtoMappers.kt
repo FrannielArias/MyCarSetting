@@ -2,6 +2,7 @@ package edu.ucne.loginapi.data.remote.mappers
 
 import edu.ucne.loginapi.data.entity.ChatMessageEntity
 import edu.ucne.loginapi.data.entity.MaintenanceHistoryEntity
+import edu.ucne.loginapi.domain.model.MaintenanceSeverity
 import edu.ucne.loginapi.data.entity.MaintenanceTaskEntity
 import edu.ucne.loginapi.data.entity.UserCarEntity
 import edu.ucne.loginapi.data.remote.dto.ChatMessageDto
@@ -299,6 +300,8 @@ fun MaintenanceTaskEntity.toDomain(): MaintenanceTask {
         description = description,
         dueDateMillis = dueDateMillis,
         dueMileageKm = dueMileageKm,
+        severity = runCatching { MaintenanceSeverity.valueOf(severity) }
+            .getOrElse { MaintenanceSeverity.MEDIUM },
         status = MaintenanceStatus.valueOf(status),
         createdAtMillis = createdAtMillis,
         updatedAtMillis = updatedAtMillis,
@@ -318,6 +321,7 @@ fun MaintenanceTask.toEntity(): MaintenanceTaskEntity {
         description = description,
         dueDateMillis = dueDateMillis,
         dueMileageKm = dueMileageKm,
+        severity = severity.name,
         status = status.name,
         createdAtMillis = createdAtMillis,
         updatedAtMillis = updatedAtMillis,

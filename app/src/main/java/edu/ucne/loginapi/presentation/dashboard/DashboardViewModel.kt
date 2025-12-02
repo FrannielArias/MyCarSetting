@@ -10,6 +10,7 @@ import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ScheduleMaintenanceAlertsUseCase
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,8 @@ class DashboardViewModel @Inject constructor(
     private val getCurrentCarUseCase: GetCurrentCarUseCase,
     private val observeUpcomingTasksForCarUseCase: ObserveUpcomingTasksForCarUseCase,
     private val observeOverdueTasksForCarUseCase: ObserveOverdueTasksForCarUseCase,
-    private val getSessionUseCase: GetSessionUseCase
+    private val getSessionUseCase: GetSessionUseCase,
+    private val scheduleMaintenanceAlertsUseCase: ScheduleMaintenanceAlertsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardUiState())
@@ -32,6 +34,7 @@ class DashboardViewModel @Inject constructor(
 
     private var upcomingJob: Job? = null
     private var overdueJob: Job? = null
+    private var alertsScheduled: Boolean = false
 
     init {
         observeSession()
@@ -64,6 +67,10 @@ class DashboardViewModel @Inject constructor(
             _state.update { it.copy(currentCar = car) }
 
             if (car != null) {
+                if (!alertsScheduled) {
+                    scheduleMaintenanceAlertsUseCase()
+                    alertsScheduled = true
+                }
                 observeTasks(car.id)
             } else {
                 _state.update {
@@ -89,6 +96,10 @@ class DashboardViewModel @Inject constructor(
             _state.update { it.copy(currentCar = car) }
 
             if (car != null) {
+                if (!alertsScheduled) {
+                    scheduleMaintenanceAlertsUseCase()
+                    alertsScheduled = true
+                }
                 observeTasks(car.id)
             } else {
                 _state.update {
