@@ -8,6 +8,6 @@ import kotlinx.coroutines.flow.Flow
 class ObserveUpcomingTasksForCarUseCase @Inject constructor(
     private val repository: MaintenanceTaskRepository
 ) {
-    operator fun invoke(carId: String): Flow<List<MaintenanceTask>> =
+    operator fun invoke(carId: Int): Flow<List<MaintenanceTask>> =
         repository.observeUpcomingTasksForCar(carId)
 }

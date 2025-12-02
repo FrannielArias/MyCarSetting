@@ -1,7 +1,7 @@
 package edu.ucne.loginapi.domain.model
 
 data class UserCar(
-    val id: String,
+    val id: Int = 0,
     val brand: String,
     val model: String,
     val year: Int,

@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase.user
+package edu.ucne.loginapi.domain.useCase.userCar
 
 import edu.ucne.loginapi.domain.model.UserCar
 import edu.ucne.loginapi.domain.repository.UserCarRepository
