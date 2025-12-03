@@ -3,7 +3,6 @@ package edu.ucne.loginapi.data.remote.dto
 data class MaintenanceTaskDto(
     val id: Int,
     val carId: Int,
-    val carId1: Int,
     val type: String,
     val title: String,
     val description: String?,
