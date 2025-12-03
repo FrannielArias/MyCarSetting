@@ -11,7 +11,6 @@ import edu.ucne.loginapi.data.remote.repository.UserCarRepositoryImpl
 import edu.ucne.loginapi.data.remote.repository.UsuariosRepositoryImpl
 import edu.ucne.loginapi.data.remote.repository.VehicleCatalogRepositoryImpl
 import edu.ucne.loginapi.domain.repository.CarRepository
-import edu.ucne.loginapi.domain.repository.ChatRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
