@@ -17,5 +17,7 @@ data class MaintenanceUiState(
     val newTaskDueDateMillis: Long? = null,
     val newTaskDueDateText: String = "",
     val newTaskSeverity: MaintenanceSeverity = MaintenanceSeverity.MEDIUM,
-    val userMessage: String? = null
-)
+    val userMessage: String? = null,
+    val newTitleError: String? = null
+
+    )

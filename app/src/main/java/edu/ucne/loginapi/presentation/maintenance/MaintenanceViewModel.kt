@@ -99,6 +99,21 @@ class MaintenanceViewModel @Inject constructor(
             is MaintenanceEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
+            is MaintenanceEvent.OnNewTitleChange -> {
+                val value = event.value
+
+                val isValid = value.length >= 5 && value.matches(Regex("^[A-Za-z0-9ÁÉÍÓÚáéíóúñÑ ]+$"))
+
+                _state.update {
+                    it.copy(
+                        newTaskTitle = value,
+                        newTitleError = if (!isValid && value.isNotEmpty()) {
+                            "El título debe tener mínimo 5 caracteres y solo letras, números y espacios"
+                        } else null
+                    )
+                }
+            }
+
         }
     }
 
@@ -168,6 +183,12 @@ class MaintenanceViewModel @Inject constructor(
     fun createTask() {
         val current = _state.value.currentCar ?: return
         val title = _state.value.newTaskTitle.trim()
+        if (_state.value.newTitleError != null) {
+
+            _state.update { it.copy(userMessage = "Corrige el título antes de guardar") }
+            return
+        }
+
 
         if (title.isBlank()) {
             _state.update { it.copy(userMessage = "El título es requerido") }

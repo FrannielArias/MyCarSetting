@@ -564,6 +564,15 @@ fun MaintenanceCreateSheet(
             onValueChange = { onEvent(MaintenanceEvent.OnNewTitleChange(it)) },
             label = { Text("Título") },
             placeholder = { Text("Selecciona o escribe un mantenimiento") },
+            isError = state.newTitleError != null,
+            supportingText = {
+                if (state.newTitleError != null) {
+                    Text(
+                        text = state.newTitleError,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -711,7 +720,9 @@ fun MaintenanceCreateSheet(
             }
             Button(
                 onClick = onCreateTask,
-                enabled = state.newTaskTitle.isNotBlank() && state.newTaskDueDateMillis != null,
+                enabled = state.newTaskTitle.length >= 5 &&
+                        state.newTitleError == null &&
+                        state.newTaskDueDateMillis != null,
                 modifier = Modifier.weight(1f)
             ) {
                 Text("Guardar")
