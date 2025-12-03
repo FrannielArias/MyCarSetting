@@ -148,7 +148,6 @@ private fun ServicesContent(
         } ?: state.services
     }
 
-    // Filtrar por servicios cercanos (radio de 10 km) cuando tenemos ubicación
     val nearbyServices = remember(services, myLocation) {
         val currentLocation = myLocation
         if (currentLocation == null) {
@@ -164,9 +163,9 @@ private fun ServicesContent(
                         service.longitude,
                         result
                     )
-                    service to result[0] // distancia en metros
+                    service to result[0]
                 }
-                .filter { it.second <= 10_000f } // 10 km
+                .filter { it.second <= 10_000f }
                 .sortedBy { it.second }
                 .map { it.first }
         }

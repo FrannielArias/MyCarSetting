@@ -98,7 +98,7 @@ class ManualViewModel @Inject constructor(
         }
     }
 
-    private fun loadGuideDetail(id: Int) {  // ← Int
+    private fun loadGuideDetail(id: Int) {
         viewModelScope.launch {
             try {
                 val detail = getGuideArticleDetailUseCase(id).first()
