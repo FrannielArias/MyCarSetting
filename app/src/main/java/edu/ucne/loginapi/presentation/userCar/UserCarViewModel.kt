@@ -210,10 +210,35 @@ class UserCarViewModel @Inject constructor(
         val selectedBrandId = _state.value.selectedBrandId
         val selectedModelId = _state.value.selectedModelId
         val selectedYearRangeId = _state.value.selectedYearRangeId
+        val plate = _state.value.plate.trim()
 
+        // Validar que todos los campos estén completos
         if (selectedBrandId == null || selectedModelId == null || selectedYearRangeId == null) {
             _state.update {
                 it.copy(userMessage = "Debes seleccionar marca, modelo y año")
+            }
+            return
+        }
+
+        // Validar la placa (obligatoria y 7 caracteres)
+        if (plate.isEmpty()) {
+            _state.update {
+                it.copy(userMessage = "La placa es obligatoria")
+            }
+            return
+        }
+
+        if (plate.length != 7) {
+            _state.update {
+                it.copy(userMessage = "La placa debe tener exactamente 7 caracteres")
+            }
+            return
+        }
+
+        // Validar que solo contenga letras y números
+        if (!plate.all { it.isLetterOrDigit() }) {
+            _state.update {
+                it.copy(userMessage = "La placa solo puede contener letras y números")
             }
             return
         }
@@ -234,7 +259,7 @@ class UserCarViewModel @Inject constructor(
             brand = selectedBrand.name,
             model = selectedModel.name,
             year = selectedYearRange.toYear,
-            plate = _state.value.plate.ifBlank { null },
+            plate = plate.uppercase(), // Guardar en mayúsculas
             fuelType = _state.value.fuelType,
             usageType = _state.value.usageType,
             isCurrent = _state.value.cars.isEmpty()
@@ -244,7 +269,6 @@ class UserCarViewModel @Inject constructor(
             _state.update { it.copy(isLoadingCatalog = true) }
 
             val result = addUserCarUseCase(car)
-
             when (result) {
                 is Resource.Success -> {
                     _state.update {
@@ -261,7 +285,6 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
-
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -270,7 +293,6 @@ class UserCarViewModel @Inject constructor(
                         )
                     }
                 }
-
                 is Resource.Loading -> {
                     _state.update { it.copy(isLoadingCatalog = true) }
                 }

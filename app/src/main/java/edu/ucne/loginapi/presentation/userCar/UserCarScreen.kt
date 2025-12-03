@@ -361,12 +361,42 @@ private fun NewCarSheet(
             }
         )
 
+        // Campo de placa OBLIGATORIO con validación
         OutlinedTextField(
             value = state.plate,
-            onValueChange = { onEvent(UserCarEvent.OnPlateChange(it)) },
-            label = { Text("Placa (opcional)") },
+            onValueChange = { newValue ->
+                // Permitir solo letras y números, máximo 7 caracteres
+                if (newValue.length <= 7 && newValue.all { it.isLetterOrDigit() }) {
+                    onEvent(UserCarEvent.OnPlateChange(newValue.uppercase()))
+                }
+            },
+            label = { Text("Placa *") },
+            placeholder = { Text("Ej: A123456") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            isError = state.plate.isNotEmpty() && state.plate.length != 7,
+            supportingText = {
+                when {
+                    state.plate.isEmpty() -> {
+                        Text(
+                            text = "Campo obligatorio - 7 caracteres",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    state.plate.length < 7 -> {
+                        Text(
+                            text = "${state.plate.length}/7 caracteres",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    state.plate.length == 7 -> {
+                        Text(
+                            text = "✓ Placa válida",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -376,6 +406,7 @@ private fun NewCarSheet(
             enabled = state.selectedBrandId != null &&
                     state.selectedModelId != null &&
                     state.selectedYearRangeId != null &&
+                    state.plate.length == 7 && // Validación de placa
                     !state.isLoadingCatalog,
             modifier = Modifier
                 .fillMaxWidth()
@@ -398,6 +429,7 @@ private fun NewCarSheet(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+
 
 @Composable
 private fun VehicleBrandDropdown(
