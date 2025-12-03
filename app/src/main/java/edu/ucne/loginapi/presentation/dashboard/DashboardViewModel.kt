@@ -3,6 +3,7 @@ package edu.ucne.loginapi.presentation.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ucne.loginapi.data.syncWorker.TriggerFullSyncUseCase
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.model.VehicleAlert
 import edu.ucne.loginapi.domain.model.VehicleAlertLevel
@@ -26,7 +27,8 @@ class DashboardViewModel @Inject constructor(
     private val observeUpcomingTasksForCarUseCase: ObserveUpcomingTasksForCarUseCase,
     private val observeOverdueTasksForCarUseCase: ObserveOverdueTasksForCarUseCase,
     private val getSessionUseCase: GetSessionUseCase,
-    private val scheduleMaintenanceAlertsUseCase: ScheduleMaintenanceAlertsUseCase
+    private val scheduleMaintenanceAlertsUseCase: ScheduleMaintenanceAlertsUseCase,
+    private val triggerFullSyncUseCase: TriggerFullSyncUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardUiState())
@@ -63,6 +65,9 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
+            // Disparamos sync global al cargar el dashboard
+            triggerFullSyncUseCase()
+
             val car = getCurrentCarUseCase()
             _state.update { it.copy(currentCar = car) }
 
@@ -91,6 +96,9 @@ class DashboardViewModel @Inject constructor(
     private fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
+
+            // Al refrescar, también pedimos sync global
+            triggerFullSyncUseCase()
 
             val car = getCurrentCarUseCase()
             _state.update { it.copy(currentCar = car) }
