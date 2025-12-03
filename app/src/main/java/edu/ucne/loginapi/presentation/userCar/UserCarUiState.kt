@@ -10,7 +10,7 @@ import edu.ucne.loginapi.domain.model.VehicleYearRange
 data class UserCarUiState(
     val isLoading: Boolean = false,
     val cars: List<UserCar> = emptyList(),
-    val currentCarId: String? = null,
+    val currentCarId: Int? = null,
     val showCreateSheet: Boolean = false,
 
     val brands: List<VehicleBrand> = emptyList(),

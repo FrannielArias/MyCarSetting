@@ -2,9 +2,8 @@ package edu.ucne.loginapi.data.remote.dataSource
 
 import edu.ucne.loginapi.data.remote.CarApiService
 import edu.ucne.loginapi.data.remote.Resource
-import edu.ucne.loginapi.data.remote.mappers.toCreateRequest
 import edu.ucne.loginapi.data.remote.mappers.toDomain
-import edu.ucne.loginapi.data.remote.mappers.toUpdateRequest
+import edu.ucne.loginapi.data.remote.mappers.toDto
 import edu.ucne.loginapi.domain.model.UserCar
 import javax.inject.Inject
 
@@ -20,8 +19,8 @@ class CarRemoteDataSource @Inject constructor(
         return try {
             val response = api.getCars()
             if (response.isSuccessful) {
-                val body = response.body().orEmpty()
-                Resource.Success(body.map { it.toDomain() })
+                val list = response.body().orEmpty().map { it.toDomain() }
+                Resource.Success(list)
             } else {
                 Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
             }
@@ -50,10 +49,12 @@ class CarRemoteDataSource @Inject constructor(
             if (response.isSuccessful) {
                 val body = response.body() ?: return Resource.Error("No hay vehículo actual")
                 Resource.Success(body.toDomain())
-            } else if (response.code() == 404) {
-                Resource.Error("No hay vehículo actual configurado")
             } else {
-                Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
+                if (response.code() == 404) {
+                    Resource.Error("No hay vehículo actual configurado")
+                } else {
+                    Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
+                }
             }
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: NETWORK_ERROR)
@@ -62,7 +63,7 @@ class CarRemoteDataSource @Inject constructor(
 
     suspend fun createCar(car: UserCar): Resource<UserCar> {
         return try {
-            val response = api.createCar(car.toCreateRequest())
+            val response = api.createCar(car.toDto())
             if (response.isSuccessful) {
                 val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE)
                 Resource.Success(body.toDomain())
@@ -76,7 +77,7 @@ class CarRemoteDataSource @Inject constructor(
 
     suspend fun updateCar(car: UserCar): Resource<Unit> {
         return try {
-            val response = api.updateCar(car.id, car.toUpdateRequest())
+            val response = api.updateCar(car.id, car.toDto())
             if (response.isSuccessful) {
                 Resource.Success(Unit)
             } else {

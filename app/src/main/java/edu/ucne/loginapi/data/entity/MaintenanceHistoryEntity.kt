@@ -5,8 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "maintenance_history")
 data class MaintenanceHistoryEntity(
-    @PrimaryKey val id: String,
-    val carId: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val carId: Int,
     val taskType: String,
     val serviceDateMillis: Long,
     val mileageKm: Int?,

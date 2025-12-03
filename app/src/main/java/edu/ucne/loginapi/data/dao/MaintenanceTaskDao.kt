@@ -18,8 +18,14 @@ interface MaintenanceTaskDao {
     @Upsert
     suspend fun upsert(task: MaintenanceTaskEntity)
 
+    @Upsert
+    suspend fun upsertAll(tasks: List<MaintenanceTaskEntity>)
+
     @Query("DELETE FROM maintenance_tasks WHERE id = :id")
     suspend fun deleteTask(id: String)
+
+    @Query("DELETE FROM maintenance_tasks WHERE carId = :carId")
+    suspend fun clearForCar(carId: String)
 
     @Query("SELECT * FROM maintenance_tasks WHERE isPendingCreate = 1")
     suspend fun getPendingCreateTasks(): List<MaintenanceTaskEntity>

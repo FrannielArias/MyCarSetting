@@ -1,11 +1,9 @@
 package edu.ucne.loginapi.domain.model
 
-import java.util.UUID
-
 data class MaintenanceTask(
-    val id: String = UUID.randomUUID().toString(),
-    val remoteId: Long? = null,
-    val carId: String,
+    val id: Int = 0,
+    val remoteId: Int? = null,
+    val carId: Int,
     val type: MaintenanceType,
     val title: String,
     val description: String?,

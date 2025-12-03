@@ -14,6 +14,6 @@ data class UserCarEntity(
     val fuelType: String,
     val usageType: String,
     val isCurrent: Boolean,
-    val remoteId: Long? = null,
+    val remoteId: Int? = null,
     val pendingSync: Boolean = false
 )

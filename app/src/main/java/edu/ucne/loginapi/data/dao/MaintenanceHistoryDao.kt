@@ -18,6 +18,12 @@ interface MaintenanceHistoryDao {
     @Upsert
     suspend fun upsert(history: MaintenanceHistoryEntity)
 
+    @Upsert
+    suspend fun upsertAll(history: List<MaintenanceHistoryEntity>)
+
     @Query("DELETE FROM maintenance_history WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("DELETE FROM maintenance_history WHERE carId = :carId")
+    suspend fun clearForCar(carId: String)
 }

@@ -2,6 +2,9 @@ package edu.ucne.loginapi.data.remote.dataSource
 
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.data.remote.VehicleCatalogApiService
+import edu.ucne.loginapi.data.remote.dto.VehicleBrandDto
+import edu.ucne.loginapi.data.remote.dto.VehicleModelDto
+import edu.ucne.loginapi.data.remote.dto.VehicleYearRangeDto
 import edu.ucne.loginapi.data.remote.mappers.toDomain
 import edu.ucne.loginapi.domain.model.VehicleBrand
 import edu.ucne.loginapi.domain.model.VehicleModel
@@ -20,8 +23,9 @@ class VehicleCatalogRemoteDataSource @Inject constructor(
         return try {
             val response = api.getBrands()
             if (response.isSuccessful) {
-                val body = response.body().orEmpty()
-                Resource.Success(body.map { it.toDomain() })
+                val body: List<VehicleBrandDto> = response.body().orEmpty()
+                val brands = body.map { dto: VehicleBrandDto -> dto.toDomain() }
+                Resource.Success(brands)
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
@@ -30,13 +34,16 @@ class VehicleCatalogRemoteDataSource @Inject constructor(
         }
     }
 
-    // ✅ Corregido: brandId es Int
     suspend fun getModelsByBrand(brandId: Int): Resource<List<VehicleModel>> {
         return try {
             val response = api.getModelsByBrand(brandId)
             if (response.isSuccessful) {
-                val body = response.body().orEmpty()
-                Resource.Success(body.map { it.toDomain() })
+                val body: List<VehicleModelDto> = response.body().orEmpty()
+                val models = body
+                    .map { dto: VehicleModelDto -> dto.toDomain() }
+                    .filter { model: VehicleModel -> model.brandId == brandId }
+
+                Resource.Success(models)
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
@@ -45,13 +52,16 @@ class VehicleCatalogRemoteDataSource @Inject constructor(
         }
     }
 
-    // ✅ Corregido: modelId es Int
     suspend fun getYearRangesByModel(modelId: Int): Resource<List<VehicleYearRange>> {
         return try {
             val response = api.getYearRangesByModel(modelId)
             if (response.isSuccessful) {
-                val body = response.body().orEmpty()
-                Resource.Success(body.map { it.toDomain() })
+                val body: List<VehicleYearRangeDto> = response.body().orEmpty()
+                val ranges = body
+                    .map { dto: VehicleYearRangeDto -> dto.toDomain() }
+                    .filter { range: VehicleYearRange -> range.modelId == modelId }
+
+                Resource.Success(ranges)
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }

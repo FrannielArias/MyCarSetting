@@ -237,7 +237,7 @@ class UserCarViewModel @Inject constructor(
             plate = _state.value.plate.ifBlank { null },
             fuelType = _state.value.fuelType,
             usageType = _state.value.usageType,
-            isCurrent = _state.value.cars.isEmpty() // Si no hay carros, este será el actual
+            isCurrent = _state.value.cars.isEmpty()
         )
 
         viewModelScope.launch {
@@ -278,7 +278,7 @@ class UserCarViewModel @Inject constructor(
         }
     }
 
-    private fun setCurrentCar(carId: String) {
+    private fun setCurrentCar(carId: Int) {
         viewModelScope.launch {
             val result = setCurrentCarUseCase(carId)
             when (result) {

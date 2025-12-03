@@ -5,9 +5,10 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "maintenance_tasks")
 data class MaintenanceTaskEntity(
-    @PrimaryKey val id: String,
-    val remoteId: Long?,
-    val carId: String,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val remoteId: Int?,
+    val carId: Int,
     val type: String,
     val title: String,
     val description: String?,

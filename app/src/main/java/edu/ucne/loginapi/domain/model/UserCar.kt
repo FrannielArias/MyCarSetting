@@ -9,7 +9,7 @@ data class UserCar(
     val fuelType: FuelType,
     val usageType: UsageType,
     val isCurrent: Boolean,
-    val remoteId: Long? = null
+    val remoteId: Int? = null
 )
 
 enum class FuelType {

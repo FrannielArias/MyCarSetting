@@ -1,10 +1,8 @@
 package edu.ucne.loginapi.domain.model
 
-import java.util.UUID
-
 data class MaintenanceHistory(
-    val id: String = UUID.randomUUID().toString(),
-    val carId: String,
+    val id: Int = 0,
+    val carId: Int,
     val taskType: MaintenanceType,
     val serviceDateMillis: Long,
     val mileageKm: Int?,
