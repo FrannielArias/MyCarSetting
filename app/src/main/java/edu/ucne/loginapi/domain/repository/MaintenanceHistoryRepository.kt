@@ -5,8 +5,8 @@ import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import kotlinx.coroutines.flow.Flow
 
 interface MaintenanceHistoryRepository {
-    fun observeHistoryForCar(carId: String): Flow<List<MaintenanceHistory>>
-    suspend fun getHistoryById(id: String): MaintenanceHistory?
+    fun observeHistoryForCar(carId: Int): Flow<List<MaintenanceHistory>>
+    suspend fun getHistoryById(id: Int): MaintenanceHistory?
     suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory>
-    suspend fun deleteRecord(id: String): Resource<Unit>
+    suspend fun deleteRecord(id: Int): Resource<Unit>
 }

@@ -7,6 +7,6 @@ import javax.inject.Inject
 class SetCurrentCarUseCase @Inject constructor(
     private val repository: UserCarRepository
 ) {
-    suspend operator fun invoke(carId: String): Resource<Unit> =
+    suspend operator fun invoke(carId: Int): Resource<Unit> =
         repository.setCurrentCar(carId)
 }

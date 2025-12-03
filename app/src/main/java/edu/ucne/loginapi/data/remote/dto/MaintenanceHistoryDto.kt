@@ -1,8 +1,8 @@
 package edu.ucne.loginapi.data.remote.dto
 
 data class MaintenanceHistoryDto(
-    val id: String,
-    val carId: String,
+    val id: Int,
+    val carId: Int,
     val taskType: String,
     val serviceDateMillis: Long,
     val mileageKm: Int?,
@@ -12,7 +12,7 @@ data class MaintenanceHistoryDto(
 )
 
 data class CreateMaintenanceHistoryRequest(
-    val carId: String,
+    val carId: Int,
     val taskType: String,
     val serviceDateMillis: Long,
     val mileageKm: Int?,
