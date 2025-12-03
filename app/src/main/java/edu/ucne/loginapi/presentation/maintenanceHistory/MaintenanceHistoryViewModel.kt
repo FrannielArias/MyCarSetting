@@ -80,7 +80,7 @@ class MaintenanceHistoryViewModel @Inject constructor(
         }
     }
 
-    private fun observeHistory(carId: String) {
+    private fun observeHistory(carId: Int) {
         historyJob?.cancel()
         historyJob = viewModelScope.launch {
             getMaintenanceHistoryForCarUseCase(carId).collectLatest { list ->

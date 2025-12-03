@@ -158,7 +158,7 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    private fun observeTasksForCar(carId: String) {
+    private fun observeTasksForCar(carId: Int) {
         tasksJob?.cancel()
         overdueJob?.cancel()
 
