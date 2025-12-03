@@ -19,7 +19,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
     }
 
-    suspend fun getTasksForCar(carId: String): Resource<List<MaintenanceTask>> {
+    suspend fun getTasksForCar(carId: Int): Resource<List<MaintenanceTask>> {
         return try {
             val response = api.getTasksForCar(carId)
             if (response.isSuccessful) {
@@ -64,7 +64,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun deleteTask(id: String): Resource<Unit> {
+    suspend fun deleteTask(id: Int): Resource<Unit> {
         return try {
             val response = api.deleteTask(id)
             if (response.isSuccessful) {
@@ -77,7 +77,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getHistoryForCar(carId: String): Resource<List<MaintenanceHistory>> {
+    suspend fun getHistoryForCar(carId: Int): Resource<List<MaintenanceHistory>> {
         return try {
             val response = api.getHistoryForCar(carId)
             if (response.isSuccessful) {
@@ -107,7 +107,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun deleteHistory(id: String): Resource<Unit> {
+    suspend fun deleteHistory(id: Int): Resource<Unit> {
         return try {
             val response = api.deleteHistory(id)
             if (response.isSuccessful) {
