@@ -1,6 +1,7 @@
 package edu.ucne.loginapi.data.remote.repository
 
 import edu.ucne.loginapi.data.dao.UserCarDao
+import edu.ucne.loginapi.data.entity.UserCarEntity
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.data.remote.dataSource.CarRemoteDataSource
 import edu.ucne.loginapi.data.remote.mappers.toDomain
@@ -17,10 +18,9 @@ class CarRepositoryImpl @Inject constructor(
 ) : CarRepository {
 
     override fun getCars(): Flow<List<UserCar>> =
-        userCarDao.getCars().map { list -> list.map { it.toDomain() } }
+        userCarDao.getCars().map { cars -> cars.map { it.toDomain() } }
 
     override suspend fun getCar(id: String): UserCar? {
-
         val intId = id.toIntOrNull() ?: return null
         return userCarDao.getCar(intId)?.toDomain()
     }
@@ -28,12 +28,16 @@ class CarRepositoryImpl @Inject constructor(
     override suspend fun addCar(car: UserCar): Resource<Unit> {
         return try {
             val existing = userCarDao.getCar(car.id)
-            if (existing == null) {
-                userCarDao.upsert(car.toEntity())
-                Resource.Success(Unit)
-            } else {
-                Resource.Error("El vehículo ya existe")
+            if (existing != null) {
+                return Resource.Error("El vehículo ya existe")
             }
+
+            userCarDao.upsert(
+                car.toEntity().copy(
+                    pendingSync = true
+                )
+            )
+            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "Error al agregar vehículo")
         }
@@ -42,12 +46,16 @@ class CarRepositoryImpl @Inject constructor(
     override suspend fun updateCar(car: UserCar): Resource<Unit> {
         return try {
             val existing = userCarDao.getCar(car.id)
-            if (existing != null) {
-                userCarDao.upsert(car.toEntity())
-                Resource.Success(Unit)
-            } else {
-                Resource.Error("El vehículo no existe")
+            if (existing == null) {
+                return Resource.Error("El vehículo no existe")
             }
+
+            userCarDao.upsert(
+                car.toEntity().copy(
+                    pendingSync = true
+                )
+            )
+            Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "Error al actualizar vehículo")
         }
@@ -78,13 +86,20 @@ class CarRepositoryImpl @Inject constructor(
         return try {
             when (val result = remote.getCars()) {
                 is Resource.Success -> {
-                    val cars = result.data.orEmpty()
-                    userCarDao.replaceAll(cars.map { it.toEntity() })
+                    val remoteCars: List<UserCar> = result.data ?: emptyList()
+
+                    val entities: List<UserCarEntity> = remoteCars.map { car ->
+                        car.toEntity().copy(pendingSync = false)
+                    }
+
+                    userCarDao.replaceAll(entities)
                     Resource.Success(Unit)
                 }
-                is Resource.Error -> {
-                    Resource.Error(result.message ?: "Error al sincronizar vehículos")
-                }
+
+                is Resource.Error -> Resource.Error(
+                    result.message ?: "Error al sincronizar vehículos"
+                )
+
                 is Resource.Loading -> Resource.Loading()
             }
         } catch (e: Exception) {
@@ -95,17 +110,30 @@ class CarRepositoryImpl @Inject constructor(
     override suspend fun pushPendingCars(): Resource<Unit> {
         return try {
             val pendingCars = userCarDao.getPendingSync()
-            pendingCars.forEach { entity ->
-                val car = entity.toDomain()
-                when (remote.createCar(car)) {
+
+            for (entity in pendingCars) {
+                val car: UserCar = entity.toDomain()
+
+                val response = remote.createCar(car)
+                when (response) {
                     is Resource.Success -> {
-                        userCarDao.upsert(entity.copy(pendingSync = false))
+                        val updatedRemote = response.data
+                        if (updatedRemote != null) {
+                            userCarDao.upsert(
+                                updatedRemote
+                                    .toEntity()
+                                    .copy(pendingSync = false)
+                            )
+                        }
                     }
+
                     is Resource.Error -> {
                     }
-                    is Resource.Loading -> {}
+
+                    is Resource.Loading -> Unit
                 }
             }
+
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "Error al sincronizar cambios pendientes")
