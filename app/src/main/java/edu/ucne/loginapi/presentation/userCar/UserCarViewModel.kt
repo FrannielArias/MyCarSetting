@@ -235,7 +235,6 @@ class UserCarViewModel @Inject constructor(
             return
         }
 
-        // Validar que solo contenga letras y números
         if (!plate.all { it.isLetterOrDigit() }) {
             _state.update {
                 it.copy(userMessage = "La placa solo puede contener letras y números")

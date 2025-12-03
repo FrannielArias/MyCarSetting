@@ -361,11 +361,9 @@ private fun NewCarSheet(
             }
         )
 
-        // Campo de placa OBLIGATORIO con validación
         OutlinedTextField(
             value = state.plate,
             onValueChange = { newValue ->
-                // Permitir solo letras y números, máximo 7 caracteres
                 if (newValue.length <= 7 && newValue.all { it.isLetterOrDigit() }) {
                     onEvent(UserCarEvent.OnPlateChange(newValue.uppercase()))
                 }
