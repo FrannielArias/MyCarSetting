@@ -12,6 +12,6 @@ data class VehicleAlert(
     val level: VehicleAlertLevel,
     val title: String,
     val message: String,
-    val relatedTaskId: String? = null,
+    val relatedTaskId: Int? = null,
     val createdAtMillis: Long = System.currentTimeMillis()
 )

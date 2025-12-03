@@ -1,15 +1,40 @@
 package edu.ucne.loginapi.data.syncWorker
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
+import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.domain.repository.MaintenanceRepository
+import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
+import edu.ucne.loginapi.domain.repository.UserCarRepository
 
-class SyncWorker(
-    appContext: Context,
-    params: WorkerParameters
+@HiltWorker
+class SyncWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted params: WorkerParameters,
+    private val userCarRepository: UserCarRepository,
+    private val maintenanceRepository: MaintenanceRepository,
+    private val maintenanceTaskRepository: MaintenanceTaskRepository
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        return Result.success()
+        return try {
+            val currentCar = userCarRepository.getCurrentCar() ?: return Result.success()
+
+            when (maintenanceTaskRepository.postPendingTasks()) {
+                is Resource.Error -> return Result.retry()
+                else -> Unit
+            }
+
+            when (maintenanceRepository.syncFromRemote(currentCar.id)) {
+                is Resource.Error -> Result.retry()
+                else -> Result.success()
+            }
+        } catch (e: Exception) {
+            Result.retry()
+        }
     }
 }

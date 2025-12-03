@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import edu.ucne.loginapi.data.remote.CarApiService
 import edu.ucne.loginapi.data.remote.ChatApi
 import edu.ucne.loginapi.data.remote.MaintenanceApiService
 import edu.ucne.loginapi.data.remote.ManualApiService
@@ -32,7 +33,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient =
-        OkHttpClient.Builder().build()
+        OkHttpClient.Builder()
+            .build()
 
     @Provides
     @Singleton
@@ -48,13 +50,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUsuariosApi(retrofit: Retrofit): UsuariosApiService =
+    fun provideUsuariosApiService(retrofit: Retrofit): UsuariosApiService =
         retrofit.create(UsuariosApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideManualApiService(retrofit: Retrofit): ManualApiService =
-        retrofit.create(ManualApiService::class.java)
+    fun provideChatApi(retrofit: Retrofit): ChatApi =
+        retrofit.create(ChatApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCarApiService(retrofit: Retrofit): CarApiService =
+        retrofit.create(CarApiService::class.java)
 
     @Provides
     @Singleton
@@ -63,16 +70,11 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideChatApi(
-        retrofit: Retrofit
-    ): ChatApi = retrofit.create(ChatApi::class.java)
+    fun provideManualApiService(retrofit: Retrofit): ManualApiService =
+        retrofit.create(ManualApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideVehicleCatalogApiService(
-        retrofit: Retrofit
-    ): VehicleCatalogApiService =
+    fun provideVehicleCatalogApiService(retrofit: Retrofit): VehicleCatalogApiService =
         retrofit.create(VehicleCatalogApiService::class.java)
-
-
 }
