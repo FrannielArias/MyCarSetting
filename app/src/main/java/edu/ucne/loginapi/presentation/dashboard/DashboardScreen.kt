@@ -52,7 +52,7 @@ import java.util.Locale
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onNavigateToMaintenance: (String?) -> Unit,
+    onNavigateToMaintenance: (Int?) -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToChat: (String) -> Unit
@@ -77,7 +77,7 @@ fun DashboardScreen(
 fun DashboardBody(
     state: DashboardUiState,
     onEvent: (DashboardEvent) -> Unit,
-    onNavigateToMaintenance: (String?) -> Unit,
+    onNavigateToMaintenance: (Int?) -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToChat: (String) -> Unit
@@ -149,7 +149,7 @@ fun DashboardBody(
 @Composable
 fun DashboardContent(
     state: DashboardUiState,
-    onNavigateToMaintenance: (String?) -> Unit,
+    onNavigateToMaintenance: (Int?) -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToChat: (String) -> Unit
