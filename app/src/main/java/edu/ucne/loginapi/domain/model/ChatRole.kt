@@ -3,5 +3,8 @@ package edu.ucne.loginapi.domain.model
 enum class ChatRole {
     USER,
     ASSISTANT,
-    SYSTEM
 }
+data class ChatTurn(
+    val role: ChatRole,
+    val content: String
+)
