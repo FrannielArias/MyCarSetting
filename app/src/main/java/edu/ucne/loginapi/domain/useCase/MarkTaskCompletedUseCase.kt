@@ -7,6 +7,6 @@ import jakarta.inject.Inject
 class MarkTaskCompletedUseCase @Inject constructor(
     private val repository: MaintenanceTaskRepository
 ) {
-    suspend operator fun invoke(taskId: String, completionDateMillis: Long): Resource<Unit> =
+    suspend operator fun invoke(taskId: Int, completionDateMillis: Long): Resource<Unit> =
         repository.markTaskCompleted(taskId, completionDateMillis)
 }
