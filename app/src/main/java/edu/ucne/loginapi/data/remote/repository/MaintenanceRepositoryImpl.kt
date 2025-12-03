@@ -12,9 +12,9 @@ import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.repository.MaintenanceHistoryRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceRepository
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 class MaintenanceRepositoryImpl @Inject constructor(
     private val taskDao: MaintenanceTaskDao,
@@ -48,17 +48,31 @@ class MaintenanceRepositoryImpl @Inject constructor(
         taskDao.getTaskById(id)?.toDomain()
 
     override suspend fun createTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask> {
-        taskDao.upsert(task.toEntity())
+        val entity = task.toEntity().copy(
+            isPendingCreate = true,
+            isPendingUpdate = false,
+            isPendingDelete = false
+        )
+        taskDao.upsert(entity)
         return Resource.Success(task)
     }
 
     override suspend fun updateTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask> {
-        taskDao.upsert(task.toEntity())
+        val entity = task.toEntity().copy(
+            isPendingUpdate = true,
+            isPendingCreate = false
+        )
+        taskDao.upsert(entity)
         return Resource.Success(task)
     }
 
     override suspend fun deleteTaskLocal(id: Int): Resource<Unit> {
-        taskDao.deleteTask(id)
+        val entity = taskDao.getTaskById(id)?.copy(
+            isPendingDelete = true
+        )
+        if (entity != null) {
+            taskDao.upsert(entity)
+        }
         return Resource.Success(Unit)
     }
 
@@ -70,8 +84,10 @@ class MaintenanceRepositoryImpl @Inject constructor(
 
         val updated = task.copy(
             status = MaintenanceStatus.COMPLETED,
-            updatedAtMillis = completionDateMillis
+            updatedAtMillis = completionDateMillis,
+            isPendingUpdate = true
         )
+
         taskDao.upsert(updated.toEntity())
 
         val historyRecord = MaintenanceHistory(
@@ -84,8 +100,8 @@ class MaintenanceRepositoryImpl @Inject constructor(
             workshopName = null,
             notes = task.title
         )
-        historyDao.upsert(historyRecord.toEntity())
 
+        historyDao.upsert(historyRecord.toEntity())
         return Resource.Success(Unit)
     }
 
@@ -96,21 +112,13 @@ class MaintenanceRepositoryImpl @Inject constructor(
         historyDao.getHistoryById(id)?.toDomain()
 
     override suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory> {
-        return try {
-            historyDao.upsert(record.toEntity())
-            Resource.Success(record)
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Error al guardar historial", record)
-        }
+        historyDao.upsert(record.toEntity())
+        return Resource.Success(record)
     }
 
     override suspend fun deleteRecord(id: Int): Resource<Unit> {
-        return try {
-            historyDao.delete(id)
-            Resource.Success(Unit)
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Error al eliminar historial")
-        }
+        historyDao.delete(id)
+        return Resource.Success(Unit)
     }
 
     override suspend fun syncFromRemote(carId: Int): Resource<Unit> {
@@ -130,7 +138,12 @@ class MaintenanceRepositoryImpl @Inject constructor(
         taskDao.clearForCar(carId)
         historyDao.clearForCar(carId)
 
-        taskDao.upsertAll(tasks.map { it.toEntity() })
+        taskDao.upsertAll(tasks.map { it.toEntity().copy(
+            isPendingCreate = false,
+            isPendingUpdate = false,
+            isPendingDelete = false
+        )})
+
         historyDao.upsertAll(history.map { it.toEntity() })
 
         return Resource.Success(Unit)
@@ -139,30 +152,31 @@ class MaintenanceRepositoryImpl @Inject constructor(
     override suspend fun pushPending(): Resource<Unit> = postPendingTasks()
 
     override suspend fun postPendingTasks(): Resource<Unit> {
-        val pendingCreates = taskDao.getPendingCreateTasks()
-        for (entity in pendingCreates) {
-            val task = entity.toDomain()
-            val res = remote.createTask(task)
-            if (res is Resource.Success) {
-                val created = res.data ?: continue
-                val updated = created.copy(id = entity.id, remoteId = created.remoteId)
-                taskDao.upsert(updated.toEntity())
+        val creates = taskDao.getPendingCreateTasks()
+        for (entity in creates) {
+            val domain = entity.toDomain()
+            val remoteResult = remote.createTask(domain)
+
+            if (remoteResult is Resource.Success) {
+                val created = remoteResult.data ?: continue
+                val merged = created.toEntity().copy(
+                    id = entity.id,
+                    isPendingCreate = false
+                )
+                taskDao.upsert(merged)
             }
         }
 
-        val pendingUpdates = taskDao.getPendingUpdateTasks()
-        for (entity in pendingUpdates) {
-            val task = entity.toDomain()
-            remote.updateTask(task)
-            taskDao.upsert(task.toEntity())
+        val updates = taskDao.getPendingUpdateTasks()
+        for (entity in updates) {
+            val domain = entity.toDomain()
+            remote.updateTask(domain)
+            taskDao.upsert(entity.copy(isPendingUpdate = false))
         }
 
-        val pendingDeletes = taskDao.getPendingDeleteTasks()
-        for (entity in pendingDeletes) {
-            val remoteId = entity.remoteId
-            if (remoteId != null) {
-                remote.deleteTask(remoteId)
-            }
+        val deletes = taskDao.getPendingDeleteTasks()
+        for (entity in deletes) {
+            entity.remoteId?.let { remote.deleteTask(it) }
             taskDao.deleteTask(entity.id)
         }
 

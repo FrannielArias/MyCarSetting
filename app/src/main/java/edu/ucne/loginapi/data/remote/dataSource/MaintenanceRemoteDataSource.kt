@@ -14,106 +14,84 @@ import javax.inject.Inject
 class MaintenanceRemoteDataSource @Inject constructor(
     private val api: MaintenanceApiService
 ) {
+
     companion object {
-        private const val NETWORK_ERROR_MESSAGE = "Network error"
-        private const val EMPTY_RESPONSE_MESSAGE = "Empty response"
+        private const val NETWORK_ERROR = "Network error"
+        private const val EMPTY_RESPONSE = "Empty response"
     }
 
     suspend fun getTasksForCar(carId: Int): Resource<List<MaintenanceTask>> {
-        return try {
-            val response = api.getTasksForCar(carId)
-            if (response.isSuccessful) {
-                val body = response.body().orEmpty()
-                val tasks = body.map(MaintenanceTaskDto::toDomain)
-                Resource.Success(tasks)
-            } else {
-                Resource.Error("HTTP ${response.code()} ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
-        }
+        return safeCall(
+            call = { api.getTasksForCar(carId) },
+            map = { list: List<MaintenanceTaskDto> -> list.map { it.toDomain() } }
+        )
     }
 
     suspend fun createTask(task: MaintenanceTask): Resource<MaintenanceTask> {
-        return try {
-            val response = api.createTask(task.toCreateRequest())
-            if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
-                Resource.Success(body.toDomain())
-            } else {
-                Resource.Error("HTTP ${response.code()} ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
-        }
+        return safeCall(
+            call = { api.createTask(task.toCreateRequest()) },
+            map = { dto: MaintenanceTaskDto -> dto.toDomain() }
+        )
     }
 
     suspend fun updateTask(task: MaintenanceTask): Resource<MaintenanceTask> {
-        return try {
-            val response = api.updateTask(task.id, task.toUpdateRequest())
-            if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
-                Resource.Success(body.toDomain())
-            } else {
-                Resource.Error("HTTP ${response.code()} ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
-        }
+        return safeCall(
+            call = { api.updateTask(task.remoteId ?: task.id, task.toUpdateRequest()) },
+            map = { dto: MaintenanceTaskDto -> dto.toDomain() }
+        )
     }
 
     suspend fun deleteTask(id: Int): Resource<Unit> {
-        return try {
-            val response = api.deleteTask(id)
-            if (response.isSuccessful) {
-                Resource.Success(Unit)
-            } else {
-                Resource.Error("HTTP ${response.code()} ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
-        }
+        return safeCallSimple { api.deleteTask(id) }
     }
 
     suspend fun getHistoryForCar(carId: Int): Resource<List<MaintenanceHistory>> {
-        return try {
-            val response = api.getHistoryForCar(carId)
-            if (response.isSuccessful) {
-                val body = response.body().orEmpty()
-                val history = body.map(MaintenanceHistoryDto::toDomain)
-                Resource.Success(history)
-            } else {
-                Resource.Error("HTTP ${response.code()} ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
-        }
+        return safeCall(
+            call = { api.getHistoryForCar(carId) },
+            map = { list: List<MaintenanceHistoryDto> -> list.map { it.toDomain() } }
+        )
     }
 
     suspend fun createHistory(history: MaintenanceHistory): Resource<MaintenanceHistory> {
+        return safeCall(
+            call = { api.createHistory(history.toCreateRequest()) },
+            map = { dto: MaintenanceHistoryDto -> dto.toDomain() }
+        )
+    }
+
+    suspend fun deleteHistory(id: Int): Resource<Unit> {
+        return safeCallSimple { api.deleteHistory(id) }
+    }
+
+    private inline fun <reified T, R> safeCall(
+        call: () -> retrofit2.Response<T>,
+        map: (T) -> R
+    ): Resource<R> {
         return try {
-            val response = api.createHistory(history.toCreateRequest())
+            val response = call()
             if (response.isSuccessful) {
-                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
-                Resource.Success(body.toDomain())
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE)
+                Resource.Success(map(body))
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR)
         }
     }
 
-    suspend fun deleteHistory(id: Int): Resource<Unit> {
+    private inline fun safeCallSimple(
+        call: () -> retrofit2.Response<Unit>
+    ): Resource<Unit> {
         return try {
-            val response = api.deleteHistory(id)
+            val response = call()
             if (response.isSuccessful) {
                 Resource.Success(Unit)
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
+            Resource.Error(e.localizedMessage ?: NETWORK_ERROR)
         }
     }
 }

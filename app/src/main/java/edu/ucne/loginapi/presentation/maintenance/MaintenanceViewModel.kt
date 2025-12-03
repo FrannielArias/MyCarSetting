@@ -1,3 +1,4 @@
+// MaintenanceViewModel.kt
 package edu.ucne.loginapi.presentation.maintenance
 
 import androidx.lifecycle.ViewModel
@@ -138,6 +139,8 @@ class MaintenanceViewModel @Inject constructor(
             _state.update { it.copy(currentCar = car) }
             observeTasksForCar(car.id)
             _state.update { it.copy(isLoading = false) }
+
+            triggerMaintenanceSyncUseCase()
         }
     }
 
@@ -150,6 +153,7 @@ class MaintenanceViewModel @Inject constructor(
 
             if (car != null) {
                 observeTasksForCar(car.id)
+                triggerMaintenanceSyncUseCase()
             } else {
                 _state.update {
                     it.copy(
