@@ -23,8 +23,8 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.getTasksForCar(carId)
             if (response.isSuccessful) {
-                val body: List<MaintenanceTaskDto> = response.body().orEmpty()
-                val tasks = body.map { dto: MaintenanceTaskDto -> dto.toDomain() }
+                val body = response.body().orEmpty()
+                val tasks = body.map(MaintenanceTaskDto::toDomain)
                 Resource.Success(tasks)
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
@@ -38,8 +38,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.createTask(task.toCreateRequest())
             if (response.isSuccessful) {
-                val body: MaintenanceTaskDto = response.body()
-                    ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
@@ -53,8 +52,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.updateTask(task.id, task.toUpdateRequest())
             if (response.isSuccessful) {
-                val body: MaintenanceTaskDto = response.body()
-                    ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
@@ -81,8 +79,8 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.getHistoryForCar(carId)
             if (response.isSuccessful) {
-                val body: List<MaintenanceHistoryDto> = response.body().orEmpty()
-                val history = body.map { dto: MaintenanceHistoryDto -> dto.toDomain() }
+                val body = response.body().orEmpty()
+                val history = body.map(MaintenanceHistoryDto::toDomain)
                 Resource.Success(history)
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
@@ -96,8 +94,7 @@ class MaintenanceRemoteDataSource @Inject constructor(
         return try {
             val response = api.createHistory(history.toCreateRequest())
             if (response.isSuccessful) {
-                val body: MaintenanceHistoryDto = response.body()
-                    ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
+                val body = response.body() ?: return Resource.Error(EMPTY_RESPONSE_MESSAGE)
                 Resource.Success(body.toDomain())
             } else {
                 Resource.Error("HTTP ${response.code()} ${response.message()}")
