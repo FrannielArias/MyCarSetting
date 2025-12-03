@@ -115,7 +115,7 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun observeTasks(carId: String) {
+    private fun observeTasks(carId: Int) {
         upcomingJob?.cancel()
         overdueJob?.cancel()
 
@@ -198,6 +198,7 @@ class DashboardViewModel @Inject constructor(
                     message = message,
                     relatedTaskId = task.id
                 )
+
             )
         }
 
