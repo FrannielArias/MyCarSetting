@@ -49,11 +49,9 @@ class MaintenanceViewModel @Inject constructor(
         when (event) {
             is MaintenanceEvent.LoadInitialData -> loadInitialData()
             is MaintenanceEvent.Refresh -> refresh()
-
             is MaintenanceEvent.ShowCreateSheet -> {
                 _state.update { it.copy(showCreateSheet = true) }
             }
-
             is MaintenanceEvent.HideCreateSheet -> {
                 _state.update {
                     it.copy(
@@ -67,19 +65,15 @@ class MaintenanceViewModel @Inject constructor(
                     )
                 }
             }
-
             is MaintenanceEvent.OnNewTitleChange -> {
                 _state.update { it.copy(newTaskTitle = event.value) }
             }
-
             is MaintenanceEvent.OnNewDescriptionChange -> {
                 _state.update { it.copy(newTaskDescription = event.value) }
             }
-
             is MaintenanceEvent.OnNewDueMileageChange -> {
                 _state.update { it.copy(newTaskDueMileage = event.value) }
             }
-
             is MaintenanceEvent.OnNewDueDateSelected -> {
                 _state.update {
                     it.copy(
@@ -88,7 +82,6 @@ class MaintenanceViewModel @Inject constructor(
                     )
                 }
             }
-
             is MaintenanceEvent.OnClearNewDueDate -> {
                 _state.update {
                     it.copy(
@@ -97,15 +90,12 @@ class MaintenanceViewModel @Inject constructor(
                     )
                 }
             }
-
             is MaintenanceEvent.OnNewSeveritySelected -> {
                 _state.update { it.copy(newTaskSeverity = event.severity) }
             }
-
             is MaintenanceEvent.OnCompleteTask -> completeTask(event.taskId)
             is MaintenanceEvent.OnDeleteTask -> deleteTask(event.taskId)
             is MaintenanceEvent.OnTaskClicked -> Unit
-
             is MaintenanceEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
             }
@@ -225,7 +215,6 @@ class MaintenanceViewModel @Inject constructor(
                     }
                     triggerMaintenanceSyncUseCase()
                 }
-
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -233,13 +222,12 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
-
                 is Resource.Loading -> Unit
             }
         }
     }
 
-    private fun completeTask(taskId: String) {
+    private fun completeTask(taskId: Int) {
         viewModelScope.launch {
             val result = markTaskCompletedUseCase(taskId, System.currentTimeMillis())
             when (result) {
@@ -247,7 +235,6 @@ class MaintenanceViewModel @Inject constructor(
                     _state.update { it.copy(userMessage = "Tarea completada") }
                     triggerMaintenanceSyncUseCase()
                 }
-
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -255,13 +242,12 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
-
                 is Resource.Loading -> Unit
             }
         }
     }
 
-    private fun deleteTask(taskId: String) {
+    private fun deleteTask(taskId: Int) {
         viewModelScope.launch {
             val result = deleteMaintenanceTaskUseCase(taskId)
             when (result) {
@@ -269,7 +255,6 @@ class MaintenanceViewModel @Inject constructor(
                     _state.update { it.copy(userMessage = "Tarea eliminada") }
                     triggerMaintenanceSyncUseCase()
                 }
-
                 is Resource.Error -> {
                     _state.update {
                         it.copy(
@@ -277,7 +262,6 @@ class MaintenanceViewModel @Inject constructor(
                         )
                     }
                 }
-
                 is Resource.Loading -> Unit
             }
         }
