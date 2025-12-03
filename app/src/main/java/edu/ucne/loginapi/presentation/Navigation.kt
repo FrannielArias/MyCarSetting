@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import edu.ucne.loginapi.presentation.Services.ServicesScreen
-import edu.ucne.loginapi.presentation.chatBot.ChatScreen
 import edu.ucne.loginapi.presentation.dashboard.DashboardScreen
 import edu.ucne.loginapi.presentation.maintenance.MaintenanceScreen
 import edu.ucne.loginapi.presentation.maintenanceHistory.MaintenanceHistoryScreen
@@ -112,8 +111,8 @@ fun MyCarSettingNavHost(
             )
         ) { backStackEntry ->
             val conversationId =
-                backStackEntry.arguments?.getString("conversationId") ?: "default_conversation"
-            ChatScreen(conversationId = conversationId)
+                backStackEntry.arguments?.getString("conversationId") ?: "default"
+            ChatScreen(conversationId = conversationId, onBack = { navController.popBackStack() })
         }
         composable(AppDestination.Profile.route) {
             ProfileScreen(

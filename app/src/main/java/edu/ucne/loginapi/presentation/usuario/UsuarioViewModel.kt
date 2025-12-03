@@ -5,12 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.data.syncWorker.TriggerFullSyncUseCase
 import edu.ucne.loginapi.domain.model.SessionInfo
 import edu.ucne.loginapi.domain.model.Usuarios
 import edu.ucne.loginapi.domain.useCase.ClearSessionUseCase
 import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
 import edu.ucne.loginapi.domain.useCase.LoginUseCase
 import edu.ucne.loginapi.domain.useCase.SaveSessionUseCase
+import edu.ucne.loginapi.domain.useCase.SchedulePeriodicSyncUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.GetUsuariosUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.SaveUsuariosUseCase
 import kotlinx.coroutines.Job
@@ -28,8 +30,11 @@ class UsuarioViewModel @Inject constructor(
     private val saveSessionUseCase: SaveSessionUseCase,
     private val clearSessionUseCase: ClearSessionUseCase,
     private val getSessionUseCase: GetSessionUseCase,
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val triggerFullSyncUseCase: TriggerFullSyncUseCase,
+    private val schedulePeriodicSyncUseCase: SchedulePeriodicSyncUseCase
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(UsuarioUiState(isLoading = true))
     val state: StateFlow<UsuarioUiState> = _uiState.asStateFlow()
 
@@ -181,6 +186,13 @@ class UsuarioViewModel @Inject constructor(
                                     userName = usuario.userName
                                 )
                             )
+
+                            // 🔹 Sync completo inmediato
+                            triggerFullSyncUseCase()
+
+                            // 🔹 Programar sync periódico en background
+                            schedulePeriodicSyncUseCase()
+
                             _uiState.update {
                                 it.copy(
                                     isLoggedIn = true,

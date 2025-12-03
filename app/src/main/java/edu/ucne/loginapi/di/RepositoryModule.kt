@@ -5,7 +5,6 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import edu.ucne.loginapi.data.remote.repository.CarRepositoryImpl
-import edu.ucne.loginapi.data.remote.repository.ChatRepositoryImpl
 import edu.ucne.loginapi.data.remote.repository.MaintenanceRepositoryImpl
 import edu.ucne.loginapi.data.remote.repository.ManualRepositoryImpl
 import edu.ucne.loginapi.data.remote.repository.UserCarRepositoryImpl
@@ -32,10 +31,6 @@ interface RepositoryModule {
 
     @Binds
     @Singleton
-    fun bindChatRepository(impl: ChatRepositoryImpl): ChatRepository
-
-    @Binds
-    @Singleton
     fun bindManualRepository(impl: ManualRepositoryImpl): ManualRepository
 
     @Binds
@@ -59,8 +54,8 @@ interface RepositoryModule {
     fun bindUserCarRepository(impl: UserCarRepositoryImpl): UserCarRepository
 
     @Binds
-    abstract fun bindVehicleCatalogRepository(
+    @Singleton
+    fun bindVehicleCatalogRepository(
         impl: VehicleCatalogRepositoryImpl
     ): VehicleCatalogRepository
-
 }

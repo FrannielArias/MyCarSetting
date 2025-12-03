@@ -4,9 +4,6 @@ import edu.ucne.loginapi.data.entity.ChatMessageEntity
 import edu.ucne.loginapi.data.entity.MaintenanceHistoryEntity
 import edu.ucne.loginapi.data.entity.MaintenanceTaskEntity
 import edu.ucne.loginapi.data.entity.UserCarEntity
-import edu.ucne.loginapi.data.remote.dto.ChatMessageDto
-import edu.ucne.loginapi.data.remote.dto.ChatRequestDto
-import edu.ucne.loginapi.data.remote.dto.ChatResponseDto
 import edu.ucne.loginapi.data.remote.dto.CreateMaintenanceHistoryRequest
 import edu.ucne.loginapi.data.remote.dto.CreateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.CreateUserCarRequest
@@ -23,6 +20,7 @@ import edu.ucne.loginapi.data.remote.dto.VehicleYearRangeDto
 import edu.ucne.loginapi.data.remote.dto.WarningLightDto
 import edu.ucne.loginapi.domain.model.ChatMessage
 import edu.ucne.loginapi.domain.model.ChatRole
+
 import edu.ucne.loginapi.domain.model.FuelType
 import edu.ucne.loginapi.domain.model.GuideArticle
 import edu.ucne.loginapi.domain.model.MaintenanceHistory
@@ -237,24 +235,6 @@ fun GuideArticle.toDto(): GuideArticleDto =
         category = category
     )
 
-fun List<ChatMessage>.toChatRequestDto(): ChatRequestDto {
-    val conversationId = lastOrNull()?.conversationId ?: ""
-    return ChatRequestDto(
-        conversationId = conversationId,
-        messages = map { it.toDto() }
-    )
-}
-
-fun ChatResponseDto.toResponseDomain(conversationId: String): ChatMessage =
-    ChatMessage(
-        id = UUID.randomUUID().toString(),
-        conversationId = conversationId,
-        role = ChatRole.ASSISTANT,
-        content = reply,
-        timestampMillis = System.currentTimeMillis(),
-        isPendingSync = false
-    )
-
 fun UserCarEntity.toDomain(): UserCar =
     UserCar(
         id = id,
@@ -364,28 +344,24 @@ fun MaintenanceHistory.toEntity(): MaintenanceHistoryEntity =
 
 fun ChatMessageEntity.toDomain(): ChatMessage =
     ChatMessage(
-        id = id.toString(),
+        id = id,
         conversationId = conversationId,
-        role = role.toChatRole(),
+        role = ChatRole.valueOf(role),
         content = content,
-        timestampMillis = timestamp,
-        isPendingSync = false
+        timestampMillis = timestampMillis,
+        isPendingSync = isPendingSync
     )
 
 fun ChatMessage.toEntity(): ChatMessageEntity =
     ChatMessageEntity(
-        id = 0L,
+        id = id,
         conversationId = conversationId,
         role = role.name,
         content = content,
-        timestamp = timestampMillis
+        timestampMillis = timestampMillis,
+        isPendingSync = isPendingSync
     )
 
-fun ChatMessage.toDto(): ChatMessageDto =
-    ChatMessageDto(
-        role = role.name.lowercase(),
-        content = content
-    )
 
 fun VehicleBrandDto.toDomain(): VehicleBrand =
     VehicleBrand(
