@@ -14,53 +14,6 @@ class ServicesRepositoryImpl @Inject constructor(
     private val api: NominatimApiService
 ) : ServicesRepository {
 
-    private fun mapDtoToServiceItem(dto: NominatimPlaceDto, userLat: Double?, userLon: Double?, category: ServiceCategory?): ServiceItem {
-        val lat = dto.lat?.toDoubleOrNull() ?: 0.0
-        val lon = dto.lon?.toDoubleOrNull() ?: 0.0
-
-        val distanceText = if (userLat != null && userLon != null) {
-            val result = FloatArray(1)
-            Location.distanceBetween(userLat, userLon, lat, lon, result)
-            val meters = result[0]
-            when {
-                meters >= 1000f -> String.format("A %.1f km", meters / 1000f)
-                else -> String.format("A %d m", meters.toInt())
-            }
-        } else {
-            ""
-        }
-
-        val inferredName = dto.displayName ?: dto.address?.values?.firstOrNull() ?: "Sin nombre"
-
-        val inferredCategory = category ?: inferCategoryFromDto(dto)
-
-        val isOpen = true
-
-        return ServiceItem(
-            id = (dto.placeId ?: dto.osmId ?: System.currentTimeMillis()).toString(),
-            name = inferredName,
-            category = inferredCategory,
-            description = dto.type ?: dto.klass ?: "",
-            distanceText = distanceText,
-            isOpen = isOpen,
-            latitude = lat,
-            longitude = lon
-        )
-    }
-
-    private fun inferCategoryFromDto(dto: NominatimPlaceDto): ServiceCategory {
-        val t = (dto.type ?: "").lowercase()
-        val klass = (dto.klass ?: "").lowercase()
-        val display = (dto.displayName ?: "").lowercase()
-
-        return when {
-            t.contains("garage") || t.contains("car_repair") || display.contains("taller") || display.contains("mecanic") || klass.contains("building") -> ServiceCategory.TALLER
-            display.contains("lavad") || t.contains("car_wash") -> ServiceCategory.LAVADO
-            display.contains("emerg") || display.contains("grua") -> ServiceCategory.EMERGENCIA
-            else -> ServiceCategory.MANTENIMIENTO
-        }
-    }
-
     override suspend fun searchServices(
         query: String,
         limit: Int,
@@ -68,22 +21,61 @@ class ServicesRepositoryImpl @Inject constructor(
         userLon: Double?,
         category: ServiceCategory?
     ): Resource<List<ServiceItem>> {
+
         return try {
-            val q = query.trim()
-            val list = api.searchPlaces(q, limit = limit)
-            val items = list.map { dto ->
-                mapDtoToServiceItem(dto, userLat, userLon, category)
+            val q = when (category) {
+                ServiceCategory.GASOLINERA -> "amenity=fuel"
+                ServiceCategory.TALLER -> "shop=car_repair OR amenity=garage"
+                ServiceCategory.LAVADO -> "amenity=car_wash"
+                ServiceCategory.EMERGENCIA -> "amenity=hospital OR emergency"
+                else -> "amenity=fuel OR shop=car_repair OR amenity=car_wash"
             }
-            val sorted = if (userLat != null && userLon != null) {
-                items.sortedBy { item ->
-                    val res = FloatArray(1)
-                    Location.distanceBetween(userLat, userLon, item.latitude, item.longitude, res)
-                    res[0]
-                }
-            } else items
-            Resource.Success(sorted)
+
+            val result = api.search(q = q, limit = limit)
+
+            val mapped = result.mapNotNull { dto -> mapDto(dto, userLat, userLon) }
+
+            Resource.Success(mapped)
+
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "Error al consultar servicios")
+            Resource.Error("Error cargando servicios: ${e.message}")
+        }
+    }
+
+    private fun mapDto(dto: NominatimPlaceDto, lat: Double?, lon: Double?): ServiceItem? {
+        val latitude = dto.lat?.toDoubleOrNull() ?: return null
+        val longitude = dto.lon?.toDoubleOrNull() ?: return null
+
+        val distanceText =
+            if (lat != null && lon != null) {
+                val r = FloatArray(1)
+                Location.distanceBetween(lat, lon, latitude, longitude, r)
+                val m = r[0]
+                if (m >= 1000) "A %.1f km".format(m / 1000) else "A ${m.toInt()} m"
+            } else ""
+
+        return ServiceItem(
+            id = dto.placeId?.toString() ?: "${latitude}_${longitude}",
+            name = dto.displayName ?: "Servicio",
+            category = inferCategory(dto),
+            description = dto.type ?: "",
+            distanceText = distanceText,
+            latitude = latitude,
+            longitude = longitude,
+            isOpen = dto.extraTags?.containsKey("opening_hours") == true
+        )
+    }
+
+    private fun inferCategory(dto: NominatimPlaceDto): ServiceCategory {
+        val t = dto.type?.lowercase() ?: ""
+        val display = dto.displayName?.lowercase() ?: ""
+
+        return when {
+            t.contains("fuel") || display.contains("gas") -> ServiceCategory.GASOLINERA
+            t.contains("car_repair") || display.contains("taller") -> ServiceCategory.TALLER
+            t.contains("car_wash") || display.contains("lavado") -> ServiceCategory.LAVADO
+            t.contains("hospital") || display.contains("emerg") -> ServiceCategory.EMERGENCIA
+            else -> ServiceCategory.MANTENIMIENTO
         }
     }
 }
