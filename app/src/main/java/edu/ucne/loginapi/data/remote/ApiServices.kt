@@ -5,6 +5,7 @@ import edu.ucne.loginapi.data.remote.dto.CreateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.GuideArticleDto
 import edu.ucne.loginapi.data.remote.dto.MaintenanceHistoryDto
 import edu.ucne.loginapi.data.remote.dto.MaintenanceTaskDto
+import edu.ucne.loginapi.data.remote.dto.NominatimPlaceDto
 import edu.ucne.loginapi.data.remote.dto.UpdateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.UserCarDto
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
@@ -144,4 +145,15 @@ interface VehicleCatalogApiService {
     suspend fun getYearRangesByModel(
         @Path("modelId") modelId: Int
     ): Response<List<VehicleYearRangeDto>>
+}
+
+interface NominatimApiService {
+    @GET("search")
+    suspend fun searchPlaces(
+        @Query("q") q: String,
+        @Query("format") format: String = "jsonv2",
+        @Query("addressdetails") addressDetails: Int = 1,
+        @Query("limit") limit: Int = 30,
+        @Query("extratags") extraTags: Int = 1
+    ): List<NominatimPlaceDto>
 }
