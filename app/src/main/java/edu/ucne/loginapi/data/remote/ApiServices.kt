@@ -149,11 +149,13 @@ interface VehicleCatalogApiService {
 
 interface NominatimApiService {
     @GET("search")
-    suspend fun searchPlaces(
+    suspend fun search(
         @Query("q") q: String,
-        @Query("format") format: String = "jsonv2",
-        @Query("addressdetails") addressDetails: Int = 1,
-        @Query("limit") limit: Int = 30,
-        @Query("extratags") extraTags: Int = 1
+        @Query("format") format: String = "json",
+        @Query("limit") limit: Int = 40,
+        @Query("viewbox") viewbox: String? = null,
+        @Query("bounded") bounded: Int? = 1,
+        @Query("extratags") extraTags: Int? = 1,
+        @Query("addressdetails") addressDetails: Int? = 1
     ): List<NominatimPlaceDto>
 }
