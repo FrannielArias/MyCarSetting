@@ -1,14 +1,20 @@
 package edu.ucne.loginapi.data.remote.dto
 
-data class NominatimPlaceDto(
-    val placeId: Long?,
-    val osmType: String?,
-    val osmId: Long?,
-    val lat: String?,
-    val lon: String?,
-    val displayName: String?,
-    val type: String?,
-    val klass: String?,
-    val address: Map<String, String>?,
-    val extraTags: Map<String, String>?
+data class OverpassResponse(
+    val version: Double,
+    val elements: List<OverpassElement>
+)
+
+data class OverpassElement(
+    val type: String,
+    val id: Long,
+    val lat: Double?,
+    val lon: Double?,
+    val tags: Map<String, String>?,
+    val center: OverpassCenter?
+)
+
+data class OverpassCenter(
+    val lat: Double,
+    val lon: Double
 )
