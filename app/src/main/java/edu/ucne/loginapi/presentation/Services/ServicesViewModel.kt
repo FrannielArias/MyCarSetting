@@ -1,8 +1,8 @@
 package edu.ucne.loginapi.presentation.Services
 
 import ServiceCategory
-import ServiceItem
 import ServicesUiState
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,21 +22,31 @@ class ServicesViewModel @Inject constructor(
     private val _state = MutableStateFlow(ServicesUiState())
     val state = _state.asStateFlow()
 
-    init {
-        loadServices(null)
-    }
+    // NO cargar servicios automáticamente en init
+    // Esperar a tener ubicación del usuario
 
     fun onEvent(event: ServicesEvent) {
         when (event) {
-            ServicesEvent.LoadInitialData -> loadServices(null)
+            ServicesEvent.LoadInitialData -> {
+                // No hacer nada, esperar ubicación
+            }
+
+            is ServicesEvent.LoadForLocation -> {
+                loadServices(event.lat, event.lon, null)
+            }
 
             is ServicesEvent.OnCategorySelected -> {
                 _state.update { it.copy(selectedCategory = event.category) }
-                loadServices(event.category)
+                // Recargar con la nueva categoría
+                val currentLat = _state.value.userLat
+                val currentLon = _state.value.userLon
+                if (currentLat != null && currentLon != null) {
+                    loadServices(currentLat, currentLon, event.category)
+                }
             }
 
             is ServicesEvent.OnServiceClicked -> {
-                _state.update { it.copy(userMessage = "Seleccionaste ${event.id}") }
+                // No necesitas hacer nada aquí, la navegación está en el UI
             }
 
             ServicesEvent.OnUserMessageShown -> {
@@ -45,21 +55,35 @@ class ServicesViewModel @Inject constructor(
         }
     }
 
-    private fun loadServices(category: ServiceCategory?) {
+    private fun loadServices(lat: Double, lon: Double, category: ServiceCategory?) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            Log.d("ServicesViewModel", "🔄 Iniciando búsqueda de servicios...")
+            Log.d("ServicesViewModel", "📍 Ubicación: $lat, $lon")
+            Log.d("ServicesViewModel", "🏷️ Categoría: $category")
 
-            val response =
-                repository.searchServices(
-                    query = "",
-                    limit = 40,
-                    userLat = 19.3035,   // Cotuí real
-                    userLon = -70.2500,
-                    category = category
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    userLat = lat,
+                    userLon = lon
                 )
+            }
+
+            val response = repository.searchServices(
+                query = "",
+                limit = 40,
+                userLat = lat,
+                userLon = lon,
+                category = category
+            )
 
             when (response) {
                 is Resource.Success -> {
+                    Log.d("ServicesViewModel", "✅ Servicios encontrados: ${response.data?.size ?: 0}")
+                    response.data?.forEach { service ->
+                        Log.d("ServicesViewModel", "  - ${service.name} (${service.distanceText})")
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -69,6 +93,7 @@ class ServicesViewModel @Inject constructor(
                 }
 
                 is Resource.Error -> {
+                    Log.e("ServicesViewModel", "❌ Error: ${response.message}")
                     _state.update {
                         it.copy(
                             isLoading = false,
