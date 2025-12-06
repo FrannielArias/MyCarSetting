@@ -6,21 +6,39 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import edu.ucne.loginapi.data.remote.CarApiService
-import edu.ucne.loginapi.data.remote.MaintenanceApiService
-import edu.ucne.loginapi.data.remote.ManualApiService
-import edu.ucne.loginapi.data.remote.UsuariosApiService
-import edu.ucne.loginapi.data.remote.VehicleCatalogApiService
+import edu.ucne.loginapi.data.remote.*
+import edu.ucne.loginapi.data.remote.repository.ServicesRepositoryImpl
+import edu.ucne.loginapi.domain.repository.ServicesRepository
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+/* ---------------------------------------- */
+/* YOUR QUALIFIERS                          */
+/* ---------------------------------------- */
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MainRetrofit
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class NominatimRetrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
     private const val BASE_URL = "https://mycarsettingapi.azurewebsites.net/"
+    private const val NOMINATIM_BASE = "https://nominatim.openstreetmap.org/"
+
+    /* ---------------------------------------- */
+    /* MOSHI                                    */
+    /* ---------------------------------------- */
 
     @Provides
     @Singleton
@@ -29,46 +47,107 @@ object NetworkModule {
             .addLast(KotlinJsonAdapterFactory())
             .build()
 
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
-        OkHttpClient.Builder()
-            .build()
+    /* ---------------------------------------- */
+    /* OKHTTP                                   */
+    /* ---------------------------------------- */
 
     @Provides
     @Singleton
-    fun provideRetrofit(
-        okHttpClient: OkHttpClient,
+    fun provideOkHttp(): OkHttpClient {
+        val logging = HttpLoggingInterceptor()
+        logging.level = HttpLoggingInterceptor.Level.BASIC
+
+        val uaInterceptor = Interceptor { chain ->
+            val request = chain.request().newBuilder()
+                .header("User-Agent", "MyCarSetting/1.0 (contact@example.com)")
+                .build()
+            chain.proceed(request)
+        }
+
+        return OkHttpClient.Builder()
+            .addInterceptor(uaInterceptor)
+            .addInterceptor(logging)
+            .build()
+    }
+
+    /* ---------------------------------------- */
+    /* RETROFIT PRINCIPAL                       */
+    /* ---------------------------------------- */
+
+    @Provides
+    @Singleton
+    @MainRetrofit
+    fun provideMainRetrofit(
+        okHttp: OkHttpClient,
         moshi: Moshi
     ): Retrofit =
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(okHttp)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 
+    /* ---------------------------------------- */
+    /* RETROFIT NOMINATIM                       */
+    /* ---------------------------------------- */
+
     @Provides
     @Singleton
-    fun provideUsuariosApiService(retrofit: Retrofit): UsuariosApiService =
+    @NominatimRetrofit
+    fun provideNominatimRetrofit(
+        okHttp: OkHttpClient,
+        moshi: Moshi
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(NOMINATIM_BASE)
+            .client(okHttp)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    /* ---------------------------------------- */
+    /* SERVICIOS API PRINCIPALES                */
+    /* ---------------------------------------- */
+
+    @Provides
+    @Singleton
+    fun provideUsuariosApiService(@MainRetrofit retrofit: Retrofit): UsuariosApiService =
         retrofit.create(UsuariosApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideCarApiService(retrofit: Retrofit): CarApiService =
+    fun provideCarApiService(@MainRetrofit retrofit: Retrofit): CarApiService =
         retrofit.create(CarApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideMaintenanceApiService(retrofit: Retrofit): MaintenanceApiService =
+    fun provideMaintenanceApiService(@MainRetrofit retrofit: Retrofit): MaintenanceApiService =
         retrofit.create(MaintenanceApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideManualApiService(retrofit: Retrofit): ManualApiService =
+    fun provideManualApiService(@MainRetrofit retrofit: Retrofit): ManualApiService =
         retrofit.create(ManualApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideVehicleCatalogApiService(retrofit: Retrofit): VehicleCatalogApiService =
+    fun provideVehicleCatalogApiService(@MainRetrofit retrofit: Retrofit): VehicleCatalogApiService =
         retrofit.create(VehicleCatalogApiService::class.java)
+
+    /* ---------------------------------------- */
+    /* API NOMINATIM                             */
+    /* ---------------------------------------- */
+
+    @Provides
+    @Singleton
+    fun provideNominatimApi(@NominatimRetrofit retrofit: Retrofit): NominatimApiService =
+        retrofit.create(NominatimApiService::class.java)
+
+    /* ---------------------------------------- */
+    /* REPOSITORY                                */
+    /* ---------------------------------------- */
+
+    @Provides
+    @Singleton
+    fun provideServicesRepository(api: NominatimApiService): ServicesRepository =
+        ServicesRepositoryImpl(api)
 }
