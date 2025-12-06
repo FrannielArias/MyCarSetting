@@ -91,4 +91,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.google.mlkit:genai-prompt:1.0.0-alpha1")
     implementation("com.google.android.gms:play-services-tasks:18.0.2")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.moshi:moshi:1.15.0")
 }
