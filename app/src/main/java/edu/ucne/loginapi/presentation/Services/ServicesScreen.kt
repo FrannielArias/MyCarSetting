@@ -290,7 +290,8 @@ private fun ServiceCategoryChips(
         ServiceCategory.TALLER,
         ServiceCategory.MANTENIMIENTO,
         ServiceCategory.LAVADO,
-        ServiceCategory.EMERGENCIA
+        ServiceCategory.EMERGENCIA,
+        ServiceCategory.GASOLINERA
     )
 
     LazyRow(
@@ -305,6 +306,7 @@ private fun ServiceCategoryChips(
                 ServiceCategory.MANTENIMIENTO -> "Mantenimiento"
                 ServiceCategory.LAVADO -> "Lavado"
                 ServiceCategory.EMERGENCIA -> "Emergencia"
+                ServiceCategory.GASOLINERA -> "Gasolinera"
             }
 
             AssistChip(
