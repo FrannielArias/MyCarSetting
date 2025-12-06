@@ -20,5 +20,6 @@ enum class ServiceCategory {
     TALLER,
     MANTENIMIENTO,
     LAVADO,
-    EMERGENCIA
+    EMERGENCIA,
+    GASOLINERA
 }
