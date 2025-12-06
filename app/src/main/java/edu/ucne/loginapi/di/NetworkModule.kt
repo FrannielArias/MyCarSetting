@@ -59,7 +59,7 @@ object NetworkModule {
 
         val uaInterceptor = Interceptor { chain ->
             val request = chain.request().newBuilder()
-                .header("User-Agent", "MyCarSetting/1.0 (contact@example.com)")
+                .header("User-Agent", "MyCarSetting/1.0 (frannielar09@gmail.com)")
                 .build()
             chain.proceed(request)
         }
