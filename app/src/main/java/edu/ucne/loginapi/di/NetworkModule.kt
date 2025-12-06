@@ -17,28 +17,20 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
-/* ---------------------------------------- */
-/* YOUR QUALIFIERS                          */
-/* ---------------------------------------- */
-
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class MainRetrofit
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class NominatimRetrofit
+annotation class OverpassRetrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
     private const val BASE_URL = "https://mycarsettingapi.azurewebsites.net/"
-    private const val NOMINATIM_BASE = "https://nominatim.openstreetmap.org/"
-
-    /* ---------------------------------------- */
-    /* MOSHI                                    */
-    /* ---------------------------------------- */
+    private const val OVERPASS_BASE = "https://overpass-api.de/api/"
 
     @Provides
     @Singleton
@@ -47,15 +39,11 @@ object NetworkModule {
             .addLast(KotlinJsonAdapterFactory())
             .build()
 
-    /* ---------------------------------------- */
-    /* OKHTTP                                   */
-    /* ---------------------------------------- */
-
     @Provides
     @Singleton
     fun provideOkHttp(): OkHttpClient {
         val logging = HttpLoggingInterceptor()
-        logging.level = HttpLoggingInterceptor.Level.BASIC
+        logging.level = HttpLoggingInterceptor.Level.BODY
 
         val uaInterceptor = Interceptor { chain ->
             val request = chain.request().newBuilder()
@@ -70,10 +58,6 @@ object NetworkModule {
             .build()
     }
 
-    /* ---------------------------------------- */
-    /* RETROFIT PRINCIPAL                       */
-    /* ---------------------------------------- */
-
     @Provides
     @Singleton
     @MainRetrofit
@@ -87,27 +71,20 @@ object NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 
-    /* ---------------------------------------- */
-    /* RETROFIT NOMINATIM                       */
-    /* ---------------------------------------- */
-
     @Provides
     @Singleton
-    @NominatimRetrofit
-    fun provideNominatimRetrofit(
+    @OverpassRetrofit
+    fun provideOverpassRetrofit(
         okHttp: OkHttpClient,
         moshi: Moshi
     ): Retrofit =
         Retrofit.Builder()
-            .baseUrl(NOMINATIM_BASE)
+            .baseUrl(OVERPASS_BASE)
             .client(okHttp)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 
-    /* ---------------------------------------- */
-    /* SERVICIOS API PRINCIPALES                */
-    /* ---------------------------------------- */
-
+    // APIs Principales
     @Provides
     @Singleton
     fun provideUsuariosApiService(@MainRetrofit retrofit: Retrofit): UsuariosApiService =
@@ -133,21 +110,15 @@ object NetworkModule {
     fun provideVehicleCatalogApiService(@MainRetrofit retrofit: Retrofit): VehicleCatalogApiService =
         retrofit.create(VehicleCatalogApiService::class.java)
 
-    /* ---------------------------------------- */
-    /* API NOMINATIM                             */
-    /* ---------------------------------------- */
-
+    // API Overpass para búsqueda de lugares
     @Provides
     @Singleton
-    fun provideNominatimApi(@NominatimRetrofit retrofit: Retrofit): NominatimApiService =
-        retrofit.create(NominatimApiService::class.java)
+    fun provideOverpassApi(@OverpassRetrofit retrofit: Retrofit): OverpassApiService =
+        retrofit.create(OverpassApiService::class.java)
 
-    /* ---------------------------------------- */
-    /* REPOSITORY                                */
-    /* ---------------------------------------- */
-
+    // Repository
     @Provides
     @Singleton
-    fun provideServicesRepository(api: NominatimApiService): ServicesRepository =
+    fun provideServicesRepository(api: OverpassApiService): ServicesRepository =
         ServicesRepositoryImpl(api)
 }
