@@ -2,7 +2,9 @@ data class ServicesUiState(
     val isLoading: Boolean = true,
     val services: List<ServiceItem> = emptyList(),
     val selectedCategory: ServiceCategory? = null,
-    val userMessage: String? = null
+    val userMessage: String? = null,
+    val userLat: Double? = null,  // ⬅️ NUEVO
+    val userLon: Double? = null   // ⬅️ NUEVO
 )
 
 data class ServiceItem(
