@@ -5,7 +5,7 @@ import edu.ucne.loginapi.data.remote.dto.CreateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.GuideArticleDto
 import edu.ucne.loginapi.data.remote.dto.MaintenanceHistoryDto
 import edu.ucne.loginapi.data.remote.dto.MaintenanceTaskDto
-import edu.ucne.loginapi.data.remote.dto.NominatimPlaceDto
+import edu.ucne.loginapi.data.remote.dto.OverpassResponse
 import edu.ucne.loginapi.data.remote.dto.UpdateMaintenanceTaskRequest
 import edu.ucne.loginapi.data.remote.dto.UserCarDto
 import edu.ucne.loginapi.data.remote.dto.UsuariosDto
@@ -147,15 +147,9 @@ interface VehicleCatalogApiService {
     ): Response<List<VehicleYearRangeDto>>
 }
 
-interface NominatimApiService {
-    @GET("search")
-    suspend fun search(
-        @Query("q") q: String,
-        @Query("format") format: String = "json",
-        @Query("limit") limit: Int = 40,
-        @Query("viewbox") viewbox: String? = null,
-        @Query("bounded") bounded: Int? = 1,
-        @Query("extratags") extraTags: Int? = 1,
-        @Query("addressdetails") addressDetails: Int? = 1
-    ): List<NominatimPlaceDto>
+interface OverpassApiService {
+    @GET("interpreter")
+    suspend fun executeQuery(
+        @Query("data") query: String
+    ): Response<OverpassResponse>
 }
