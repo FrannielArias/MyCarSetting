@@ -139,4 +139,5 @@ class CarRepositoryImpl @Inject constructor(
             Resource.Error(e.localizedMessage ?: "Error al sincronizar cambios pendientes")
         }
     }
+
 }

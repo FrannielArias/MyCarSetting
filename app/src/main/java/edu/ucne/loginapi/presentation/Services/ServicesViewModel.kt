@@ -1,39 +1,45 @@
 package edu.ucne.loginapi.presentation.Services
 
-import ServiceItem
+import ServiceCategory
 import ServicesUiState
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import edu.ucne.loginapi.data.remote.Resource
+import edu.ucne.loginapi.domain.repository.ServicesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ServicesViewModel @Inject constructor() : ViewModel() {
+class ServicesViewModel @Inject constructor(
+    private val repository: ServicesRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ServicesUiState())
-    val state: StateFlow<ServicesUiState> = _state.asStateFlow()
-
-    init {
-        onEvent(ServicesEvent.LoadInitialData)
-    }
+    val state = _state.asStateFlow()
 
     fun onEvent(event: ServicesEvent) {
         when (event) {
-            ServicesEvent.LoadInitialData -> loadInitial()
+            ServicesEvent.LoadInitialData -> {}
+
+            is ServicesEvent.LoadForLocation -> {
+                loadServices(event.lat, event.lon, null)
+            }
 
             is ServicesEvent.OnCategorySelected -> {
                 _state.update { it.copy(selectedCategory = event.category) }
+                val currentLat = _state.value.userLat
+                val currentLon = _state.value.userLon
+                if (currentLat != null && currentLon != null) {
+                    loadServices(currentLat, currentLon, event.category)
+                }
             }
 
-            is ServicesEvent.OnServiceClicked -> {
-                _state.update { it.copy(userMessage = "Seleccionaste ${event.id}") }
-            }
+            is ServicesEvent.OnServiceClicked -> {}
 
             ServicesEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
@@ -41,60 +47,54 @@ class ServicesViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun loadInitial() {
+    private fun loadServices(lat: Double, lon: Double, category: ServiceCategory?) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-
-            delay(400)
-
-            val items = listOf(
-                ServiceItem(
-                    id = "1",
-                    name = "Taller Rodríguez",
-                    category = ServiceCategory.TALLER,
-                    description = "Mecánica general, frenos y suspensión",
-                    distanceText = "A 1.2 km",
-                    isOpen = true,
-                    latitude = 19.3030,
-                    longitude = -70.2520
-                ),
-                ServiceItem(
-                    id = "2",
-                    name = "Cambio de aceite Express",
-                    category = ServiceCategory.MANTENIMIENTO,
-                    description = "Cambio de aceite y filtros sin cita",
-                    distanceText = "A 850 m",
-                    isOpen = true,
-                    latitude = 19.2990,
-                    longitude = -70.2500
-                ),
-                ServiceItem(
-                    id = "3",
-                    name = "Lavado AutoClean",
-                    category = ServiceCategory.LAVADO,
-                    description = "Lavado completo y detallado interior",
-                    distanceText = "A 2.3 km",
-                    isOpen = false,
-                    latitude = 19.2985,
-                    longitude = -70.2535
-                ),
-                ServiceItem(
-                    id = "4",
-                    name = "Gomera La Rápida",
-                    category = ServiceCategory.EMERGENCIA,
-                    description = "Gomas, pinchazos y alineación básica",
-                    distanceText = "A 2.1 km",
-                    isOpen = true,
-                    latitude = 19.3020,
-                    longitude = -70.2550
-                )
-            )
+            Log.d("ServicesViewModel", "🔄 Iniciando búsqueda de servicios...")
+            Log.d("ServicesViewModel", "📍 Ubicación: $lat, $lon")
+            Log.d("ServicesViewModel", "🏷️ Categoría: $category")
 
             _state.update {
                 it.copy(
-                    services = items,
-                    isLoading = false
+                    isLoading = true,
+                    userLat = lat,
+                    userLon = lon
                 )
+            }
+
+            val response = repository.searchServices(
+                query = "",
+                limit = 40,
+                userLat = lat,
+                userLon = lon,
+                category = category
+            )
+
+            when (response) {
+                is Resource.Success -> {
+                    Log.d("ServicesViewModel", "✅ Servicios encontrados: ${response.data?.size ?: 0}")
+                    response.data?.forEach { service ->
+                        Log.d("ServicesViewModel", "  - ${service.name} (${service.distanceText})")
+                    }
+
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            services = response.data ?: emptyList()
+                        )
+                    }
+                }
+
+                is Resource.Error -> {
+                    Log.e("ServicesViewModel", "❌ Error: ${response.message}")
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            userMessage = response.message
+                        )
+                    }
+                }
+
+                else -> {}
             }
         }
     }

@@ -2,7 +2,9 @@ data class ServicesUiState(
     val isLoading: Boolean = true,
     val services: List<ServiceItem> = emptyList(),
     val selectedCategory: ServiceCategory? = null,
-    val userMessage: String? = null
+    val userMessage: String? = null,
+    val userLat: Double? = null,
+    val userLon: Double? = null
 )
 
 data class ServiceItem(
@@ -20,5 +22,6 @@ enum class ServiceCategory {
     TALLER,
     MANTENIMIENTO,
     LAVADO,
-    EMERGENCIA
+    EMERGENCIA,
+    GASOLINERA
 }

@@ -10,4 +10,5 @@ class AddMaintenanceRecordUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(record: MaintenanceHistory): Resource<MaintenanceHistory> =
         repository.addRecord(record)
+
 }

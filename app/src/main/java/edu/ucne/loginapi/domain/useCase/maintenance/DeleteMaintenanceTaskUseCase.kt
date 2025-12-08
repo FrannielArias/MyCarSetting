@@ -9,4 +9,5 @@ class DeleteMaintenanceTaskUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(taskId: Int): Resource<Unit> =
         repository.deleteTaskLocal(taskId)
+
 }

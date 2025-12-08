@@ -9,4 +9,5 @@ class ObserveCarsUseCase @Inject constructor(
     private val repository: UserCarRepository
 ) {
     operator fun invoke(): Flow<List<UserCar>> = repository.observeCars()
+
 }

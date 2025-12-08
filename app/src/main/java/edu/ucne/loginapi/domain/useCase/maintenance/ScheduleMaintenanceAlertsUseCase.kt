@@ -21,4 +21,5 @@ class ScheduleMaintenanceAlertsUseCase @Inject constructor(
             request
         )
     }
+
 }

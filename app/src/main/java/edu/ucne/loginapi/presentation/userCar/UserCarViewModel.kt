@@ -16,7 +16,6 @@ import edu.ucne.loginapi.domain.useCase.currentCar.SetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.userCar.AddUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.userCar.DeleteUserCarUseCase
 import edu.ucne.loginapi.domain.useCase.userCar.ObserveCarsUseCase
-import edu.ucne.loginapi.domain.validation.ValidateCarDataUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -212,7 +210,6 @@ class UserCarViewModel @Inject constructor(
         val selectedYearRangeId = _state.value.selectedYearRangeId
         val plate = _state.value.plate.trim()
 
-        // Validar que todos los campos estén completos
         if (selectedBrandId == null || selectedModelId == null || selectedYearRangeId == null) {
             _state.update {
                 it.copy(userMessage = "Debes seleccionar marca, modelo y año")
@@ -220,7 +217,6 @@ class UserCarViewModel @Inject constructor(
             return
         }
 
-        // Validar la placa (obligatoria y 7 caracteres)
         if (plate.isEmpty()) {
             _state.update {
                 it.copy(userMessage = "La placa es obligatoria")

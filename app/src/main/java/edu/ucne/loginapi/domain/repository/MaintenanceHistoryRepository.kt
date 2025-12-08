@@ -9,4 +9,5 @@ interface MaintenanceHistoryRepository {
     suspend fun getHistoryById(id: Int): MaintenanceHistory?
     suspend fun addRecord(record: MaintenanceHistory): Resource<MaintenanceHistory>
     suspend fun deleteRecord(id: Int): Resource<Unit>
+
 }

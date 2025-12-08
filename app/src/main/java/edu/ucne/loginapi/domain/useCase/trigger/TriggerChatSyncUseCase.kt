@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase
+package edu.ucne.loginapi.domain.useCase.trigger
 
 import android.content.Context
 import androidx.work.OneTimeWorkRequestBuilder
@@ -14,4 +14,5 @@ class TriggerChatSyncUseCase @Inject constructor(
         val request = OneTimeWorkRequestBuilder<SyncWorker>().build()
         WorkManager.getInstance(context).enqueue(request)
     }
+
 }

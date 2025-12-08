@@ -72,4 +72,5 @@ class ManualRemoteDataSource @Inject constructor(
             Resource.Error(e.localizedMessage ?: NETWORK_ERROR_MESSAGE)
         }
     }
+
 }

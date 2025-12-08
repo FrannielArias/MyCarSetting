@@ -9,4 +9,5 @@ class SetCurrentCarUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(carId: Int): Resource<Unit> =
         repository.setCurrentCar(carId)
+
 }

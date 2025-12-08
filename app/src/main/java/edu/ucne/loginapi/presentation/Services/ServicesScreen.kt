@@ -8,7 +8,6 @@ import ServicesUiState
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.location.Location
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +54,8 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 import edu.ucne.loginapi.ui.components.ScreenScaffold
+import android.util.Log
+import androidx.compose.material3.*
 
 @Composable
 fun ServicesScreen(
@@ -79,26 +80,10 @@ fun ServicesScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (state.isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    MyCarLoadingIndicator()
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Buscando servicios cercanos...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                ServicesContent(
-                    state = state,
-                    onEvent = viewModel::onEvent
-                )
-            }
+            ServicesContent(
+                state = state,
+                onEvent = viewModel::onEvent
+            )
         }
     }
 }
@@ -116,6 +101,7 @@ private fun ServicesContent(
 
     var hasLocationPermission by remember { mutableStateOf(false) }
     var myLocation by remember { mutableStateOf<LatLng?>(null) }
+    var isLoadingLocation by remember { mutableStateOf(true) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -125,15 +111,32 @@ private fun ServicesContent(
                     permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
         if (hasLocationPermission) {
+            Log.d("ServicesScreen", "✅ Permisos concedidos, obteniendo ubicación...")
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
-                    myLocation = LatLng(location.latitude, location.longitude)
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    myLocation = latLng
+                    isLoadingLocation = false
+                    Log.d("ServicesScreen", "✅ Ubicación obtenida: ${location.latitude}, ${location.longitude}")
+
+                    // ✅ LLAMAR AL VIEWMODEL CON LA UBICACIÓN
+                    onEvent(ServicesEvent.LoadForLocation(location.latitude, location.longitude))
+                } else {
+                    Log.e("ServicesScreen", "❌ Location es null")
+                    isLoadingLocation = false
                 }
+            }.addOnFailureListener { e ->
+                Log.e("ServicesScreen", "❌ Error al obtener ubicación: ${e.message}")
+                isLoadingLocation = false
             }
+        } else {
+            Log.e("ServicesScreen", "❌ Permisos NO concedidos")
+            isLoadingLocation = false
         }
     }
 
     LaunchedEffect(Unit) {
+        Log.d("ServicesScreen", "🔄 Solicitando permisos de ubicación...")
         permissionLauncher.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -142,40 +145,95 @@ private fun ServicesContent(
         )
     }
 
+    if (isLoadingLocation || state.isLoading) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            MyCarLoadingIndicator()
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = if (isLoadingLocation) "Obteniendo tu ubicación..." else "Buscando servicios cercanos...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
+    if (!hasLocationPermission) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Se requiere permiso de ubicación",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Necesitamos tu ubicación para mostrarte servicios cercanos",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                permissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }) {
+                Text("Conceder permiso")
+            }
+        }
+        return
+    }
+
+    if (myLocation == null) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "No se pudo obtener tu ubicación",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Asegúrate de tener el GPS activado",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                isLoadingLocation = true
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        val latLng = LatLng(location.latitude, location.longitude)
+                        myLocation = latLng
+                        onEvent(ServicesEvent.LoadForLocation(location.latitude, location.longitude))
+                    }
+                    isLoadingLocation = false
+                }
+            }) {
+                Text("Reintentar")
+            }
+        }
+        return
+    }
+
     val services = remember(state.services, state.selectedCategory) {
         state.selectedCategory?.let { category ->
             state.services.filter { it.category == category }
         } ?: state.services
     }
 
-    val nearbyServices = remember(services, myLocation) {
-        val currentLocation = myLocation
-        if (currentLocation == null) {
-            emptyList()
-        } else {
-            services
-                .map { service ->
-                    val result = FloatArray(1)
-                    Location.distanceBetween(
-                        currentLocation.latitude,
-                        currentLocation.longitude,
-                        service.latitude,
-                        service.longitude,
-                        result
-                    )
-                    service to result[0]
-                }
-                .filter { it.second <= 10_000f }
-                .sortedBy { it.second }
-                .map { it.first }
-        }
-    }
-
-    val defaultCenter = myLocation
-        ?: nearbyServices.firstOrNull()?.let {
-            LatLng(it.latitude, it.longitude)
-        }
-        ?: LatLng(18.4861, -69.9312)
+    val defaultCenter = myLocation ?: LatLng(19.0522, -70.1498)
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultCenter, 13f)
@@ -206,7 +264,7 @@ private fun ServicesContent(
             cameraPositionState = cameraPositionState,
             properties = mapProperties
         ) {
-            nearbyServices.forEach { service ->
+            services.forEach { service ->
                 Marker(
                     state = MarkerState(
                         position = LatLng(service.latitude, service.longitude)
@@ -236,23 +294,35 @@ private fun ServicesContent(
     }
 
     Text(
-        text = "Puntos de interés",
+        text = "Puntos de interés (${services.size})",
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold
     )
 
-    if (nearbyServices.isEmpty()) {
-        Text(
-            text = "No hay servicios cercanos a tu ubicación actual.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    if (services.isEmpty()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "No hay servicios cercanos",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Intenta cambiar el filtro o buscar en otra ubicación",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(nearbyServices, key = { it.id }) { service ->
+            items(services, key = { it.id }) { service ->
                 ServiceItemCard(
                     service = service,
                     onClick = {
@@ -269,9 +339,7 @@ private fun ServicesContent(
                             val browserUri = Uri.parse(
                                 "https://www.google.com/maps/dir/?api=1&destination=${service.latitude},${service.longitude}"
                             )
-                            context.startActivity(
-                                Intent(Intent.ACTION_VIEW, browserUri)
-                            )
+                            context.startActivity(Intent(Intent.ACTION_VIEW, browserUri))
                         }
                     }
                 )
@@ -290,7 +358,8 @@ private fun ServiceCategoryChips(
         ServiceCategory.TALLER,
         ServiceCategory.MANTENIMIENTO,
         ServiceCategory.LAVADO,
-        ServiceCategory.EMERGENCIA
+        ServiceCategory.EMERGENCIA,
+        ServiceCategory.GASOLINERA
     )
 
     LazyRow(
@@ -305,6 +374,7 @@ private fun ServiceCategoryChips(
                 ServiceCategory.MANTENIMIENTO -> "Mantenimiento"
                 ServiceCategory.LAVADO -> "Lavado"
                 ServiceCategory.EMERGENCIA -> "Emergencia"
+                ServiceCategory.GASOLINERA -> "Gasolinera"
             }
 
             AssistChip(
@@ -365,7 +435,8 @@ private fun ServiceItemCard(
             ) {
                 Text(
                     text = service.distanceText,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Card(
                     colors = CardDefaults.cardColors(
@@ -391,4 +462,5 @@ private fun ServiceItemCard(
             }
         }
     }
+
 }

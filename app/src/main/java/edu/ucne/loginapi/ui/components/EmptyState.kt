@@ -23,4 +23,5 @@ fun EmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+
 }

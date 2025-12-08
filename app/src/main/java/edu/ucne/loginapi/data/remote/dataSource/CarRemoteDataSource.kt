@@ -100,4 +100,5 @@ class CarRemoteDataSource @Inject constructor(
             Resource.Error(e.localizedMessage ?: NETWORK_ERROR)
         }
     }
+
 }

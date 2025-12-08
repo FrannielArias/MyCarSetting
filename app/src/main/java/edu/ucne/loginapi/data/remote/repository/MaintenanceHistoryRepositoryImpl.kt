@@ -41,4 +41,5 @@ class MaintenanceHistoryRepositoryImpl @Inject constructor(
             Resource.Error(e.localizedMessage ?: "Error al eliminar historial")
         }
     }
+
 }

@@ -10,4 +10,5 @@ class GetGuideArticleDetailUseCase @Inject constructor(
 ) {
     operator fun invoke(id: Int): Flow<GuideArticle?> =
         repository.getGuideArticleDetail(id)
+
 }

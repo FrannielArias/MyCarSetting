@@ -22,4 +22,5 @@ class RemoteDataSource @Inject constructor(
     suspend fun updateUsuarios(usuariosDto: UsuariosDto) {
         return api.updateUsuarios(usuariosDto)
     }
+
 }

@@ -7,9 +7,9 @@ import edu.ucne.loginapi.data.syncWorker.TriggerFullSyncUseCase
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.model.VehicleAlert
 import edu.ucne.loginapi.domain.model.VehicleAlertLevel
-import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
-import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
-import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.session.GetSessionUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ObserveOverdueTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ObserveUpcomingTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.ScheduleMaintenanceAlertsUseCase
 import javax.inject.Inject
@@ -65,7 +65,6 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            // Disparamos sync global al cargar el dashboard
             triggerFullSyncUseCase()
 
             val car = getCurrentCarUseCase()
@@ -97,7 +96,6 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
 
-            // Al refrescar, también pedimos sync global
             triggerFullSyncUseCase()
 
             val car = getCurrentCarUseCase()
@@ -274,4 +272,5 @@ class DashboardViewModel @Inject constructor(
                 }.thenByDescending { it.createdAtMillis }
             )
     }
+
 }

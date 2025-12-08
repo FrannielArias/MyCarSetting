@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase
+package edu.ucne.loginapi.domain.useCase.login
 
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.model.Usuarios
@@ -11,4 +11,5 @@ class LoginUseCase @Inject constructor(
     suspend operator fun invoke(userName: String, password: String): Resource<Usuarios> {
         return repository.login(userName, password)
     }
+
 }

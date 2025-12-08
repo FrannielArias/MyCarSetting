@@ -14,4 +14,5 @@ class TriggerMaintenanceSyncUseCase @Inject constructor(
         val request = OneTimeWorkRequestBuilder<SyncWorker>().build()
         WorkManager.getInstance(context).enqueue(request)
     }
+
 }

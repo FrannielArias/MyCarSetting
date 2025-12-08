@@ -8,10 +8,10 @@ import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.data.syncWorker.TriggerFullSyncUseCase
 import edu.ucne.loginapi.domain.model.SessionInfo
 import edu.ucne.loginapi.domain.model.Usuarios
-import edu.ucne.loginapi.domain.useCase.ClearSessionUseCase
-import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
-import edu.ucne.loginapi.domain.useCase.LoginUseCase
-import edu.ucne.loginapi.domain.useCase.SaveSessionUseCase
+import edu.ucne.loginapi.domain.useCase.session.ClearSessionUseCase
+import edu.ucne.loginapi.domain.useCase.session.GetSessionUseCase
+import edu.ucne.loginapi.domain.useCase.login.LoginUseCase
+import edu.ucne.loginapi.domain.useCase.session.SaveSessionUseCase
 import edu.ucne.loginapi.domain.useCase.SchedulePeriodicSyncUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.GetUsuariosUseCase
 import edu.ucne.loginapi.domain.useCase.Usuarios.SaveUsuariosUseCase
@@ -187,10 +187,8 @@ class UsuarioViewModel @Inject constructor(
                                 )
                             )
 
-                            // 🔹 Sync completo inmediato
                             triggerFullSyncUseCase()
 
-                            // 🔹 Programar sync periódico en background
                             schedulePeriodicSyncUseCase()
 
                             _uiState.update {

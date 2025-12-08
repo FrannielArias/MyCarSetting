@@ -7,4 +7,5 @@ interface SessionRepository {
     fun getSession(): Flow<SessionInfo>
     suspend fun saveSession(info: SessionInfo)
     suspend fun clearSession()
+
 }

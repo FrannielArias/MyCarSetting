@@ -35,4 +35,5 @@ fun ScreenScaffold(
     ) { padding ->
         content(padding, snackbarHostState)
     }
+
 }

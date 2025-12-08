@@ -26,4 +26,5 @@ interface MaintenanceHistoryDao {
 
     @Query("DELETE FROM maintenance_history WHERE carId = :carId")
     suspend fun clearForCar(carId: Int)
+
 }

@@ -9,4 +9,5 @@ class DeleteUserCarUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(carId: Int): Resource<Unit> =
         repository.deleteCar(carId)
+
 }

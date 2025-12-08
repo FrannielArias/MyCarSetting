@@ -9,4 +9,5 @@ interface ManualRepository {
     fun getWarningLightDetail(id: Int): Flow<WarningLight?>
     fun getGuideArticles(category: String?): Flow<List<GuideArticle>>
     fun getGuideArticleDetail(id: Int): Flow<GuideArticle?>
+
 }

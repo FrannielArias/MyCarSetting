@@ -34,4 +34,5 @@ class VehicleCatalogRepositoryImpl @Inject constructor(
             is Resource.Error, is Resource.Loading -> emit(emptyList())
         }
     }
+
 }

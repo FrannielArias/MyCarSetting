@@ -9,4 +9,5 @@ class DeleteMaintenanceRecordUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(recordId: Int): Resource<Unit> =
         repository.deleteRecord(recordId)
+
 }

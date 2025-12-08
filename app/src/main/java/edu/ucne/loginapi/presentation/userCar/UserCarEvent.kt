@@ -14,7 +14,6 @@ sealed interface UserCarEvent {
     data class OnBrandSelected(val brand: VehicleBrand) : UserCarEvent
     data class OnModelSelected(val model: VehicleModel) : UserCarEvent
     data class OnYearRangeSelected(val yearRange: VehicleYearRange) : UserCarEvent
-
     data class OnPlateChange(val value: String) : UserCarEvent
     data class OnFuelTypeChange(val value: FuelType) : UserCarEvent
     data class OnUsageTypeChange(val value: UsageType) : UserCarEvent

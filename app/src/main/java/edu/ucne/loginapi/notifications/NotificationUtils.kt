@@ -12,7 +12,6 @@ import edu.ucne.franniel_arias_ap2_p2.R
 import edu.ucne.loginapi.MainActivity
 
 object NotificationUtils {
-
     const val CHANNEL_ID_MAINTENANCE = "maintenance_reminders_channel"
     private const val CHANNEL_NAME = "Recordatorios de mantenimiento"
     private const val CHANNEL_DESCRIPTION = "Notificaciones sobre tareas de mantenimiento vencidas o próximas"
@@ -67,4 +66,5 @@ object NotificationUtils {
             notify(notificationId, builder.build())
         }
     }
+
 }

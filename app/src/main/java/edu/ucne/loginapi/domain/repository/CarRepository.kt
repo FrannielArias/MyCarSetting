@@ -13,4 +13,5 @@ interface CarRepository {
     suspend fun setCurrentCar(id: String): Resource<Unit>
     suspend fun syncCars(): Resource<Unit>
     suspend fun pushPendingCars(): Resource<Unit>
+
 }

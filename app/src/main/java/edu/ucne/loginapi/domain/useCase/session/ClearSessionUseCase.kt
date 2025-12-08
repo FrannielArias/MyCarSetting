@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase
+package edu.ucne.loginapi.domain.useCase.session
 
 import edu.ucne.loginapi.domain.repository.SessionRepository
 import javax.inject.Inject
@@ -9,4 +9,5 @@ class ClearSessionUseCase @Inject constructor(
     suspend operator fun invoke() {
         repository.clearSession()
     }
+
 }
