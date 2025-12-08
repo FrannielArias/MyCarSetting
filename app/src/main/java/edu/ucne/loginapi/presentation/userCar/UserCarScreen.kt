@@ -218,8 +218,6 @@ private fun UserCarItem(
     }
 }
 
-/* ====================== NEW CAR SHEET ========================== */
-
 @Composable
 private fun NewCarSheet(
     state: UserCarUiState,
@@ -342,7 +340,6 @@ private fun canSaveCar(state: UserCarUiState): Boolean {
             !state.isLoadingCatalog
 }
 
-/* ====================== DROPDOWNS ========================== */
 
 @Composable
 private fun VehicleBrandDropdown(
