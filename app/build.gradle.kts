@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.firebase.components)
     implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.generativeai)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     implementation ("com.google.dagger:hilt-android:2.57.1")
