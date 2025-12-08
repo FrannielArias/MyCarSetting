@@ -78,7 +78,8 @@ class MaintenanceRepositoryImpl @Inject constructor(
 
     override suspend fun markTaskCompleted(
         taskId: Int,
-        completionDateMillis: Long
+        completionDateMillis: Long,
+        costAmount: Double?
     ): Resource<Unit> {
         val task = getTaskById(taskId) ?: return Resource.Error("La tarea no existe")
 
