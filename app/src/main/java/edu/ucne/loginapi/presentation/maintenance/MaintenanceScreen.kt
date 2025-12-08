@@ -182,156 +182,184 @@ fun CompleteTaskDialog(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Column {
-                        Text(
-                            text = "Completar Tarea",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Registra el costo del servicio (opcional)",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
+                CompleteTaskHeader()
                 Divider()
+                CompleteTaskCostInput(state = state, onEvent = onEvent)
+                CompleteTaskCostPreview(state = state, formatter = currencyFormatter)
+                CompleteTaskInfoCard()
+                CompleteTaskActions(state = state, onEvent = onEvent)
+            }
+        }
+    }
+}
 
-                OutlinedTextField(
-                    value = state.completeCostAmount,
-                    onValueChange = { value ->
-                        val filtered = value.filter { it.isDigit() || it == '.' }
-                        onEvent(MaintenanceEvent.OnCostAmountChange(filtered))
-                    },
-                    label = { Text("Costo del servicio (opcional)") },
-                    placeholder = { Text("0.00") },
-                    leadingIcon = {
-                        Text(
-                            text = "$",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    trailingIcon = {
-                        if (state.completeCostAmount.isNotBlank()) {
-                            IconButton(onClick = { onEvent(MaintenanceEvent.OnCostAmountChange("")) }) {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = "Limpiar",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    isError = state.completeCostError != null,
-                    supportingText = {
-                        if (state.completeCostError != null) {
-                            Text(
-                                text = state.completeCostError,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        } else {
-                            Text(
-                                text = "Puedes dejar este campo vacío si no hubo costo",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+@Composable
+private fun CompleteTaskHeader() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(32.dp)
+        )
+        Column {
+            Text(
+                text = "Completar Tarea",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Registra el costo del servicio (opcional)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
 
-                if (state.completeCostAmount.isNotBlank() && state.completeCostError == null) {
-                    val cost = state.completeCostAmount.toDoubleOrNull()
-                    if (cost != null) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Total a registrar:",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    text = currencyFormatter.format(cost),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = "Esta acción marcará la tarea como completada y guardará el historial de gastos de tu vehículo.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { onEvent(MaintenanceEvent.HideCompleteTaskDialog) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancelar")
-                    }
-                    Button(
-                        onClick = { onEvent(MaintenanceEvent.ConfirmCompleteTask) },
-                        enabled = state.completeCostError == null,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Completar")
-                    }
+@Composable
+private fun CompleteTaskCostInput(
+    state: MaintenanceUiState,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    OutlinedTextField(
+        value = state.completeCostAmount,
+        onValueChange = { value ->
+            val filtered = value.filter { it.isDigit() || it == '.' }
+            onEvent(MaintenanceEvent.OnCostAmountChange(filtered))
+        },
+        label = { Text("Costo del servicio (opcional)") },
+        placeholder = { Text("0.00") },
+        leadingIcon = {
+            Text(
+                text = "$",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        trailingIcon = {
+            if (state.completeCostAmount.isNotBlank()) {
+                IconButton(onClick = { onEvent(MaintenanceEvent.OnCostAmountChange("")) }) {
+                    Icon(
+                        Icons.Default.Clear,
+                        contentDescription = "Limpiar",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        isError = state.completeCostError != null,
+        supportingText = {
+            if (state.completeCostError != null) {
+                Text(
+                    text = state.completeCostError,
+                    color = MaterialTheme.colorScheme.error
+                )
+            } else {
+                Text(
+                    text = "Puedes dejar este campo vacío si no hubo costo",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun CompleteTaskCostPreview(
+    state: MaintenanceUiState,
+    formatter: NumberFormat
+) {
+    if (state.completeCostAmount.isBlank() || state.completeCostError != null) return
+
+    val cost = state.completeCostAmount.toDoubleOrNull() ?: return
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Total a registrar:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = formatter.format(cost),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompleteTaskInfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = "Esta acción marcará la tarea como completada y guardará el historial de gastos de tu vehículo.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompleteTaskActions(
+    state: MaintenanceUiState,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedButton(
+            onClick = { onEvent(MaintenanceEvent.HideCompleteTaskDialog) },
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Cancelar")
+        }
+        Button(
+            onClick = { onEvent(MaintenanceEvent.ConfirmCompleteTask) },
+            enabled = state.completeCostError == null,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text("Completar")
         }
     }
 }
@@ -930,13 +958,11 @@ private fun SeveritySection(
     ) {
         SeverityChip(
             label = "Baja",
-            severity = MaintenanceSeverity.LOW,
             selected = selectedSeverity == MaintenanceSeverity.LOW,
             onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.LOW)) }
         )
         SeverityChip(
             label = "Media",
-            severity = MaintenanceSeverity.MEDIUM,
             selected = selectedSeverity == MaintenanceSeverity.MEDIUM,
             onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.MEDIUM)) }
         )
@@ -947,13 +973,11 @@ private fun SeveritySection(
     ) {
         SeverityChip(
             label = "Alta",
-            severity = MaintenanceSeverity.HIGH,
             selected = selectedSeverity == MaintenanceSeverity.HIGH,
             onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.HIGH)) }
         )
         SeverityChip(
             label = "Crítica",
-            severity = MaintenanceSeverity.CRITICAL,
             selected = selectedSeverity == MaintenanceSeverity.CRITICAL,
             onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.CRITICAL)) }
         )
@@ -1087,7 +1111,6 @@ private fun CreateSheetActions(
 @Composable
 private fun SeverityChip(
     label: String,
-    severity: MaintenanceSeverity,
     selected: Boolean,
     onClick: () -> Unit
 ) {
