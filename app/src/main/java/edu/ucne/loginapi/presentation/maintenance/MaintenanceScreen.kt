@@ -17,8 +17,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -39,6 +42,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -52,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -59,9 +64,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import edu.ucne.loginapi.domain.model.MaintenanceSeverity
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
@@ -99,79 +101,138 @@ fun MaintenanceBody(
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(state.userMessage) {
-        val message = state.userMessage
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            onEvent(MaintenanceEvent.OnUserMessageShown)
-        }
-    }
+    MaintenanceUserMessages(
+        userMessage = state.userMessage,
+        snackbarHostState = snackbarHostState,
+        onEvent = onEvent
+    )
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.currentCar?.let { "${it.brand} ${it.model}" }
-                            ?: "Mantenimiento",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
+            MaintenanceTopBar(
+                title = state.currentCar?.let { "${it.brand} ${it.model}" } ?: "Mantenimiento"
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { onEvent(MaintenanceEvent.ShowCreateSheet) }) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar recordatorio")
-            }
+            MaintenanceFab(onClick = { onEvent(MaintenanceEvent.ShowCreateSheet) })
         }
     ) { padding ->
-        Box(
+        MaintenanceScaffoldContent(
+            state = state,
+            focusedTaskId = focusedTaskId,
+            onEvent = onEvent,
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-        ) {
-            when {
-                state.isLoading -> {
-                    MyCarLoadingIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+        )
 
-                state.currentCar == null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Configura un vehículo para ver recordatorios",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
+        MaintenanceBottomSheetHost(
+            showSheet = state.showCreateSheet,
+            sheetState = sheetState,
+            state = state,
+            onEvent = onEvent,
+            onCreateTask = onCreateTask
+        )
+    }
+}
 
-                else -> {
-                    MaintenanceContent(
-                        state = state,
-                        focusedTaskId = focusedTaskId,
-                        onEvent = onEvent
-                    )
-                }
-            }
+@Composable
+private fun MaintenanceUserMessages(
+    userMessage: String?,
+    snackbarHostState: SnackbarHostState,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    LaunchedEffect(userMessage) {
+        val message = userMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message)
+        onEvent(MaintenanceEvent.OnUserMessageShown)
+    }
+}
+
+@Composable
+private fun MaintenanceTopBar(title: String) {
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
+            )
         }
+    )
+}
 
-        if (state.showCreateSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { onEvent(MaintenanceEvent.HideCreateSheet) },
-                sheetState = sheetState
-            ) {
-                MaintenanceCreateSheet(
+@Composable
+private fun MaintenanceFab(onClick: () -> Unit) {
+    FloatingActionButton(onClick = onClick) {
+        Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar recordatorio")
+    }
+}
+
+@Composable
+private fun MaintenanceScaffoldContent(
+    state: MaintenanceUiState,
+    focusedTaskId: Int?,
+    onEvent: (MaintenanceEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        when {
+            state.isLoading -> {
+                MyCarLoadingIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            state.currentCar == null -> {
+                MaintenanceNoCarPlaceholder(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            else -> {
+                MaintenanceContent(
                     state = state,
-                    onEvent = onEvent,
-                    onCreateTask = onCreateTask
+                    focusedTaskId = focusedTaskId,
+                    onEvent = onEvent
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun MaintenanceNoCarPlaceholder(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Configura un vehículo para ver recordatorios",
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+private fun MaintenanceBottomSheetHost(
+    showSheet: Boolean,
+    sheetState: SheetState,
+    state: MaintenanceUiState,
+    onEvent: (MaintenanceEvent) -> Unit,
+    onCreateTask: () -> Unit
+) {
+    if (!showSheet) return
+
+    ModalBottomSheet(
+        onDismissRequest = { onEvent(MaintenanceEvent.HideCreateSheet) },
+        sheetState = sheetState
+    ) {
+        MaintenanceCreateSheet(
+            state = state,
+            onEvent = onEvent,
+            onCreateTask = onCreateTask
+        )
     }
 }
 
@@ -197,115 +258,121 @@ fun MaintenanceContent(
             )
         }
 
-        if (overdueTasks.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Vencidas",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            }
-            items(overdueTasks, key = { it.id }) { task ->
-                MaintenanceTaskItem(
-                    task = task,
-                    isOverdue = true,
-                    isFocused = task.id == focusedTaskId,
-                    onComplete = { onEvent(MaintenanceEvent.OnCompleteTask(task.id)) },
-                    onDelete = { onEvent(MaintenanceEvent.OnDeleteTask(task.id)) }
-                )
-            }
-        }
+        overdueSection(
+            overdueTasks = overdueTasks,
+            focusedTaskId = focusedTaskId,
+            onEvent = onEvent
+        )
 
-        if (upcomingTasks.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Próximas",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            }
-            items(upcomingTasks, key = { it.id }) { task ->
-                MaintenanceTaskItem(
-                    task = task,
-                    isOverdue = false,
-                    isFocused = task.id == focusedTaskId,
-                    onComplete = { onEvent(MaintenanceEvent.OnCompleteTask(task.id)) },
-                    onDelete = { onEvent(MaintenanceEvent.OnDeleteTask(task.id)) }
-                )
-            }
-        }
+        upcomingSection(
+            upcomingTasks = upcomingTasks,
+            focusedTaskId = focusedTaskId,
+            onEvent = onEvent
+        )
 
-        if (overdueTasks.isEmpty() && upcomingTasks.isEmpty() && !state.isLoading) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "No hay recordatorios de mantenimiento",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Pulsa el botón + para agregar el primero.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+        emptyStateSection(
+            showEmpty = overdueTasks.isEmpty() && upcomingTasks.isEmpty() && !state.isLoading
+        )
+    }
+}
+
+private fun LazyListScope.overdueSection(
+    overdueTasks: List<MaintenanceTask>,
+    focusedTaskId: Int?,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    if (overdueTasks.isEmpty()) return
+
+    item {
+        Text(
+            text = "Vencidas",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+        )
+    }
+    items(overdueTasks, key = { it.id }) { task ->
+        MaintenanceTaskItem(
+            task = task,
+            isOverdue = true,
+            isFocused = task.id == focusedTaskId,
+            onComplete = { onEvent(MaintenanceEvent.OnCompleteTask(task.id)) },
+            onDelete = { onEvent(MaintenanceEvent.OnDeleteTask(task.id)) }
+        )
+    }
+}
+
+private fun LazyListScope.upcomingSection(
+    upcomingTasks: List<MaintenanceTask>,
+    focusedTaskId: Int?,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    if (upcomingTasks.isEmpty()) return
+
+    item {
+        Text(
+            text = "Próximas",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+        )
+    }
+    items(upcomingTasks, key = { it.id }) { task ->
+        MaintenanceTaskItem(
+            task = task,
+            isOverdue = false,
+            isFocused = task.id == focusedTaskId,
+            onComplete = { onEvent(MaintenanceEvent.OnCompleteTask(task.id)) },
+            onDelete = { onEvent(MaintenanceEvent.OnDeleteTask(task.id)) }
+        )
+    }
+}
+
+private fun LazyListScope.emptyStateSection(showEmpty: Boolean) {
+    if (!showEmpty) return
+
+    item {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "No hay recordatorios de mantenimiento",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Pulsa el botón + para agregar el primero.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
+
+private data class SummaryUi(
+    val container: Color,
+    val content: Color,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val title: String,
+    val message: String
+)
 
 @Composable
 private fun MaintenanceSummaryBanner(
     overdueCount: Int,
     upcomingCount: Int
 ) {
-    val container: Color
-    val content: Color
-    val icon = when {
-        overdueCount > 0 -> Icons.Filled.Warning
-        upcomingCount > 0 -> Icons.Filled.Info
-        else -> Icons.Filled.Check
-    }
-
-    val title: String
-    val message: String
-
-    when {
-        overdueCount > 0 -> {
-            container = MaterialTheme.colorScheme.errorContainer
-            content = MaterialTheme.colorScheme.onErrorContainer
-            title = "Tienes $overdueCount tareas vencidas"
-            message = "Te recomendamos atender al menos una esta semana para evitar problemas en tu vehículo."
-        }
-
-        upcomingCount > 0 -> {
-            container = MaterialTheme.colorScheme.primaryContainer
-            content = MaterialTheme.colorScheme.onPrimaryContainer
-            title = "Tienes $upcomingCount tareas próximas"
-            message = "Si las completas a tiempo, mantendrás tu vehículo en buen estado y evitarás fallas futuras."
-        }
-
-        else -> {
-            container = MaterialTheme.colorScheme.surfaceVariant
-            content = MaterialTheme.colorScheme.onSurfaceVariant
-            title = "Todo al día"
-            message = "No tienes tareas pendientes. Mantén tus registros actualizados para seguir así."
-        }
-    }
+    val ui = summaryUi(overdueCount, upcomingCount)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = container,
-            contentColor = content
+            containerColor = ui.container,
+            contentColor = ui.content
         ),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -321,13 +388,13 @@ private fun MaintenanceSummaryBanner(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(content.copy(alpha = 0.12f)),
+                    .background(ui.content.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = ui.icon,
                     contentDescription = null,
-                    tint = content
+                    tint = ui.content
                 )
             }
             Column(
@@ -335,18 +402,50 @@ private fun MaintenanceSummaryBanner(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = title,
+                    text = ui.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = content
+                    color = ui.content
                 )
                 Text(
-                    text = message,
+                    text = ui.message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = content.copy(alpha = 0.9f)
+                    color = ui.content.copy(alpha = 0.9f)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun summaryUi(
+    overdueCount: Int,
+    upcomingCount: Int
+): SummaryUi {
+    return when {
+        overdueCount > 0 -> SummaryUi(
+            container = MaterialTheme.colorScheme.errorContainer,
+            content = MaterialTheme.colorScheme.onErrorContainer,
+            icon = Icons.Filled.Warning,
+            title = "Tienes $overdueCount tareas vencidas",
+            message = "Te recomendamos atender al menos una esta semana para evitar problemas en tu vehículo."
+        )
+
+        upcomingCount > 0 -> SummaryUi(
+            container = MaterialTheme.colorScheme.primaryContainer,
+            content = MaterialTheme.colorScheme.onPrimaryContainer,
+            icon = Icons.Filled.Info,
+            title = "Tienes $upcomingCount tareas próximas",
+            message = "Si las completas a tiempo, mantendrás tu vehículo en buen estado y evitarás fallas futuras."
+        )
+
+        else -> SummaryUi(
+            container = MaterialTheme.colorScheme.surfaceVariant,
+            content = MaterialTheme.colorScheme.onSurfaceVariant,
+            icon = Icons.Filled.Check,
+            title = "Todo al día",
+            message = "No tienes tareas pendientes. Mantén tus registros actualizados para seguir así."
+        )
     }
 }
 
@@ -358,23 +457,13 @@ fun MaintenanceTaskItem(
     onComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val containerColor = when {
-        isFocused -> MaterialTheme.colorScheme.primaryContainer
-        isOverdue -> MaterialTheme.colorScheme.errorContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val contentColor = when {
-        isFocused -> MaterialTheme.colorScheme.onPrimaryContainer
-        isOverdue -> MaterialTheme.colorScheme.onErrorContainer
-        else -> MaterialTheme.colorScheme.onSurface
-    }
+    val colors = taskColors(isOverdue, isFocused)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
+            containerColor = colors.container,
+            contentColor = colors.content
         ),
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -395,7 +484,7 @@ fun MaintenanceTaskItem(
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = contentColor
+                    color = colors.content
                 )
                 val statusLabel = if (isOverdue) "Vencida" else "Próxima"
                 val statusColor = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -412,7 +501,7 @@ fun MaintenanceTaskItem(
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    color = contentColor.copy(alpha = 0.9f)
+                    color = colors.content.copy(alpha = 0.9f)
                 )
             }
 
@@ -431,18 +520,46 @@ fun MaintenanceTaskItem(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Marcar completada",
-                        tint = contentColor
+                        tint = colors.content
                     )
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Eliminar",
-                        tint = contentColor
+                        tint = colors.content
                     )
                 }
             }
         }
+    }
+}
+
+private data class TaskColors(
+    val container: Color,
+    val content: Color
+)
+
+@Composable
+private fun taskColors(
+    isOverdue: Boolean,
+    isFocused: Boolean
+): TaskColors {
+    return when {
+        isFocused -> TaskColors(
+            container = MaterialTheme.colorScheme.primaryContainer,
+            content = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+
+        isOverdue -> TaskColors(
+            container = MaterialTheme.colorScheme.errorContainer,
+            content = MaterialTheme.colorScheme.onErrorContainer
+        )
+
+        else -> TaskColors(
+            container = MaterialTheme.colorScheme.surfaceVariant,
+            content = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -476,12 +593,7 @@ private fun TaskDetails(
                 )
             }
 
-            val severityColor = when (task.severity) {
-                MaintenanceSeverity.LOW -> MaterialTheme.colorScheme.primary
-                MaintenanceSeverity.MEDIUM -> MaterialTheme.colorScheme.tertiary
-                MaintenanceSeverity.HIGH -> MaterialTheme.colorScheme.error
-                MaintenanceSeverity.CRITICAL -> MaterialTheme.colorScheme.error
-            }
+            val severityColor = severityColor(task.severity)
 
             InfoTag(
                 text = task.severityLabel(),
@@ -491,9 +603,10 @@ private fun TaskDetails(
         }
 
         if (task.dueMileageKm != null) {
-            val textColor = when {
-                isOverdue -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.primary
+            val textColor = if (isOverdue) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.primary
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -502,6 +615,16 @@ private fun TaskDetails(
                 color = textColor
             )
         }
+    }
+}
+
+@Composable
+private fun severityColor(severity: MaintenanceSeverity): Color {
+    return when (severity) {
+        MaintenanceSeverity.LOW -> MaterialTheme.colorScheme.primary
+        MaintenanceSeverity.MEDIUM -> MaterialTheme.colorScheme.tertiary
+        MaintenanceSeverity.HIGH -> MaterialTheme.colorScheme.error
+        MaintenanceSeverity.CRITICAL -> MaterialTheme.colorScheme.error
     }
 }
 
@@ -553,180 +676,287 @@ fun MaintenanceCreateSheet(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Nuevo recordatorio",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+        CreateSheetTitle()
+
+        TitleInput(
+            title = state.newTaskTitle,
+            error = state.newTitleError,
+            onEvent = onEvent
         )
 
-        OutlinedTextField(
-            value = state.newTaskTitle,
-            onValueChange = { onEvent(MaintenanceEvent.OnNewTitleChange(it)) },
-            label = { Text("Título") },
-            placeholder = { Text("Selecciona o escribe un mantenimiento") },
-            isError = state.newTitleError != null,
-            supportingText = {
-                if (state.newTitleError != null) {
-                    Text(
-                        text = state.newTitleError,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+        CommonTitlesSection(
+            titles = commonTitles,
+            onEvent = onEvent
         )
 
-        if (commonTitles.isNotEmpty()) {
-            Text(
-                text = "Tareas frecuentes",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(commonTitles) { title ->
-                    OutlinedButton(
-                        onClick = { onEvent(MaintenanceEvent.OnNewTitleChange(title)) }
-                    ) {
-                        Text(text = title)
-                    }
-                }
-            }
-        }
-
-        Text(
-            text = "Nivel de gravedad",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        SeveritySection(
+            selectedSeverity = state.newTaskSeverity,
+            onEvent = onEvent
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            SeverityChip(
-                label = "Baja",
-                severity = MaintenanceSeverity.LOW,
-                selected = state.newTaskSeverity == MaintenanceSeverity.LOW,
-                onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.LOW)) }
-            )
-
-            SeverityChip(
-                label = "Media",
-                severity = MaintenanceSeverity.MEDIUM,
-                selected = state.newTaskSeverity == MaintenanceSeverity.MEDIUM,
-                onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.MEDIUM)) }
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            SeverityChip(
-                label = "Alta",
-                severity = MaintenanceSeverity.HIGH,
-                selected = state.newTaskSeverity == MaintenanceSeverity.HIGH,
-                onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.HIGH)) }
-            )
-            SeverityChip(
-                label = "Crítica",
-                severity = MaintenanceSeverity.CRITICAL,
-                selected = state.newTaskSeverity == MaintenanceSeverity.CRITICAL,
-                onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.CRITICAL)) }
-            )
-        }
-
-        OutlinedTextField(
-            value = state.newTaskDescription,
-            onValueChange = { onEvent(MaintenanceEvent.OnNewDescriptionChange(it)) },
-            label = { Text("Descripción (opcional)") },
-            modifier = Modifier.fillMaxWidth()
+        DescriptionAndMileageSection(
+            description = state.newTaskDescription,
+            mileage = state.newTaskDueMileage,
+            onEvent = onEvent
         )
 
-        OutlinedTextField(
-            value = state.newTaskDueMileage,
-            onValueChange = { onEvent(MaintenanceEvent.OnNewDueMileageChange(it)) },
-            label = { Text("Kilometraje objetivo (opcional)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
+        DueDateReadOnlyField(
+            dateText = state.newTaskDueDateText
         )
 
-        OutlinedTextField(
-            value = state.newTaskDueDateText,
-            onValueChange = {},
-            label = { Text("Fecha y hora objetivo (obligatoria)") },
-            placeholder = { Text("Selecciona una fecha y hora") },
-            readOnly = true,
-            enabled = false,
-            modifier = Modifier.fillMaxWidth()
+        DueDatePickerButton(
+            currentMillis = state.newTaskDueDateMillis,
+            formatter = dateTimeFormatter,
+            context = context,
+            onEvent = onEvent
         )
-
-        Button(
-            onClick = {
-                val baseCal = Calendar.getInstance().apply {
-                    if (state.newTaskDueDateMillis != null) {
-                        timeInMillis = state.newTaskDueDateMillis
-                    }
-                }
-
-                DatePickerDialog(
-                    context,
-                    { _, year, month, dayOfMonth ->
-                        val dateCal = Calendar.getInstance().apply {
-                            set(year, month, dayOfMonth)
-                        }
-
-                        TimePickerDialog(
-                            context,
-                            { _, hourOfDay, minute ->
-                                dateCal.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                                dateCal.set(Calendar.MINUTE, minute)
-                                dateCal.set(Calendar.SECOND, 0)
-                                dateCal.set(Calendar.MILLISECOND, 0)
-
-                                val millis = dateCal.timeInMillis
-                                val formatted = dateTimeFormatter.format(Date(millis))
-                                onEvent(MaintenanceEvent.OnNewDueDateSelected(millis, formatted))
-                            },
-                            baseCal.get(Calendar.HOUR_OF_DAY),
-                            baseCal.get(Calendar.MINUTE),
-                            true
-                        ).show()
-                    },
-                    baseCal.get(Calendar.YEAR),
-                    baseCal.get(Calendar.MONTH),
-                    baseCal.get(Calendar.DAY_OF_MONTH)
-                ).show()
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Seleccionar fecha y hora")
-        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        CreateSheetActions(
+            state = state,
+            onEvent = onEvent,
+            onCreateTask = onCreateTask
+        )
+    }
+}
+
+@Composable
+private fun CreateSheetTitle() {
+    Text(
+        text = "Nuevo recordatorio",
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+private fun TitleInput(
+    title: String,
+    error: String?,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    OutlinedTextField(
+        value = title,
+        onValueChange = { onEvent(MaintenanceEvent.OnNewTitleChange(it)) },
+        label = { Text("Título") },
+        placeholder = { Text("Selecciona o escribe un mantenimiento") },
+        isError = error != null,
+        supportingText = {
+            if (error != null) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun CommonTitlesSection(
+    titles: List<String>,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    if (titles.isEmpty()) return
+
+    Text(
+        text = "Tareas frecuentes",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(titles) { title ->
+            OutlinedButton(
+                onClick = { onEvent(MaintenanceEvent.OnNewTitleChange(title)) }
+            ) {
+                Text(text = title)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeveritySection(
+    selectedSeverity: MaintenanceSeverity,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    Text(
+        text = "Nivel de gravedad",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SeverityChip(
+            label = "Baja",
+            severity = MaintenanceSeverity.LOW,
+            selected = selectedSeverity == MaintenanceSeverity.LOW,
+            onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.LOW)) }
+        )
+
+        SeverityChip(
+            label = "Media",
+            severity = MaintenanceSeverity.MEDIUM,
+            selected = selectedSeverity == MaintenanceSeverity.MEDIUM,
+            onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.MEDIUM)) }
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SeverityChip(
+            label = "Alta",
+            severity = MaintenanceSeverity.HIGH,
+            selected = selectedSeverity == MaintenanceSeverity.HIGH,
+            onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.HIGH)) }
+        )
+        SeverityChip(
+            label = "Crítica",
+            severity = MaintenanceSeverity.CRITICAL,
+            selected = selectedSeverity == MaintenanceSeverity.CRITICAL,
+            onClick = { onEvent(MaintenanceEvent.OnNewSeveritySelected(MaintenanceSeverity.CRITICAL)) }
+        )
+    }
+}
+
+@Composable
+private fun DescriptionAndMileageSection(
+    description: String,
+    mileage: String,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    OutlinedTextField(
+        value = description,
+        onValueChange = { onEvent(MaintenanceEvent.OnNewDescriptionChange(it)) },
+        label = { Text("Descripción (opcional)") },
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    OutlinedTextField(
+        value = mileage,
+        onValueChange = { onEvent(MaintenanceEvent.OnNewDueMileageChange(it)) },
+        label = { Text("Kilometraje objetivo (opcional)") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun DueDateReadOnlyField(
+    dateText: String
+) {
+    OutlinedTextField(
+        value = dateText,
+        onValueChange = {},
+        label = { Text("Fecha y hora objetivo (obligatoria)") },
+        placeholder = { Text("Selecciona una fecha y hora") },
+        readOnly = true,
+        enabled = false,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun DueDatePickerButton(
+    currentMillis: Long?,
+    formatter: SimpleDateFormat,
+    context: android.content.Context,
+    onEvent: (MaintenanceEvent) -> Unit
+) {
+    Button(
+        onClick = {
+            showDateTimePicker(
+                context = context,
+                currentMillis = currentMillis,
+                formatter = formatter
+            ) { millis, formatted ->
+                onEvent(MaintenanceEvent.OnNewDueDateSelected(millis, formatted))
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Seleccionar fecha y hora")
+    }
+}
+
+private fun showDateTimePicker(
+    context: android.content.Context,
+    currentMillis: Long?,
+    formatter: SimpleDateFormat,
+    onSelected: (Long, String) -> Unit
+) {
+    val baseCal = Calendar.getInstance().apply {
+        if (currentMillis != null) {
+            timeInMillis = currentMillis
+        }
+    }
+
+    DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val dateCal = Calendar.getInstance().apply {
+                set(year, month, dayOfMonth)
+            }
+
+            TimePickerDialog(
+                context,
+                { _, hourOfDay, minute ->
+                    dateCal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                    dateCal.set(Calendar.MINUTE, minute)
+                    dateCal.set(Calendar.SECOND, 0)
+                    dateCal.set(Calendar.MILLISECOND, 0)
+
+                    val millis = dateCal.timeInMillis
+                    val formatted = formatter.format(Date(millis))
+                    onSelected(millis, formatted)
+                },
+                baseCal.get(Calendar.HOUR_OF_DAY),
+                baseCal.get(Calendar.MINUTE),
+                true
+            ).show()
+        },
+        baseCal.get(Calendar.YEAR),
+        baseCal.get(Calendar.MONTH),
+        baseCal.get(Calendar.DAY_OF_MONTH)
+    ).show()
+}
+
+@Composable
+private fun CreateSheetActions(
+    state: MaintenanceUiState,
+    onEvent: (MaintenanceEvent) -> Unit,
+    onCreateTask: () -> Unit
+) {
+    val canSave = state.newTaskTitle.length >= 5 &&
+            state.newTitleError == null &&
+            state.newTaskDueDateMillis != null
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        TextButton(
+            onClick = { onEvent(MaintenanceEvent.HideCreateSheet) },
+            modifier = Modifier.weight(1f)
         ) {
-            TextButton(
-                onClick = { onEvent(MaintenanceEvent.HideCreateSheet) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Cancelar")
-            }
-            Button(
-                onClick = onCreateTask,
-                enabled = state.newTaskTitle.length >= 5 &&
-                        state.newTitleError == null &&
-                        state.newTaskDueDateMillis != null,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Guardar")
-            }
+            Text("Cancelar")
+        }
+        Button(
+            onClick = onCreateTask,
+            enabled = canSave,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Guardar")
         }
     }
 }
