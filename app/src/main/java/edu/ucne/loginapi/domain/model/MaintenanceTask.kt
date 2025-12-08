@@ -13,6 +13,10 @@ data class MaintenanceTask(
     val status: MaintenanceStatus,
     val createdAtMillis: Long,
     val updatedAtMillis: Long,
+
+    val completedAtMillis: Long? = null,
+    val costAmount: Double? = null,
+
     val isPendingCreate: Boolean = false,
     val isPendingUpdate: Boolean = false,
     val isPendingDelete: Boolean = false
