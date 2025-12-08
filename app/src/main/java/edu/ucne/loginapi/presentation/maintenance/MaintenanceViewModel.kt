@@ -8,9 +8,9 @@ import edu.ucne.loginapi.domain.model.MaintenanceSeverity
 import edu.ucne.loginapi.domain.model.MaintenanceStatus
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.model.MaintenanceType
-import edu.ucne.loginapi.domain.useCase.MarkTaskCompletedUseCase
-import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
-import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.MarkTaskCompletedUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ObserveOverdueTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ObserveUpcomingTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.CreateMaintenanceTaskLocalUseCase
 import edu.ucne.loginapi.domain.useCase.maintenance.DeleteMaintenanceTaskUseCase
@@ -287,4 +287,5 @@ class MaintenanceViewModel @Inject constructor(
             }
         }
     }
+
 }

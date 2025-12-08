@@ -211,4 +211,5 @@ class ServicesRepositoryImpl @Inject constructor(
 
         return parts.joinToString(" • ")
     }
+
 }

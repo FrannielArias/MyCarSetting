@@ -18,4 +18,5 @@ class ValidatePasswordUseCase @Inject constructor() {
         }
         return ValidationResult(successful = true)
     }
+
 }

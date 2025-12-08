@@ -26,30 +26,25 @@ class SyncWorker @AssistedInject constructor(
         return try {
             val currentCar = userCarRepository.getCurrentCar()
 
-            // 1) Empujar vehículos pendientes
             when (carRepository.pushPendingCars()) {
                 is Resource.Error -> return Result.retry()
                 else -> Unit
             }
 
-            // 2) Sincronizar catálogo de vehículos
             when (carRepository.syncCars()) {
                 is Resource.Error -> return Result.retry()
                 else -> Unit
             }
 
-            // 3) Si no hay vehículo actual, termina ok
             if (currentCar == null) {
                 return Result.success()
             }
 
-            // 4) Empujar tareas de mantenimiento pendientes
             when (maintenanceTaskRepository.postPendingTasks()) {
                 is Resource.Error -> return Result.retry()
                 else -> Unit
             }
 
-            // 5) Traer tareas / historial del servidor
             when (maintenanceRepository.syncFromRemote(currentCar.id)) {
                 is Resource.Error -> Result.retry()
                 else -> Result.success()
@@ -58,4 +53,5 @@ class SyncWorker @AssistedInject constructor(
             Result.retry()
         }
     }
+
 }

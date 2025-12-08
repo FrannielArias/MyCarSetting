@@ -12,4 +12,5 @@ interface ServicesRepository {
         userLon: Double? = null,
         category: ServiceCategory? = null
     ): Resource<List<ServiceItem>>
+
 }

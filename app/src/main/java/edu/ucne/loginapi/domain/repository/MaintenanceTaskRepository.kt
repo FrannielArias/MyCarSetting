@@ -14,4 +14,5 @@ interface MaintenanceTaskRepository {
     suspend fun markTaskCompleted(taskId: Int, completionDateMillis: Long): Resource<Unit>
     suspend fun deleteTaskLocal(id: Int): Resource<Unit>
     suspend fun postPendingTasks(): Resource<Unit>
+
 }

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ucne.loginapi.data.syncWorker.TriggerFullSyncUseCase
-import edu.ucne.loginapi.domain.useCase.GetSessionUseCase
+import edu.ucne.loginapi.domain.useCase.session.GetSessionUseCase
 import edu.ucne.loginapi.domain.useCase.SchedulePeriodicSyncUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

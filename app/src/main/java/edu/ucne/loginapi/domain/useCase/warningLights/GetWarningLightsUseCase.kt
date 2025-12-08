@@ -10,4 +10,5 @@ class GetWarningLightsUseCase @Inject constructor(
 ) {
     operator fun invoke(): Flow<List<WarningLight>> =
         repository.getWarningLights()
+
 }

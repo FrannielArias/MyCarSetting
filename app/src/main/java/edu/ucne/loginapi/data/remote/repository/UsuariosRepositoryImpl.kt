@@ -115,4 +115,5 @@ class UsuariosRepositoryImpl @Inject constructor(
             Resource.Error("Error de red o desconocido: ${e.localizedMessage}")
         }
     }
+
 }

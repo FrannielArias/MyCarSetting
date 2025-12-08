@@ -25,17 +25,14 @@ import retrofit2.http.Query
 interface UsuariosApiService {
     @GET("api/Usuarios")
     suspend fun getUsuarios(): List<UsuariosDto>
-
     @GET("api/Usuarios/{id}")
     suspend fun getUsuario(
         @Path("id") id: Int
     ): List<UsuariosDto>
-
     @POST("api/Usuarios")
     suspend fun saveUsuarios(
         @Body usuariosDto: UsuariosDto
     )
-
     @PUT("api/Usuarios/{id}")
     suspend fun updateUsuarios(
         @Body usuariosDto: UsuariosDto
@@ -43,29 +40,23 @@ interface UsuariosApiService {
 }
 
 interface CarApiService {
-
     @GET("api/UserCar")
     suspend fun getCars(): Response<List<UserCarDto>>
-
     @GET("api/UserCar/{id}")
     suspend fun getCar(
         @Path("id") id: Int
     ): Response<UserCarDto>
-
     @GET("api/UserCar/current")
     suspend fun getCurrentCar(): Response<UserCarDto>
-
     @POST("api/UserCar")
     suspend fun createCar(
         @Body car: UserCarDto
     ): Response<UserCarDto>
-
     @PUT("api/UserCar/{id}")
     suspend fun updateCar(
         @Path("id") id: Int,
         @Body car: UserCarDto
     ): Response<Unit>
-
     @DELETE("api/UserCar/{id}")
     suspend fun deleteCar(
         @Path("id") id: Int
@@ -73,38 +64,31 @@ interface CarApiService {
 }
 
 interface MaintenanceApiService {
-
     @GET("api/MaintenanceTask")
     suspend fun getTasksForCar(
         @Query("carId") carId: Int
     ): Response<List<MaintenanceTaskDto>>
-
     @POST("api/MaintenanceTask")
     suspend fun createTask(
         @Body request: CreateMaintenanceTaskRequest
     ): Response<MaintenanceTaskDto>
-
     @PUT("api/MaintenanceTask/{id}")
     suspend fun updateTask(
         @Path("id") id: Int,
         @Body request: UpdateMaintenanceTaskRequest
     ): Response<MaintenanceTaskDto>
-
     @DELETE("api/MaintenanceTask/{id}")
     suspend fun deleteTask(
         @Path("id") id: Int
     ): Response<Unit>
-
     @GET("api/MaintenanceHistory")
     suspend fun getHistoryForCar(
         @Query("carId") carId: Int
     ): Response<List<MaintenanceHistoryDto>>
-
     @POST("api/MaintenanceHistory")
     suspend fun createHistory(
         @Body request: CreateMaintenanceHistoryRequest
     ): Response<MaintenanceHistoryDto>
-
     @DELETE("api/MaintenanceHistory/{id}")
     suspend fun deleteHistory(
         @Path("id") id: Int
@@ -114,17 +98,14 @@ interface MaintenanceApiService {
 interface ManualApiService {
     @GET("api/WarningLight")
     suspend fun getWarningLights(): Response<List<WarningLightDto>>
-
     @GET("api/WarningLight/{id}")
     suspend fun getWarningLightDetail(
         @Path("id") id: Int
     ): Response<WarningLightDto>
-
     @GET("api/GuideArticle")
     suspend fun getGuideArticles(
         @Query("category") category: String?
     ): Response<List<GuideArticleDto>>
-
     @GET("api/GuideArticle/{id}")
     suspend fun getGuideArticleDetail(
         @Path("id") id: Int
@@ -132,15 +113,12 @@ interface ManualApiService {
 }
 
 interface VehicleCatalogApiService {
-
     @GET("api/VehicleBrand")
     suspend fun getBrands(): Response<List<VehicleBrandDto>>
-
     @GET("api/VehicleModel/brand/{brandId}")
     suspend fun getModelsByBrand(
         @Path("brandId") brandId: Int
     ): Response<List<VehicleModelDto>>
-
     @GET("api/VehicleYearRange/model/{modelId}")
     suspend fun getYearRangesByModel(
         @Path("modelId") modelId: Int

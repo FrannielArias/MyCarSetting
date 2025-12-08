@@ -10,4 +10,5 @@ class UpdateMaintenanceTaskUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(task: MaintenanceTask): Resource<MaintenanceTask> =
         repository.updateTaskLocal(task)
+
 }

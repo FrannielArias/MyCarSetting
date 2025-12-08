@@ -40,4 +40,5 @@ class ManualRepositoryImpl @Inject constructor(
             else -> emit(null)
         }
     }
+
 }

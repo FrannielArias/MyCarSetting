@@ -54,4 +54,5 @@ fun MyCarLoadingIndicator(
             progress = { animatedProgress }
         )
     }
+
 }

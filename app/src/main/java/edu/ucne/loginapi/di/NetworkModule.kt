@@ -84,7 +84,6 @@ object NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 
-    // APIs Principales
     @Provides
     @Singleton
     fun provideUsuariosApiService(@MainRetrofit retrofit: Retrofit): UsuariosApiService =
@@ -110,13 +109,11 @@ object NetworkModule {
     fun provideVehicleCatalogApiService(@MainRetrofit retrofit: Retrofit): VehicleCatalogApiService =
         retrofit.create(VehicleCatalogApiService::class.java)
 
-    // API Overpass para búsqueda de lugares
     @Provides
     @Singleton
     fun provideOverpassApi(@OverpassRetrofit retrofit: Retrofit): OverpassApiService =
         retrofit.create(OverpassApiService::class.java)
 
-    // Repository
     @Provides
     @Singleton
     fun provideServicesRepository(api: OverpassApiService): ServicesRepository =

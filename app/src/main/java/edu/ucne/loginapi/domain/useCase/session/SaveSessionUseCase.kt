@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase
+package edu.ucne.loginapi.domain.useCase.session
 
 import edu.ucne.loginapi.domain.model.SessionInfo
 import edu.ucne.loginapi.domain.repository.SessionRepository
@@ -10,4 +10,5 @@ class SaveSessionUseCase @Inject constructor(
     suspend operator fun invoke(info: SessionInfo) {
         repository.saveSession(info)
     }
+
 }

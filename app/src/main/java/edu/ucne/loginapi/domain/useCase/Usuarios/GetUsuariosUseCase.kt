@@ -12,4 +12,5 @@ class GetUsuariosUseCase @Inject constructor(
     operator fun invoke(): Flow<Resource<List<Usuarios>>> {
         return repository.getUsuarios()
     }
+
 }

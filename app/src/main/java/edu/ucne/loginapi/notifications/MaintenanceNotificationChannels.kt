@@ -43,4 +43,5 @@ object MaintenanceNotificationChannels {
 
         manager.createNotificationChannels(listOf(general, high, critical))
     }
+
 }

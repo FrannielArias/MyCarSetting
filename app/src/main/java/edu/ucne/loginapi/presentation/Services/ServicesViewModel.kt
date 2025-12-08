@@ -22,14 +22,9 @@ class ServicesViewModel @Inject constructor(
     private val _state = MutableStateFlow(ServicesUiState())
     val state = _state.asStateFlow()
 
-    // NO cargar servicios automáticamente en init
-    // Esperar a tener ubicación del usuario
-
     fun onEvent(event: ServicesEvent) {
         when (event) {
-            ServicesEvent.LoadInitialData -> {
-                // No hacer nada, esperar ubicación
-            }
+            ServicesEvent.LoadInitialData -> {}
 
             is ServicesEvent.LoadForLocation -> {
                 loadServices(event.lat, event.lon, null)
@@ -37,7 +32,6 @@ class ServicesViewModel @Inject constructor(
 
             is ServicesEvent.OnCategorySelected -> {
                 _state.update { it.copy(selectedCategory = event.category) }
-                // Recargar con la nueva categoría
                 val currentLat = _state.value.userLat
                 val currentLon = _state.value.userLon
                 if (currentLat != null && currentLon != null) {
@@ -45,9 +39,7 @@ class ServicesViewModel @Inject constructor(
                 }
             }
 
-            is ServicesEvent.OnServiceClicked -> {
-                // No necesitas hacer nada aquí, la navegación está en el UI
-            }
+            is ServicesEvent.OnServiceClicked -> {}
 
             ServicesEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }

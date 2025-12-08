@@ -12,4 +12,5 @@ interface UserCarRepository {
     suspend fun upsertCar(car: UserCar): Resource<UserCar>
     suspend fun setCurrentCar(id: Int): Resource<Unit>
     suspend fun deleteCar(id: Int): Resource<Unit>
+
 }

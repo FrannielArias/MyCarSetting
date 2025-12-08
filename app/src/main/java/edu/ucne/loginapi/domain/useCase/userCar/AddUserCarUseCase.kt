@@ -10,4 +10,5 @@ class AddUserCarUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(car: UserCar): Resource<UserCar> =
         repository.upsertCar(car)
+
 }

@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase
+package edu.ucne.loginapi.domain.useCase.maintenance
 
 import edu.ucne.loginapi.domain.model.MaintenanceTask
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
@@ -10,4 +10,5 @@ class ObserveUpcomingTasksForCarUseCase @Inject constructor(
 ) {
     operator fun invoke(carId: Int): Flow<List<MaintenanceTask>> =
         repository.observeUpcomingTasksForCar(carId)
+
 }

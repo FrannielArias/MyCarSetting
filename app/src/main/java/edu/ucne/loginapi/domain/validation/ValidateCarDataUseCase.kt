@@ -25,4 +25,5 @@ class ValidateCarDataUseCase @Inject constructor() {
 
         return ValidationResult(successful = true)
     }
+
 }

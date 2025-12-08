@@ -12,4 +12,5 @@ interface UsuarioEvent {
     data class PasswordChange(val value: String) : UsuarioEvent
     data object Login : UsuarioEvent
     data object Logout : UsuarioEvent
+
 }

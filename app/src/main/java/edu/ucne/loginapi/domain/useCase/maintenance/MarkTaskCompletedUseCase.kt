@@ -1,4 +1,4 @@
-package edu.ucne.loginapi.domain.useCase
+package edu.ucne.loginapi.domain.useCase.maintenance
 
 import edu.ucne.loginapi.data.remote.Resource
 import edu.ucne.loginapi.domain.repository.MaintenanceTaskRepository
@@ -9,4 +9,5 @@ class MarkTaskCompletedUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(taskId: Int, completionDateMillis: Long): Resource<Unit> =
         repository.markTaskCompleted(taskId, completionDateMillis)
+
 }

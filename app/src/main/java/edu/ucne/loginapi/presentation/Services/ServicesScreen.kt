@@ -8,7 +8,6 @@ import ServicesUiState
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.location.Location
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -56,10 +55,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 import edu.ucne.loginapi.ui.components.ScreenScaffold
 import android.util.Log
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import com.google.maps.android.compose.*
 
 @Composable
 fun ServicesScreen(
@@ -139,7 +135,6 @@ private fun ServicesContent(
         }
     }
 
-    // Solicitar permisos al inicio
     LaunchedEffect(Unit) {
         Log.d("ServicesScreen", "🔄 Solicitando permisos de ubicación...")
         permissionLauncher.launch(
@@ -150,7 +145,6 @@ private fun ServicesContent(
         )
     }
 
-    // Si está cargando ubicación O servicios, mostrar loading
     if (isLoadingLocation || state.isLoading) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -168,7 +162,6 @@ private fun ServicesContent(
         return
     }
 
-    // Si no hay permisos
     if (!hasLocationPermission) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -200,7 +193,6 @@ private fun ServicesContent(
         return
     }
 
-    // Si no hay ubicación
     if (myLocation == null) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -235,7 +227,6 @@ private fun ServicesContent(
         return
     }
 
-    // ✅ CONTENIDO PRINCIPAL
     val services = remember(state.services, state.selectedCategory) {
         state.selectedCategory?.let { category ->
             state.services.filter { it.category == category }
@@ -258,7 +249,6 @@ private fun ServicesContent(
         isMyLocationEnabled = hasLocationPermission
     )
 
-    // Mapa
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -286,7 +276,6 @@ private fun ServicesContent(
         }
     }
 
-    // Filtros por categoría
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -310,7 +299,6 @@ private fun ServicesContent(
         fontWeight = FontWeight.SemiBold
     )
 
-    // Lista de servicios
     if (services.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -474,4 +462,5 @@ private fun ServiceItemCard(
             }
         }
     }
+
 }

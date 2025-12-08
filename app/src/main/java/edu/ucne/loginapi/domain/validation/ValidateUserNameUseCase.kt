@@ -18,4 +18,5 @@ class ValidateUserNameUseCase @Inject constructor() {
         }
         return ValidationResult(successful = true)
     }
+
 }

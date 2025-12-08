@@ -6,8 +6,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import edu.ucne.loginapi.domain.useCase.ObserveOverdueTasksForCarUseCase
-import edu.ucne.loginapi.domain.useCase.ObserveUpcomingTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ObserveOverdueTasksForCarUseCase
+import edu.ucne.loginapi.domain.useCase.maintenance.ObserveUpcomingTasksForCarUseCase
 import edu.ucne.loginapi.domain.useCase.currentCar.GetCurrentCarUseCase
 import edu.ucne.loginapi.notifications.NotificationUtils
 import kotlinx.coroutines.flow.first
@@ -75,4 +75,5 @@ class MaintenanceReminderWorker @AssistedInject constructor(
 
         return Result.success()
     }
+
 }

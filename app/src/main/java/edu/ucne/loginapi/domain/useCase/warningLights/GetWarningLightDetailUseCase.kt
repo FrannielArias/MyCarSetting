@@ -10,4 +10,5 @@ class GetWarningLightDetailUseCase @Inject constructor(
 ) {
     operator fun invoke(id: Int): Flow<WarningLight?> =
         repository.getWarningLightDetail(id)
+
 }

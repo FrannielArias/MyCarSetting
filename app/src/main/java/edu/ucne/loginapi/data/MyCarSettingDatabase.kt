@@ -24,4 +24,5 @@ abstract class MyCarSettingDatabase : RoomDatabase() {
     abstract val userCarDao: UserCarDao
     abstract val maintenanceTaskDao: MaintenanceTaskDao
     abstract val maintenanceHistoryDao: MaintenanceHistoryDao
+
 }

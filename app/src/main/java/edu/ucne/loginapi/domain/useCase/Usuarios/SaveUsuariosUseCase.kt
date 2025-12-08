@@ -11,4 +11,5 @@ class SaveUsuariosUseCase @Inject constructor(
     suspend operator fun invoke(usuarios: Usuarios): Resource<Unit> {
         return repository.saveUsuarios(usuarios)
     }
+
 }

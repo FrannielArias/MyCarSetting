@@ -38,4 +38,5 @@ interface MaintenanceTaskDao {
 
     @Query("SELECT * FROM maintenance_tasks")
     suspend fun getAllTasksOnce(): List<MaintenanceTaskEntity>
+
 }

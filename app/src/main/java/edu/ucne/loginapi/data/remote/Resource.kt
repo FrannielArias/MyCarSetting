@@ -5,12 +5,3 @@ sealed class Resource<T>(val data: T? = null, val message: String? = null) {
     class Error<T>(message: String, data: T? = null) : Resource<T>(data, message)
     class Loading<T>(data: T? = null) : Resource<T>(data)
 }
-
-inline fun <T, R : Any> Iterable<T>.mapNotNull(transform: (T) -> R?): List<R> {
-    val list = ArrayList<R>()
-    for (item in this) {
-        val mapped = transform(item)
-        if (mapped != null) list.add(mapped)
-    }
-    return list
-}

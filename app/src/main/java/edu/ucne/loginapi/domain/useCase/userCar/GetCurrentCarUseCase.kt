@@ -8,4 +8,5 @@ class GetCurrentCarUseCase @Inject constructor(
     private val repository: UserCarRepository
 ) {
     suspend operator fun invoke(): UserCar? = repository.getCurrentCar()
+
 }

@@ -3,8 +3,8 @@ data class ServicesUiState(
     val services: List<ServiceItem> = emptyList(),
     val selectedCategory: ServiceCategory? = null,
     val userMessage: String? = null,
-    val userLat: Double? = null,  // ⬅️ NUEVO
-    val userLon: Double? = null   // ⬅️ NUEVO
+    val userLat: Double? = null,
+    val userLon: Double? = null
 )
 
 data class ServiceItem(
