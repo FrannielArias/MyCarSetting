@@ -24,10 +24,16 @@ class ServicesViewModel @Inject constructor(
 
     fun onEvent(event: ServicesEvent) {
         when (event) {
-            ServicesEvent.LoadInitialData -> {}
+            ServicesEvent.LoadInitialData -> {
+                val lat = _state.value.userLat
+                val lon = _state.value.userLon
+                if (lat != null && lon != null) {
+                    loadServices(lat, lon, _state.value.selectedCategory)
+                }
+            }
 
             is ServicesEvent.LoadForLocation -> {
-                loadServices(event.lat, event.lon, null)
+                loadServices(event.lat, event.lon, _state.value.selectedCategory)
             }
 
             is ServicesEvent.OnCategorySelected -> {
@@ -39,7 +45,9 @@ class ServicesViewModel @Inject constructor(
                 }
             }
 
-            is ServicesEvent.OnServiceClicked -> {}
+            is ServicesEvent.OnServiceClicked -> {
+                Log.d("ServicesViewModel", "Service clicked")
+            }
 
             ServicesEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
@@ -49,9 +57,9 @@ class ServicesViewModel @Inject constructor(
 
     private fun loadServices(lat: Double, lon: Double, category: ServiceCategory?) {
         viewModelScope.launch {
-            Log.d("ServicesViewModel", "🔄 Iniciando búsqueda de servicios...")
-            Log.d("ServicesViewModel", "📍 Ubicación: $lat, $lon")
-            Log.d("ServicesViewModel", "🏷️ Categoría: $category")
+            Log.d("ServicesViewModel", "Iniciando búsqueda de servicios...")
+            Log.d("ServicesViewModel", "Ubicación: $lat, $lon")
+            Log.d("ServicesViewModel", "Categoría: $category")
 
             _state.update {
                 it.copy(
@@ -71,10 +79,10 @@ class ServicesViewModel @Inject constructor(
 
             when (response) {
                 is Resource.Success -> {
-                    Log.d("ServicesViewModel", "✅ Servicios encontrados: ${response.data?.size ?: 0}")
-                    response.data?.forEach { service ->
-                        Log.d("ServicesViewModel", "  - ${service.name} (${service.distanceText})")
-                    }
+                    Log.d(
+                        "ServicesViewModel",
+                        "Servicios encontrados: ${response.data?.size ?: 0}"
+                    )
 
                     _state.update {
                         it.copy(
@@ -85,7 +93,7 @@ class ServicesViewModel @Inject constructor(
                 }
 
                 is Resource.Error -> {
-                    Log.e("ServicesViewModel", "❌ Error: ${response.message}")
+                    Log.e("ServicesViewModel", "Error: ${response.message}")
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -94,7 +102,9 @@ class ServicesViewModel @Inject constructor(
                     }
                 }
 
-                else -> {}
+                is Resource.Loading -> {
+                    _state.update { it.copy(isLoading = true) }
+                }
             }
         }
     }
