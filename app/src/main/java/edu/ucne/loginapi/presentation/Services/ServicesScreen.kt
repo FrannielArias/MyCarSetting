@@ -129,8 +129,7 @@ private fun rememberServicesLocationState(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         hasLocationPermission =
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
         if (hasLocationPermission) {
             fetchLocation()
@@ -143,7 +142,6 @@ private fun rememberServicesLocationState(
         isLoadingLocation = true
         permissionLauncher.launch(
             arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
