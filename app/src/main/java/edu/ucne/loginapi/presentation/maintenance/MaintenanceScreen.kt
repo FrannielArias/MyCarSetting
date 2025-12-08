@@ -37,6 +37,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -53,7 +54,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -379,7 +379,9 @@ private fun MaintenanceUserMessages(
 
 @Composable
 private fun MaintenanceTopBar(title: String) {
-    TopAppBar(title = { Text(text = title, style = MaterialTheme.typography.titleLarge) })
+    CenterAlignedTopAppBar(
+        title = { Text(text = title, style = MaterialTheme.typography.titleLarge) }
+    )
 }
 
 @Composable
@@ -1067,14 +1069,14 @@ private fun showDateTimePicker(
                     val formatted = formatter.format(Date(millis))
                     onSelected(millis, formatted)
                 },
-                baseCal.get(Calendar.HOUR_OF_DAY),
-                baseCal.get(Calendar.MINUTE),
+                baseCal[Calendar.HOUR_OF_DAY],
+                baseCal[Calendar.MINUTE],
                 true
             ).show()
         },
-        baseCal.get(Calendar.YEAR),
-        baseCal.get(Calendar.MONTH),
-        baseCal.get(Calendar.DAY_OF_MONTH)
+        baseCal[Calendar.YEAR],
+        baseCal[Calendar.MONTH],
+        baseCal[Calendar.DAY_OF_MONTH]
     ).show()
 }
 
