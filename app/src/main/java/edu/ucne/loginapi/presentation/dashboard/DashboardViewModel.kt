@@ -165,112 +165,143 @@ class DashboardViewModel @Inject constructor(
         val now = System.currentTimeMillis()
         val oneDayMillis = 24L * 60L * 60L * 1000L
 
-        val alerts = mutableListOf<VehicleAlert>()
-
-        overdue.forEach { task ->
-            val due = task.dueDateMillis
-            val daysLate = if (due != null) {
-                ((now - due) / oneDayMillis).coerceAtLeast(0)
-            } else {
-                0L
-            }
-
-            val level = if (daysLate >= 7L) {
-                VehicleAlertLevel.CRITICAL
-            } else {
-                VehicleAlertLevel.IMPORTANT
-            }
-
-            val title = when (level) {
-                VehicleAlertLevel.CRITICAL -> "Tarea vencida crítica"
-                VehicleAlertLevel.IMPORTANT -> "Tarea vencida"
-                else -> "Tarea vencida"
-            }
-
-            val message = buildString {
-                append("La tarea \"${task.title}\" está vencida")
-                if (daysLate > 0) append(" hace $daysLate días")
-                if (task.dueMileageKm != null) {
-                    append(" y estaba programada a los ${task.dueMileageKm} km")
-                }
-                append(". Atiéndela lo antes posible.")
-            }
-
-            alerts.add(
-                VehicleAlert(
-                    id = "overdue_${task.id}",
-                    level = level,
-                    title = title,
-                    message = message,
-                    relatedTaskId = task.id
-                )
-
-            )
+        val overdueAlerts = overdue.map { task ->
+            createOverdueAlert(task, now, oneDayMillis)
         }
 
-        upcoming.forEach { task ->
-            val due = task.dueDateMillis ?: return@forEach
-            val daysUntil = ((due - now) / oneDayMillis)
-
-            val level = when {
-                daysUntil in 0..7 -> VehicleAlertLevel.IMPORTANT
-                daysUntil in 8..30 -> VehicleAlertLevel.RECOMMENDATION
-                else -> null
-            }
-
-            if (level != null) {
-                val title = when (level) {
-                    VehicleAlertLevel.IMPORTANT -> "Mantenimiento próximo"
-                    VehicleAlertLevel.RECOMMENDATION -> "Mantenimiento recomendado"
-                    else -> "Mantenimiento"
-                }
-
-                val message = buildString {
-                    append("La tarea \"${task.title}\" está prevista")
-                    when {
-                        daysUntil < 0 -> append(" muy pronto.")
-                        daysUntil == 0L -> append(" para hoy.")
-                        else -> append(" en aproximadamente $daysUntil días.")
-                    }
-                    if (task.dueMileageKm != null) {
-                        append(" Objetivo: ${task.dueMileageKm} km.")
-                    }
-                }
-
-                alerts.add(
-                    VehicleAlert(
-                        id = "upcoming_${task.id}",
-                        level = level,
-                        title = title,
-                        message = message,
-                        relatedTaskId = task.id
-                    )
-                )
-            }
+        val upcomingAlerts = upcoming.mapNotNull { task ->
+            createUpcomingAlert(task, now, oneDayMillis)
         }
 
-        if (alerts.isEmpty()) {
-            alerts.add(
-                VehicleAlert(
-                    id = "info_all_good",
-                    level = VehicleAlertLevel.INFO,
-                    title = "Todo en orden",
-                    message = "No tienes tareas vencidas y tus mantenimientos próximos están bajo control."
-                )
-            )
+        val allAlerts = (overdueAlerts + upcomingAlerts).ifEmpty {
+            listOf(createAllGoodAlert())
         }
 
-        return alerts
-            .sortedWith(
-                compareBy<VehicleAlert> {
-                    when (it.level) {
-                        VehicleAlertLevel.CRITICAL -> 0
-                        VehicleAlertLevel.IMPORTANT -> 1
-                        VehicleAlertLevel.RECOMMENDATION -> 2
-                        VehicleAlertLevel.INFO -> 3
-                    }
-                }.thenByDescending { it.createdAtMillis }
-            )
+        return allAlerts.sortedWith(alertComparator())
     }
 
+    private fun createOverdueAlert(
+        task: MaintenanceTask,
+        now: Long,
+        oneDayMillis: Long
+    ): VehicleAlert {
+        val daysLate = task.dueDateMillis
+            ?.let { ((now - it) / oneDayMillis).coerceAtLeast(0) }
+            ?: 0L
+
+        val level = overdueLevel(daysLate)
+        val title = overdueTitle(level)
+        val message = overdueMessage(task, daysLate)
+
+        return VehicleAlert(
+            id = "overdue_${task.id}",
+            level = level,
+            title = title,
+            message = message,
+            relatedTaskId = task.id
+        )
+    }
+
+    private fun overdueLevel(daysLate: Long): VehicleAlertLevel {
+        return if (daysLate >= 7L) {
+            VehicleAlertLevel.CRITICAL
+        } else {
+            VehicleAlertLevel.IMPORTANT
+        }
+    }
+
+    private fun overdueTitle(level: VehicleAlertLevel): String {
+        return when (level) {
+            VehicleAlertLevel.CRITICAL -> "Tarea vencida crítica"
+            VehicleAlertLevel.IMPORTANT -> "Tarea vencida"
+            else -> "Tarea vencida"
+        }
+    }
+
+    private fun overdueMessage(
+        task: MaintenanceTask,
+        daysLate: Long
+    ): String {
+        return buildString {
+            append("La tarea \"${task.title}\" está vencida")
+            if (daysLate > 0) append(" hace $daysLate días")
+            if (task.dueMileageKm != null) {
+                append(" y estaba programada a los ${task.dueMileageKm} km")
+            }
+            append(". Atiéndela lo antes posible.")
+        }
+    }
+
+    private fun createUpcomingAlert(
+        task: MaintenanceTask,
+        now: Long,
+        oneDayMillis: Long
+    ): VehicleAlert? {
+        val due = task.dueDateMillis ?: return null
+        val daysUntil = (due - now) / oneDayMillis
+        val level = upcomingLevel(daysUntil) ?: return null
+        val title = upcomingTitle(level)
+        val message = upcomingMessage(task, daysUntil)
+
+        return VehicleAlert(
+            id = "upcoming_${task.id}",
+            level = level,
+            title = title,
+            message = message,
+            relatedTaskId = task.id
+        )
+    }
+
+    private fun upcomingLevel(daysUntil: Long): VehicleAlertLevel? {
+        return when {
+            daysUntil in 0..7 -> VehicleAlertLevel.IMPORTANT
+            daysUntil in 8..30 -> VehicleAlertLevel.RECOMMENDATION
+            else -> null
+        }
+    }
+
+    private fun upcomingTitle(level: VehicleAlertLevel): String {
+        return when (level) {
+            VehicleAlertLevel.IMPORTANT -> "Mantenimiento próximo"
+            VehicleAlertLevel.RECOMMENDATION -> "Mantenimiento recomendado"
+            else -> "Mantenimiento"
+        }
+    }
+
+    private fun upcomingMessage(
+        task: MaintenanceTask,
+        daysUntil: Long
+    ): String {
+        return buildString {
+            append("La tarea \"${task.title}\" está prevista")
+            when {
+                daysUntil < 0 -> append(" muy pronto.")
+                daysUntil == 0L -> append(" para hoy.")
+                else -> append(" en aproximadamente $daysUntil días.")
+            }
+            if (task.dueMileageKm != null) {
+                append(" Objetivo: ${task.dueMileageKm} km.")
+            }
+        }
+    }
+
+    private fun createAllGoodAlert(): VehicleAlert {
+        return VehicleAlert(
+            id = "info_all_good",
+            level = VehicleAlertLevel.INFO,
+            title = "Todo en orden",
+            message = "No tienes tareas vencidas y tus mantenimientos próximos están bajo control."
+        )
+    }
+
+    private fun alertComparator(): Comparator<VehicleAlert> {
+        return compareBy<VehicleAlert> {
+            when (it.level) {
+                VehicleAlertLevel.CRITICAL -> 0
+                VehicleAlertLevel.IMPORTANT -> 1
+                VehicleAlertLevel.RECOMMENDATION -> 2
+                VehicleAlertLevel.INFO -> 3
+            }
+        }.thenByDescending { it.createdAtMillis }
+    }
 }
