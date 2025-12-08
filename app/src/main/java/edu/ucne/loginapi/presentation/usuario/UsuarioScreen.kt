@@ -52,20 +52,78 @@ fun UsuariosScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.isLoggedIn) {
-        if (state.isLoggedIn) {
-            navController.navigate(AppDestination.Dashboard.route) {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
-            }
-        }
-    }
+    HandleLoginNavigation(
+        isLoggedIn = state.isLoggedIn,
+        navController = navController
+    )
 
     UsuariosScreenBody(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateToRegister = { navController.navigate(AppDestination.Register.route) }
     )
+}
+
+@Composable
+private fun HandleLoginNavigation(
+    isLoggedIn: Boolean,
+    navController: NavHostController
+) {
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            navController.navigate(AppDestination.Dashboard.route) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+}
+
+@Composable
+fun UsuariosScreenBody(
+    state: UsuarioUiState,
+    onEvent: (UsuarioEvent) -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
+    Scaffold { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            UsuariosScreenContent(
+                state = state,
+                onEvent = onEvent,
+                onNavigateToRegister = onNavigateToRegister,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun UsuariosScreenContent(
+    state: UsuarioUiState,
+    onEvent: (UsuarioEvent) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (state.isLoading) {
+        Box(
+            modifier = modifier
+        ) {
+            MyCarLoadingIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    } else {
+        LoginContent(
+            state = state,
+            onEvent = onEvent,
+            onNavigateToRegister = onNavigateToRegister,
+            modifier = modifier
+        )
+    }
 }
 
 @Composable
@@ -92,47 +150,16 @@ fun LoginLogoSection() {
 }
 
 @Composable
-fun UsuariosScreenBody(
-    state: UsuarioUiState,
-    onEvent: (UsuarioEvent) -> Unit,
-    onNavigateToRegister: () -> Unit
-) {
-    Scaffold { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when {
-                state.isLoading -> {
-                    MyCarLoadingIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                else -> {
-                    LoginContent(
-                        state = state,
-                        onEvent = onEvent,
-                        onNavigateToRegister = onNavigateToRegister
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun LoginContent(
     state: UsuarioUiState,
     onEvent: (UsuarioEvent) -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -227,10 +254,11 @@ private fun LoginForm(
             label = { Text("Contraseña") },
             placeholder = { Text("Ingrese su contraseña") },
             singleLine = true,
-            visualTransformation = if (passwordVisible)
+            visualTransformation = if (passwordVisible) {
                 VisualTransformation.None
-            else
-                PasswordVisualTransformation(),
+            } else {
+                PasswordVisualTransformation()
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
@@ -266,26 +294,36 @@ private fun MessageSection(
     message: String?
 ) {
     if (error != null) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = error,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+        ErrorMessage(text = error)
     }
 
     if (message != null) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+        InfoMessage(text = message)
     }
+}
+
+@Composable
+private fun ErrorMessage(text: String) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun InfoMessage(text: String) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.bodySmall,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
