@@ -23,101 +23,69 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 @HiltViewModel
 class MaintenanceViewModel @Inject constructor(
     private val getCurrentCarUseCase: GetCurrentCarUseCase,
-    private val observeUpcomingTasksForCarUseCase: ObserveUpcomingTasksForCarUseCase,
-    private val observeOverdueTasksForCarUseCase: ObserveOverdueTasksForCarUseCase,
-    private val createMaintenanceTaskLocalUseCase: CreateMaintenanceTaskLocalUseCase,
-    private val deleteMaintenanceTaskUseCase: DeleteMaintenanceTaskUseCase,
-    private val markTaskCompletedUseCase: MarkTaskCompletedUseCase,
-    private val triggerMaintenanceSyncUseCase: TriggerMaintenanceSyncUseCase
+    private val observeUpcomingUseCase: ObserveUpcomingTasksForCarUseCase,
+    private val observeOverdueUseCase: ObserveOverdueTasksForCarUseCase,
+    private val createTaskUseCase: CreateMaintenanceTaskLocalUseCase,
+    private val deleteTaskUseCase: DeleteMaintenanceTaskUseCase,
+    private val markCompletedUseCase: MarkTaskCompletedUseCase,
+    private val triggerSyncUseCase: TriggerMaintenanceSyncUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MaintenanceUiState())
-    val state: StateFlow<MaintenanceUiState> = _state.asStateFlow()
+    val state = _state.asStateFlow()
 
-    private var tasksJob: Job? = null
+    private var upcomingJob: Job? = null
     private var overdueJob: Job? = null
 
-    init {
-        onEvent(MaintenanceEvent.LoadInitialData)
-    }
+    init { loadInitial() }
 
+    // ---------------------------------------------------------
+    // EVENTOS
+    // ---------------------------------------------------------
     fun onEvent(event: MaintenanceEvent) {
         when (event) {
-            is MaintenanceEvent.LoadInitialData -> loadInitialData()
+
+            is MaintenanceEvent.LoadInitialData -> loadInitial()
             is MaintenanceEvent.Refresh -> refresh()
-            is MaintenanceEvent.ShowCreateSheet -> {
-                _state.update { it.copy(showCreateSheet = true) }
+
+            is MaintenanceEvent.ShowCreateSheet -> _state.update { it.copy(showCreateSheet = true) }
+            is MaintenanceEvent.HideCreateSheet -> resetCreateSheet()
+
+            is MaintenanceEvent.OnNewTitleChange -> validateTitle(event.value)
+            is MaintenanceEvent.OnNewDescriptionChange -> _state.update { it.copy(newTaskDescription = event.value) }
+            is MaintenanceEvent.OnNewDueMileageChange -> _state.update { it.copy(newTaskDueMileage = event.value) }
+
+            is MaintenanceEvent.OnNewDueDateSelected -> _state.update {
+                it.copy(newTaskDueDateMillis = event.millis, newTaskDueDateText = event.formatted)
             }
-            is MaintenanceEvent.HideCreateSheet -> {
-                _state.update {
-                    it.copy(
-                        showCreateSheet = false,
-                        newTaskTitle = "",
-                        newTaskDescription = "",
-                        newTaskDueMileage = "",
-                        newTaskDueDateMillis = null,
-                        newTaskDueDateText = "",
-                        newTaskSeverity = MaintenanceSeverity.MEDIUM
-                    )
-                }
+
+            is MaintenanceEvent.OnClearNewDueDate -> _state.update {
+                it.copy(newTaskDueDateMillis = null, newTaskDueDateText = "")
             }
-            is MaintenanceEvent.OnNewTitleChange -> {
-                _state.update { it.copy(newTaskTitle = event.value) }
-            }
-            is MaintenanceEvent.OnNewDescriptionChange -> {
-                _state.update { it.copy(newTaskDescription = event.value) }
-            }
-            is MaintenanceEvent.OnNewDueMileageChange -> {
-                _state.update { it.copy(newTaskDueMileage = event.value) }
-            }
-            is MaintenanceEvent.OnNewDueDateSelected -> {
-                _state.update {
-                    it.copy(
-                        newTaskDueDateMillis = event.millis,
-                        newTaskDueDateText = event.formatted
-                    )
-                }
-            }
-            is MaintenanceEvent.OnClearNewDueDate -> {
-                _state.update {
-                    it.copy(
-                        newTaskDueDateMillis = null,
-                        newTaskDueDateText = ""
-                    )
-                }
-            }
-            is MaintenanceEvent.OnNewSeveritySelected -> {
-                _state.update { it.copy(newTaskSeverity = event.severity) }
-            }
-            is MaintenanceEvent.OnCompleteTask -> completeTask(event.taskId)
+
+            is MaintenanceEvent.OnNewSeveritySelected -> _state.update { it.copy(newTaskSeverity = event.severity) }
+
+            is MaintenanceEvent.ShowCompleteTaskDialog -> showCompleteDialog(event.taskId)
+            is MaintenanceEvent.HideCompleteTaskDialog -> hideCompleteDialog()
+
+            is MaintenanceEvent.OnCostAmountChange -> validateCost(event.value)
+            is MaintenanceEvent.ConfirmCompleteTask -> completeTask()
+
             is MaintenanceEvent.OnDeleteTask -> deleteTask(event.taskId)
+
+            is MaintenanceEvent.OnUserMessageShown -> _state.update { it.copy(userMessage = null) }
+
             is MaintenanceEvent.OnTaskClicked -> Unit
-            is MaintenanceEvent.OnUserMessageShown -> {
-                _state.update { it.copy(userMessage = null) }
-            }
-            is MaintenanceEvent.OnNewTitleChange -> {
-                val value = event.value
-
-                val isValid = value.length >= 5 && value.matches(Regex("^[A-Za-z0-9ÁÉÍÓÚáéíóúñÑ ]+$"))
-
-                _state.update {
-                    it.copy(
-                        newTaskTitle = value,
-                        newTitleError = if (!isValid && value.isNotEmpty()) {
-                            "El título debe tener mínimo 5 caracteres y solo letras, números y espacios"
-                        } else null
-                    )
-                }
-            }
-
         }
     }
 
-    private fun loadInitialData() {
+    // ---------------------------------------------------------
+    // CARGA INICIAL
+    // ---------------------------------------------------------
+    private fun loadInitial() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
@@ -136,13 +104,16 @@ class MaintenanceViewModel @Inject constructor(
             }
 
             _state.update { it.copy(currentCar = car) }
-            observeTasksForCar(car.id)
-            _state.update { it.copy(isLoading = false) }
+            observeTasks(car.id)
 
-            triggerMaintenanceSyncUseCase()
+            triggerSyncUseCase()
+            _state.update { it.copy(isLoading = false) }
         }
     }
 
+    // ---------------------------------------------------------
+    // REFRESCAR
+    // ---------------------------------------------------------
     private fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
@@ -151,65 +122,62 @@ class MaintenanceViewModel @Inject constructor(
             _state.update { it.copy(currentCar = car) }
 
             if (car != null) {
-                observeTasksForCar(car.id)
-                triggerMaintenanceSyncUseCase()
+                observeTasks(car.id)
+                triggerSyncUseCase()
             } else {
-                _state.update {
-                    it.copy(
-                        upcomingTasks = emptyList(),
-                        overdueTasks = emptyList()
-                    )
-                }
+                _state.update { it.copy(upcomingTasks = emptyList(), overdueTasks = emptyList()) }
             }
 
             _state.update { it.copy(isRefreshing = false) }
         }
     }
 
-    private fun observeTasksForCar(carId: Int) {
-        tasksJob?.cancel()
+    // ---------------------------------------------------------
+    // OBSERVAR TAREAS
+    // ---------------------------------------------------------
+    private fun observeTasks(carId: Int) {
+        upcomingJob?.cancel()
         overdueJob?.cancel()
 
-        tasksJob = viewModelScope.launch {
-            observeUpcomingTasksForCarUseCase(carId).collectLatest { tasks ->
+        upcomingJob = viewModelScope.launch {
+            observeUpcomingUseCase(carId).collectLatest { tasks ->
                 _state.update { it.copy(upcomingTasks = tasks) }
             }
         }
 
         overdueJob = viewModelScope.launch {
-            observeOverdueTasksForCarUseCase(carId).collectLatest { tasks ->
+            observeOverdueUseCase(carId).collectLatest { tasks ->
                 _state.update { it.copy(overdueTasks = tasks) }
             }
         }
     }
 
+    // ---------------------------------------------------------
+    // CREAR TAREA
+    // ---------------------------------------------------------
     fun createTask() {
-        val current = _state.value.currentCar ?: return
+        val car = _state.value.currentCar ?: return
         val title = _state.value.newTaskTitle.trim()
-        if (_state.value.newTitleError != null) {
 
-            _state.update { it.copy(userMessage = "Corrige el título antes de guardar") }
+        if (_state.value.newTitleError != null) {
+            showMsg("Corrige el título antes de guardar")
             return
         }
 
-
         if (title.isBlank()) {
-            _state.update { it.copy(userMessage = "El título es requerido") }
+            showMsg("El título es requerido")
             return
         }
 
         val dueMillis = _state.value.newTaskDueDateMillis
-        if (dueMillis == null) {
-            _state.update { it.copy(userMessage = "Selecciona una fecha y hora objetivo") }
-            return
-        }
+            ?: return showMsg("Selecciona una fecha y hora objetivo")
 
-        val mileageText = _state.value.newTaskDueMileage.trim()
-        val mileage = mileageText.toIntOrNull()
+        val mileage = _state.value.newTaskDueMileage.trim().toIntOrNull()
+
         val now = System.currentTimeMillis()
 
         val task = MaintenanceTask(
-            carId = current.id,
+            carId = car.id,
             type = MaintenanceType.OIL_CHANGE,
             title = title,
             description = _state.value.newTaskDescription.ifBlank { null },
@@ -222,70 +190,134 @@ class MaintenanceViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            when (val result = createMaintenanceTaskLocalUseCase(task)) {
+            when (createTaskUseCase(task)) {
                 is Resource.Success -> {
-                    _state.update {
-                        it.copy(
-                            showCreateSheet = false,
-                            newTaskTitle = "",
-                            newTaskDescription = "",
-                            newTaskDueMileage = "",
-                            newTaskDueDateMillis = null,
-                            newTaskDueDateText = "",
-                            newTaskSeverity = MaintenanceSeverity.MEDIUM,
-                            userMessage = "Tarea creada localmente"
-                        )
-                    }
-                    triggerMaintenanceSyncUseCase()
+                    resetCreateSheet()
+                    showMsg("Tarea creada localmente")
+                    triggerSyncUseCase()
                 }
-                is Resource.Error -> {
-                    _state.update {
-                        it.copy(
-                            userMessage = result.message ?: "Error al crear tarea"
-                        )
-                    }
-                }
-                is Resource.Loading -> Unit
+                is Resource.Error -> showMsg("Error al crear tarea")
+                else -> Unit
             }
         }
     }
 
-    private fun completeTask(taskId: Int) {
+    // ---------------------------------------------------------
+    // COMPLETAR TAREA
+    // ---------------------------------------------------------
+    private fun completeTask() {
+        val taskId = _state.value.taskToCompleteId ?: return
+        val costText = _state.value.completeCostAmount.trim()
+
+        val cost = if (costText.isNotBlank()) costText.toDoubleOrNull() else null
+        if (costText.isNotBlank() && cost == null) {
+            _state.update { it.copy(completeCostError = "Ingresa un número válido") }
+            return
+        }
+
         viewModelScope.launch {
-            when (val result = markTaskCompletedUseCase(taskId, System.currentTimeMillis())) {
+            when (val result = markCompletedUseCase(taskId, System.currentTimeMillis(), cost)) {
+
                 is Resource.Success -> {
-                    _state.update { it.copy(userMessage = "Tarea completada") }
-                    triggerMaintenanceSyncUseCase()
+                    hideCompleteDialog()
+                    showMsg(
+                        if (cost != null) "Tarea completada • Costo: $${String.format("%.2f", cost)}"
+                        else "Tarea completada"
+                    )
+                    triggerSyncUseCase()
                 }
-                is Resource.Error -> {
-                    _state.update {
-                        it.copy(
-                            userMessage = result.message ?: "Error al completar tarea"
-                        )
-                    }
-                }
-                is Resource.Loading -> Unit
+
+                is Resource.Error -> showMsg("Error al completar tarea")
+                else -> Unit
             }
         }
     }
 
+    // ---------------------------------------------------------
+    // ELIMINAR TAREA
+    // ---------------------------------------------------------
     private fun deleteTask(taskId: Int) {
         viewModelScope.launch {
-            when (val result = deleteMaintenanceTaskUseCase(taskId)) {
-                is Resource.Success -> {
-                    _state.update { it.copy(userMessage = "Tarea eliminada") }
-                    triggerMaintenanceSyncUseCase()
-                }
-                is Resource.Error -> {
-                    _state.update {
-                        it.copy(
-                            userMessage = result.message ?: "Error al eliminar tarea"
-                        )
-                    }
-                }
-                is Resource.Loading -> Unit
+            when (deleteTaskUseCase(taskId)) {
+                is Resource.Success -> showMsg("Tarea eliminada")
+                is Resource.Error -> showMsg("Error al eliminar tarea")
+                else -> Unit
             }
+            triggerSyncUseCase()
         }
     }
 
+    // ---------------------------------------------------------
+    // UTILIDADES
+    // ---------------------------------------------------------
+    private fun showMsg(msg: String) {
+        _state.update { it.copy(userMessage = msg) }
+    }
+
+    private fun resetCreateSheet() {
+        _state.update {
+            it.copy(
+                showCreateSheet = false,
+                newTaskTitle = "",
+                newTaskDescription = "",
+                newTaskDueMileage = "",
+                newTaskDueDateMillis = null,
+                newTaskDueDateText = "",
+                newTaskSeverity = MaintenanceSeverity.MEDIUM,
+                newTitleError = null
+            )
+        }
+    }
+
+    private fun showCompleteDialog(taskId: Int) {
+        _state.update {
+            it.copy(
+                showCompleteTaskDialog = true,
+                taskToCompleteId = taskId,
+                completeCostAmount = "",
+                completeCostError = null
+            )
+        }
+    }
+
+    private fun hideCompleteDialog() {
+        _state.update {
+            it.copy(
+                showCompleteTaskDialog = false,
+                taskToCompleteId = null,
+                completeCostAmount = "",
+                completeCostError = null
+            )
+        }
+    }
+
+    private fun validateTitle(value: String) {
+        val isValid = value.length >= 5 &&
+                value.matches(Regex("^[A-Za-z0-9ÁÉÍÓÚáéíóúñÑ ]+$"))
+
+        _state.update {
+            it.copy(
+                newTaskTitle = value,
+                newTitleError = if (!isValid && value.isNotEmpty())
+                    "Debe tener mínimo 5 caracteres y solo letras/números"
+                else null
+            )
+        }
+    }
+
+    private fun validateCost(value: String) {
+        val cost = value.toDoubleOrNull()
+        _state.update {
+            it.copy(
+                completeCostAmount = value,
+                completeCostError = when {
+                    value.isBlank() -> null
+                    cost == null -> "Ingresa un número válido"
+                    cost < 0 -> "El costo no puede ser negativo"
+                    cost > 999999 -> "Costo demasiado alto"
+                    else -> null
+                }
+            )
+        }
+    }
 }
