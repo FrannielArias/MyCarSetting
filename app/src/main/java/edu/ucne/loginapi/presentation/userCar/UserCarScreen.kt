@@ -54,7 +54,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,7 +69,8 @@ fun UserCarScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(state.userMessage) {
         val message = state.userMessage
@@ -84,17 +84,8 @@ fun UserCarScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = {
-                    Text(
-                        "Mis vehículos",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                title = { Text("Mis vehículos", fontWeight = FontWeight.Bold) },
+                scrollBehavior = scrollBehavior
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -102,77 +93,25 @@ fun UserCarScreen(
             FloatingActionButton(
                 onClick = { viewModel.onEvent(UserCarEvent.ShowCreateSheet) }
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Agregar vehículo"
-                )
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar vehículo")
             }
         }
     ) { padding ->
+
         Box(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
             when {
-                state.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            CircularProgressIndicator()
-                            Text(
-                                text = "Cargando vehículos...",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                state.cars.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DirectionsCar,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.outline
-                            )
-                            Text(
-                                text = "No hay vehículos registrados",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Presiona + para agregar tu primer vehículo",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
+                state.isLoading -> LoadingCars()
+                state.cars.isEmpty() -> EmptyCarsState()
                 else -> {
                     UserCarList(
                         cars = state.cars,
                         currentCarId = state.currentCarId,
-                        onSetCurrent = { id ->
-                            viewModel.onEvent(UserCarEvent.OnSetCurrentCar(id))
-                        },
-                        onDelete = { id ->
-                            viewModel.onEvent(UserCarEvent.OnDeleteCar(id))
-                        }
+                        onSetCurrent = { viewModel.onEvent(UserCarEvent.OnSetCurrentCar(it)) },
+                        onDelete = { viewModel.onEvent(UserCarEvent.OnDeleteCar(it)) }
                     )
                 }
             }
@@ -180,16 +119,33 @@ fun UserCarScreen(
 
         if (state.showCreateSheet) {
             ModalBottomSheet(
-                onDismissRequest = {
-                    viewModel.onEvent(UserCarEvent.HideCreateSheet)
-                },
+                onDismissRequest = { viewModel.onEvent(UserCarEvent.HideCreateSheet) },
                 sheetState = sheetState
             ) {
-                NewCarSheet(
-                    state = state,
-                    onEvent = viewModel::onEvent
-                )
+                NewCarSheet(state = state, onEvent = viewModel::onEvent)
             }
+        }
+    }
+}
+
+@Composable
+private fun LoadingCars() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Spacer(Modifier.height(12.dp))
+            Text("Cargando vehículos…")
+        }
+    }
+}
+
+@Composable
+private fun EmptyCarsState() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.DirectionsCar, null, Modifier.size(64.dp))
+            Text("No hay vehículos registrados")
+            Text("Presiona + para agregar uno")
         }
     }
 }
@@ -203,7 +159,7 @@ private fun UserCarList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(cars, key = { it.id }) { car ->
@@ -227,14 +183,9 @@ private fun UserCarItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCurrent) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isCurrent) 4.dp else 1.dp
+            containerColor =
+                if (isCurrent) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Row(
@@ -243,78 +194,31 @@ private fun UserCarItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.DirectionsCar,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = if (isCurrent) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
+            Icon(Icons.Default.DirectionsCar, null, Modifier.size(40.dp))
 
-            Spacer(modifier = Modifier.size(16.dp))
+            Spacer(Modifier.size(16.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "${car.brand} ${car.model}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isCurrent) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Año ${car.year}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isCurrent) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-                car.plate?.let {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Placa: $it",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (isCurrent) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    )
-                }
+            Column(Modifier.weight(1f)) {
+                Text("${car.brand} ${car.model}", fontWeight = FontWeight.Bold)
+                Text("Año ${car.year}")
+                car.plate?.let { Text("Placa: $it") }
             }
 
             IconButton(onClick = onSetCurrent) {
                 Icon(
-                    imageVector = if (isCurrent) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = "Seleccionar vehículo actual",
-                    tint = if (isCurrent) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    if (isCurrent) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = null
                 )
             }
 
             IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar vehículo",
-                    tint = MaterialTheme.colorScheme.error
-                )
+                Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error)
             }
         }
     }
 }
+
+/* ====================== NEW CAR SHEET ========================== */
 
 @Composable
 private fun NewCarSheet(
@@ -324,15 +228,10 @@ private fun NewCarSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Nuevo vehículo",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Text("Nuevo vehículo", fontWeight = FontWeight.Bold)
 
         VehicleBrandDropdown(
             brands = state.brands,
@@ -361,73 +260,89 @@ private fun NewCarSheet(
             }
         )
 
-        OutlinedTextField(
-            value = state.plate,
-            onValueChange = { newValue ->
-                if (newValue.length <= 7 && newValue.all { it.isLetterOrDigit() }) {
-                    onEvent(UserCarEvent.OnPlateChange(newValue.uppercase()))
-                }
-            },
-            label = { Text("Placa *") },
-            placeholder = { Text("Ej: A123456") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = state.plate.isNotEmpty() && state.plate.length != 7,
-            supportingText = {
-                when {
-                    state.plate.isEmpty() -> {
-                        Text(
-                            text = "Campo obligatorio - 7 caracteres",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    state.plate.length < 7 -> {
-                        Text(
-                            text = "${state.plate.length}/7 caracteres",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    state.plate.length == 7 -> {
-                        Text(
-                            text = "✓ Placa válida",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
+        PlateInput(
+            plate = state.plate,
+            onPlateChange = { onEvent(UserCarEvent.OnPlateChange(it)) }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = { onEvent(UserCarEvent.OnSaveCar) },
-            enabled = state.selectedBrandId != null &&
-                    state.selectedModelId != null &&
-                    state.selectedYearRangeId != null &&
-                    state.plate.length == 7 && // Validación de placa
-                    !state.isLoadingCatalog,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-        ) {
-            if (state.isLoadingCatalog) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text(
-                    text = "Guardar vehículo",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+        SaveCarButton(state = state) {
+            onEvent(UserCarEvent.OnSaveCar)
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
+@Composable
+private fun PlateInput(
+    plate: String,
+    onPlateChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = plate,
+        onValueChange = { raw ->
+            onPlateChange(sanitizePlateInput(raw))
+        },
+        label = { Text("Placa *") },
+        singleLine = true,
+        isError = plate.isNotEmpty() && plate.length != 7,
+        supportingText = { PlateSupportingText(plate) },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+private fun sanitizePlateInput(input: String): String =
+    input
+        .take(7)
+        .filter { it.isLetterOrDigit() }
+        .uppercase()
+
+@Composable
+private fun PlateSupportingText(plate: String) {
+    val (text, color) = when {
+        plate.isEmpty() ->
+            "Campo obligatorio - 7 caracteres" to MaterialTheme.colorScheme.error
+
+        plate.length < 7 ->
+            "${plate.length}/7 caracteres" to MaterialTheme.colorScheme.error
+
+        else ->
+            "✓ Placa válida" to MaterialTheme.colorScheme.primary
+    }
+
+    Text(text = text, color = color)
+}
+
+@Composable
+private fun SaveCarButton(
+    state: UserCarUiState,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        enabled = canSaveCar(state),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        if (state.isLoadingCatalog) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text("Guardar vehículo")
+        }
+    }
+}
+
+private fun canSaveCar(state: UserCarUiState): Boolean {
+    return state.selectedBrandId != null &&
+            state.selectedModelId != null &&
+            state.selectedYearRangeId != null &&
+            state.plate.length == 7 &&
+            !state.isLoadingCatalog
+}
+
+/* ====================== DROPDOWNS ========================== */
 
 @Composable
 private fun VehicleBrandDropdown(
@@ -442,7 +357,7 @@ private fun VehicleBrandDropdown(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = {
-            if (brands.isNotEmpty() && !isLoading) {
+            if (!isLoading && brands.isNotEmpty()) {
                 expanded = !expanded
             }
         }
@@ -608,39 +523,6 @@ private fun VehicleYearRangeDropdown(
                         }
                     )
                 }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun EmptyStatePreview() {
-    MaterialTheme {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DirectionsCar,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-                Text(
-                    text = "No hay vehículos registrados",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Presiona + para agregar tu primer vehículo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
