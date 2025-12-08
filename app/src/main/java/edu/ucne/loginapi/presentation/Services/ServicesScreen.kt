@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,8 +55,6 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import edu.ucne.loginapi.ui.components.MyCarLoadingIndicator
 import edu.ucne.loginapi.ui.components.ScreenScaffold
-import android.util.Log
-import androidx.compose.material3.*
 
 @Composable
 fun ServicesScreen(
@@ -88,12 +87,19 @@ fun ServicesScreen(
     }
 }
 
+private data class ServicesLocationState(
+    val hasPermission: Boolean,
+    val location: LatLng?,
+    val isLoading: Boolean,
+    val requestPermissions: () -> Unit,
+    val retryGetLocation: () -> Unit
+)
+
 @SuppressLint("MissingPermission")
 @Composable
-private fun ServicesContent(
-    state: ServicesUiState,
+private fun rememberServicesLocationState(
     onEvent: (ServicesEvent) -> Unit
-) {
+): ServicesLocationState {
     val context = LocalContext.current
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
@@ -103,6 +109,22 @@ private fun ServicesContent(
     var myLocation by remember { mutableStateOf<LatLng?>(null) }
     var isLoadingLocation by remember { mutableStateOf(true) }
 
+    fun fetchLocation() {
+        isLoadingLocation = true
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    myLocation = latLng
+                    onEvent(ServicesEvent.LoadForLocation(location.latitude, location.longitude))
+                }
+                isLoadingLocation = false
+            }
+            .addOnFailureListener {
+                isLoadingLocation = false
+            }
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -111,32 +133,14 @@ private fun ServicesContent(
                     permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
         if (hasLocationPermission) {
-            Log.d("ServicesScreen", "✅ Permisos concedidos, obteniendo ubicación...")
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    val latLng = LatLng(location.latitude, location.longitude)
-                    myLocation = latLng
-                    isLoadingLocation = false
-                    Log.d("ServicesScreen", "✅ Ubicación obtenida: ${location.latitude}, ${location.longitude}")
-
-                    // ✅ LLAMAR AL VIEWMODEL CON LA UBICACIÓN
-                    onEvent(ServicesEvent.LoadForLocation(location.latitude, location.longitude))
-                } else {
-                    Log.e("ServicesScreen", "❌ Location es null")
-                    isLoadingLocation = false
-                }
-            }.addOnFailureListener { e ->
-                Log.e("ServicesScreen", "❌ Error al obtener ubicación: ${e.message}")
-                isLoadingLocation = false
-            }
+            fetchLocation()
         } else {
-            Log.e("ServicesScreen", "❌ Permisos NO concedidos")
             isLoadingLocation = false
         }
     }
 
-    LaunchedEffect(Unit) {
-        Log.d("ServicesScreen", "🔄 Solicitando permisos de ubicación...")
+    val requestPermissions: () -> Unit = {
+        isLoadingLocation = true
         permissionLauncher.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -145,87 +149,147 @@ private fun ServicesContent(
         )
     }
 
-    if (isLoadingLocation || state.isLoading) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            MyCarLoadingIndicator()
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = if (isLoadingLocation) "Obteniendo tu ubicación..." else "Buscando servicios cercanos...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    val retryGetLocation: () -> Unit = {
+        if (hasLocationPermission) {
+            fetchLocation()
+        } else {
+            requestPermissions()
         }
-        return
     }
 
-    if (!hasLocationPermission) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Se requiere permiso de ubicación",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Necesitamos tu ubicación para mostrarte servicios cercanos",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                permissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }) {
-                Text("Conceder permiso")
-            }
-        }
-        return
+    LaunchedEffect(Unit) {
+        requestPermissions()
     }
 
-    if (myLocation == null) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "No se pudo obtener tu ubicación",
-                style = MaterialTheme.typography.titleMedium
+    return ServicesLocationState(
+        hasPermission = hasLocationPermission,
+        location = myLocation,
+        isLoading = isLoadingLocation,
+        requestPermissions = requestPermissions,
+        retryGetLocation = retryGetLocation
+    )
+}
+
+@Composable
+private fun ServicesContent(
+    state: ServicesUiState,
+    onEvent: (ServicesEvent) -> Unit
+) {
+    val locationState = rememberServicesLocationState(onEvent)
+
+    when {
+        locationState.isLoading || state.isLoading -> {
+            ServicesLoading(
+                isLoadingLocation = locationState.isLoading
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Asegúrate de tener el GPS activado",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                isLoadingLocation = true
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        val latLng = LatLng(location.latitude, location.longitude)
-                        myLocation = latLng
-                        onEvent(ServicesEvent.LoadForLocation(location.latitude, location.longitude))
-                    }
-                    isLoadingLocation = false
-                }
-            }) {
-                Text("Reintentar")
-            }
         }
-        return
+
+        !locationState.hasPermission -> {
+            ServicesPermissionRequired(
+                onRequestPermissions = locationState.requestPermissions
+            )
+        }
+
+        locationState.location == null -> {
+            ServicesLocationError(
+                onRetry = locationState.retryGetLocation
+            )
+        }
+
+        else -> {
+            ServicesMainContent(
+                state = state,
+                myLocation = locationState.location,
+                hasLocationPermission = locationState.hasPermission,
+                onEvent = onEvent
+            )
+        }
     }
+}
+
+@Composable
+private fun ServicesLoading(
+    isLoadingLocation: Boolean
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        MyCarLoadingIndicator()
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = if (isLoadingLocation) {
+                "Obteniendo tu ubicación..."
+            } else {
+                "Buscando servicios cercanos..."
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun ServicesPermissionRequired(
+    onRequestPermissions: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Se requiere permiso de ubicación",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Necesitamos tu ubicación para mostrarte servicios cercanos",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRequestPermissions) {
+            Text("Conceder permiso")
+        }
+    }
+}
+
+@Composable
+private fun ServicesLocationError(
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "No se pudo obtener tu ubicación",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Asegúrate de tener el GPS activado",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRetry) {
+            Text("Reintentar")
+        }
+    }
+}
+
+@Composable
+private fun ServicesMainContent(
+    state: ServicesUiState,
+    myLocation: LatLng,
+    hasLocationPermission: Boolean,
+    onEvent: (ServicesEvent) -> Unit
+) {
+    val context = LocalContext.current
 
     val services = remember(state.services, state.selectedCategory) {
         state.selectedCategory?.let { category ->
@@ -233,7 +297,7 @@ private fun ServicesContent(
         } ?: state.services
     }
 
-    val defaultCenter = myLocation ?: LatLng(19.0522, -70.1498)
+    val defaultCenter = myLocation
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultCenter, 13f)
@@ -462,5 +526,4 @@ private fun ServiceItemCard(
             }
         }
     }
-
 }

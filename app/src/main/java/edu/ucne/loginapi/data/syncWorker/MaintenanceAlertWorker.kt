@@ -29,112 +29,134 @@ class MaintenanceAlertWorker @AssistedInject constructor(
         val upcomingWindow = now + TimeUnit.DAYS.toMillis(3)
 
         val relevant = tasks.filter { task ->
-            task.dueDateMillis != null &&
-                    !task.isPendingDelete
+            task.dueDateMillis != null && !task.isPendingDelete
         }
 
         val overdue = relevant.filter { it.dueDateMillis!! < now }
         val upcoming = relevant.filter { it.dueDateMillis!! in now..upcomingWindow }
 
-        if (overdue.isEmpty() && upcoming.isEmpty()) {
-            return Result.success()
-        }
-
-        val criticalOverdue = overdue.filter {
-            it.severity == "CRITICAL"
-        }
-        val highOverdue = overdue.filter {
-            it.severity == "HIGH"
-        }
-
-        val manager = NotificationManagerCompat.from(applicationContext)
-
-        if (criticalOverdue.isNotEmpty()) {
-            val first = criticalOverdue.first()
-            val message =
-                if (criticalOverdue.size == 1) {
-                    "La tarea crítica \"${first.title}\" está vencida."
-                } else {
-                    "Tienes ${criticalOverdue.size} tareas críticas vencidas. Ej: \"${first.title}\"."
-                }
-
-            val notification = NotificationCompat.Builder(
-                applicationContext,
-                MaintenanceNotificationChannels.CHANNEL_CRITICAL
-            )
-                .setSmallIcon(R.drawable.ic_car_notification)
-                .setContentTitle("Mantenimiento CRÍTICO vencido")
-                .setContentText(message)
-                .setStyle(
-                    NotificationCompat.BigTextStyle()
-                        .bigText(message)
-                )
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .build()
-
-            manager.notify(2001, notification)
-        }
-
-        if (highOverdue.isNotEmpty()) {
-            val first = highOverdue.first()
-            val message =
-                if (highOverdue.size == 1) {
-                    "La tarea importante \"${first.title}\" está vencida."
-                } else {
-                    "Tienes ${highOverdue.size} tareas importantes vencidas. Ej: \"${first.title}\"."
-                }
-
-            val notification = NotificationCompat.Builder(
-                applicationContext,
-                MaintenanceNotificationChannels.CHANNEL_HIGH
-            )
-                .setSmallIcon(R.drawable.ic_car_notification)
-                .setContentTitle("Mantenimiento importante vencido")
-                .setContentText(message)
-                .setStyle(
-                    NotificationCompat.BigTextStyle()
-                        .bigText(message)
-                )
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .build()
-
-            manager.notify(2002, notification)
-        }
-
+        val criticalOverdue = overdue.filter { it.severity == "CRITICAL" }
+        val highOverdue = overdue.filter { it.severity == "HIGH" }
         val generalUpcoming = upcoming.filter {
             it.severity == "LOW" || it.severity == "MEDIUM"
         }
 
-        if (generalUpcoming.isNotEmpty()) {
-            val first = generalUpcoming.first()
-            val message =
-                if (generalUpcoming.size == 1) {
-                    "La tarea \"${first.title}\" se aproxima. Revisa tu mantenimiento."
-                } else {
-                    "Tienes ${generalUpcoming.size} tareas próximas. Ej: \"${first.title}\"."
-                }
+        val manager = NotificationManagerCompat.from(applicationContext)
 
-            val notification = NotificationCompat.Builder(
-                applicationContext,
-                MaintenanceNotificationChannels.CHANNEL_GENERAL
-            )
-                .setSmallIcon(R.drawable.ic_car_notification)
-                .setContentTitle("Mantenimientos próximos")
-                .setContentText(message)
-                .setStyle(
-                    NotificationCompat.BigTextStyle()
-                        .bigText(message)
-                )
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
-                .build()
+        notifyCriticalOverdue(
+            manager = manager,
+            count = criticalOverdue.size,
+            firstTitle = criticalOverdue.firstOrNull()?.title
+        )
 
-            manager.notify(2003, notification)
-        }
+        notifyHighOverdue(
+            manager = manager,
+            count = highOverdue.size,
+            firstTitle = highOverdue.firstOrNull()?.title
+        )
+
+        notifyGeneralUpcoming(
+            manager = manager,
+            count = generalUpcoming.size,
+            firstTitle = generalUpcoming.firstOrNull()?.title
+        )
 
         return Result.success()
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    private fun notifyCriticalOverdue(
+        manager: NotificationManagerCompat,
+        count: Int,
+        firstTitle: String?
+    ) {
+        if (count <= 0 || firstTitle == null) return
+
+        val message = if (count == 1) {
+            "La tarea crítica \"$firstTitle\" está vencida."
+        } else {
+            "Tienes $count tareas críticas vencidas. Ej: \"$firstTitle\"."
+        }
+
+        val notification = NotificationCompat.Builder(
+            applicationContext,
+            MaintenanceNotificationChannels.CHANNEL_CRITICAL
+        )
+            .setSmallIcon(R.drawable.ic_car_notification)
+            .setContentTitle("Mantenimiento CRÍTICO vencido")
+            .setContentText(message)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(message)
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        manager.notify(2001, notification)
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    private fun notifyHighOverdue(
+        manager: NotificationManagerCompat,
+        count: Int,
+        firstTitle: String?
+    ) {
+        if (count <= 0 || firstTitle == null) return
+
+        val message = if (count == 1) {
+            "La tarea importante \"$firstTitle\" está vencida."
+        } else {
+            "Tienes $count tareas importantes vencidas. Ej: \"$firstTitle\"."
+        }
+
+        val notification = NotificationCompat.Builder(
+            applicationContext,
+            MaintenanceNotificationChannels.CHANNEL_HIGH
+        )
+            .setSmallIcon(R.drawable.ic_car_notification)
+            .setContentTitle("Mantenimiento importante vencido")
+            .setContentText(message)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(message)
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        manager.notify(2002, notification)
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    private fun notifyGeneralUpcoming(
+        manager: NotificationManagerCompat,
+        count: Int,
+        firstTitle: String?
+    ) {
+        if (count <= 0 || firstTitle == null) return
+
+        val message = if (count == 1) {
+            "La tarea \"$firstTitle\" se aproxima. Revisa tu mantenimiento."
+        } else {
+            "Tienes $count tareas próximas. Ej: \"$firstTitle\"."
+        }
+
+        val notification = NotificationCompat.Builder(
+            applicationContext,
+            MaintenanceNotificationChannels.CHANNEL_GENERAL
+        )
+            .setSmallIcon(R.drawable.ic_car_notification)
+            .setContentTitle("Mantenimientos próximos")
+            .setContentText(message)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(message)
+            )
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        manager.notify(2003, notification)
+    }
 }
