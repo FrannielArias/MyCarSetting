@@ -15,7 +15,6 @@ sealed interface MaintenanceEvent {
     object OnClearNewDueDate : MaintenanceEvent
     data class OnNewSeveritySelected(val severity: MaintenanceSeverity) : MaintenanceEvent
 
-    // ✅ NUEVOS EVENTOS PARA COMPLETAR TAREA
     data class ShowCompleteTaskDialog(val taskId: Int) : MaintenanceEvent
     object HideCompleteTaskDialog : MaintenanceEvent
     data class OnCostAmountChange(val value: String) : MaintenanceEvent

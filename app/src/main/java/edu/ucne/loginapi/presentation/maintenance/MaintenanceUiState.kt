@@ -11,7 +11,6 @@ data class MaintenanceUiState(
     val upcomingTasks: List<MaintenanceTask> = emptyList(),
     val overdueTasks: List<MaintenanceTask> = emptyList(),
 
-    // Create sheet
     val showCreateSheet: Boolean = false,
     val newTaskTitle: String = "",
     val newTaskDescription: String = "",
@@ -21,7 +20,6 @@ data class MaintenanceUiState(
     val newTaskSeverity: MaintenanceSeverity = MaintenanceSeverity.MEDIUM,
     val newTitleError: String? = null,
 
-    // ✅ NUEVO: Complete task dialog
     val showCompleteTaskDialog: Boolean = false,
     val taskToCompleteId: Int? = null,
     val completeCostAmount: String = "",

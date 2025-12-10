@@ -267,9 +267,6 @@ fun Usuarios.toDto(): UsuariosDto =
     )
 
 fun MaintenanceTaskEntity.toDomain(): MaintenanceTask {
-    val resolvedSeverity = runCatching { MaintenanceSeverity.valueOf(severity) }
-        .getOrElse { MaintenanceSeverity.MEDIUM }
-
     return MaintenanceTask(
         id = id,
         remoteId = remoteId,
@@ -279,18 +276,19 @@ fun MaintenanceTaskEntity.toDomain(): MaintenanceTask {
         description = description,
         dueDateMillis = dueDateMillis,
         dueMileageKm = dueMileageKm,
-        severity = resolvedSeverity,
+        severity = MaintenanceSeverity.valueOf(severity),
         status = MaintenanceStatus.valueOf(status),
         createdAtMillis = createdAtMillis,
         updatedAtMillis = updatedAtMillis,
+        completedAtMillis = completedAtMillis,
+        costAmount = costAmount,
         isPendingCreate = isPendingCreate,
         isPendingUpdate = isPendingUpdate,
         isPendingDelete = isPendingDelete
     )
 }
-
-fun MaintenanceTask.toEntity(): MaintenanceTaskEntity =
-    MaintenanceTaskEntity(
+fun MaintenanceTask.toEntity(): MaintenanceTaskEntity {
+    return MaintenanceTaskEntity(
         id = id,
         remoteId = remoteId,
         carId = carId,
@@ -303,13 +301,16 @@ fun MaintenanceTask.toEntity(): MaintenanceTaskEntity =
         status = status.name,
         createdAtMillis = createdAtMillis,
         updatedAtMillis = updatedAtMillis,
+        completedAtMillis = completedAtMillis,
+        costAmount = costAmount,
         isPendingCreate = isPendingCreate,
         isPendingUpdate = isPendingUpdate,
         isPendingDelete = isPendingDelete
     )
+}
 
-fun MaintenanceHistoryEntity.toDomain(): MaintenanceHistory =
-    MaintenanceHistory(
+fun MaintenanceHistoryEntity.toDomain(): MaintenanceHistory {
+    return MaintenanceHistory(
         id = id,
         carId = carId,
         taskType = MaintenanceType.valueOf(taskType),
@@ -319,7 +320,7 @@ fun MaintenanceHistoryEntity.toDomain(): MaintenanceHistory =
         workshopName = workshopName,
         notes = notes
     )
-
+}
 fun MaintenanceHistory.toEntity(): MaintenanceHistoryEntity =
     MaintenanceHistoryEntity(
         id = id,

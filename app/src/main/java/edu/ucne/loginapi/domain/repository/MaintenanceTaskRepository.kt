@@ -12,7 +12,6 @@ interface MaintenanceTaskRepository {
     suspend fun createTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask>
     suspend fun updateTaskLocal(task: MaintenanceTask): Resource<MaintenanceTask>
 
-    // ✅ ACTUALIZADO: Agregar parámetro costAmount
     suspend fun markTaskCompleted(
         taskId: Int,
         completionDateMillis: Long,

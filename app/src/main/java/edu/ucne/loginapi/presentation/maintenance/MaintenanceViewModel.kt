@@ -42,9 +42,6 @@ class MaintenanceViewModel @Inject constructor(
 
     init { loadInitial() }
 
-    // ---------------------------------------------------------
-    // EVENTOS
-    // ---------------------------------------------------------
     fun onEvent(event: MaintenanceEvent) {
         when (event) {
 
@@ -81,10 +78,6 @@ class MaintenanceViewModel @Inject constructor(
             is MaintenanceEvent.OnTaskClicked -> Unit
         }
     }
-
-    // ---------------------------------------------------------
-    // CARGA INICIAL
-    // ---------------------------------------------------------
     private fun loadInitial() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -111,9 +104,6 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------
-    // REFRESCAR
-    // ---------------------------------------------------------
     private fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
@@ -132,9 +122,6 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------
-    // OBSERVAR TAREAS
-    // ---------------------------------------------------------
     private fun observeTasks(carId: Int) {
         upcomingJob?.cancel()
         overdueJob?.cancel()
@@ -152,9 +139,6 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------
-    // CREAR TAREA
-    // ---------------------------------------------------------
     fun createTask() {
         val car = _state.value.currentCar ?: return
         val title = _state.value.newTaskTitle.trim()
@@ -202,20 +186,15 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------
-    // COMPLETAR TAREA
-    // ---------------------------------------------------------
     private fun completeTask() {
         val taskId = _state.value.taskToCompleteId ?: return
         val costText = _state.value.completeCostAmount.trim()
 
-        // ✅ VALIDACIÓN CORREGIDA
         val cost: Double? = when {
-            costText.isBlank() -> null // Si está vacío, es válido (opcional)
+            costText.isBlank() -> null
             else -> {
                 val parsedCost = costText.toDoubleOrNull()
                 if (parsedCost == null) {
-                    // Si no se puede convertir a número, mostrar error
                     _state.update { it.copy(completeCostError = "Ingresa un número válido") }
                     return
                 }
@@ -223,14 +202,9 @@ class MaintenanceViewModel @Inject constructor(
                     _state.update { it.copy(completeCostError = "El costo no puede ser negativo") }
                     return
                 }
-                parsedCost // Retornar el costo válido
+                parsedCost
             }
         }
-
-        // ✅ LOG para ver qué se está enviando
-        android.util.Log.d("MaintenanceViewModel", "Completando tarea ID: $taskId")
-        android.util.Log.d("MaintenanceViewModel", "Texto ingresado: '$costText'")
-        android.util.Log.d("MaintenanceViewModel", "Costo a guardar: $cost")
 
         viewModelScope.launch {
             when (val result = markCompletedUseCase(taskId, System.currentTimeMillis(), cost)) {
@@ -243,7 +217,6 @@ class MaintenanceViewModel @Inject constructor(
                     triggerSyncUseCase()
                 }
                 is Resource.Error -> {
-                    android.util.Log.e("MaintenanceViewModel", "Error: ${result.message}")
                     showMsg("Error al completar tarea")
                 }
                 else -> Unit
@@ -251,9 +224,6 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------
-    // ELIMINAR TAREA
-    // ---------------------------------------------------------
     private fun deleteTask(taskId: Int) {
         viewModelScope.launch {
             when (deleteTaskUseCase(taskId)) {
@@ -265,9 +235,6 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    // ---------------------------------------------------------
-    // UTILIDADES
-    // ---------------------------------------------------------
     private fun showMsg(msg: String) {
         _state.update { it.copy(userMessage = msg) }
     }

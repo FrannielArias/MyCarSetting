@@ -254,7 +254,7 @@ class UserCarViewModel @Inject constructor(
             brand = selectedBrand.name,
             model = selectedModel.name,
             year = selectedYearRange.toYear,
-            plate = plate.uppercase(), // Guardar en mayúsculas
+            plate = plate.uppercase(),
             fuelType = _state.value.fuelType,
             usageType = _state.value.usageType,
             isCurrent = _state.value.cars.isEmpty()

@@ -36,10 +36,8 @@ class ServicesRepositoryImpl @Inject constructor(
         }
 
         return try {
-            // Respetar rate limit
             delay(1000)
 
-            // Construir query según categoría
             val overpassQuery = if (category == null) {
                 Log.d(TAG, "🔄 Buscando TODOS los tipos de servicios...")
                 buildMultiAmenityQuery(userLat, userLon)
@@ -69,14 +67,12 @@ class ServicesRepositoryImpl @Inject constructor(
                 }
                 Log.d(TAG, "✅ Items mapeados: ${items.size}")
 
-                // Ordenar por distancia
                 val sorted = items.sortedBy { item ->
                     val result = FloatArray(1)
                     Location.distanceBetween(userLat, userLon, item.latitude, item.longitude, result)
                     result[0]
                 }
 
-                // Filtrar solo los que están dentro de 10km
                 val nearbyItems = sorted.filter { item ->
                     val result = FloatArray(1)
                     Location.distanceBetween(userLat, userLon, item.latitude, item.longitude, result)
@@ -143,7 +139,6 @@ class ServicesRepositoryImpl @Inject constructor(
             return null
         }
 
-        // Calcular distancia
         val result = FloatArray(1)
         Location.distanceBetween(userLat, userLon, lat, lon, result)
         val meters = result[0]
