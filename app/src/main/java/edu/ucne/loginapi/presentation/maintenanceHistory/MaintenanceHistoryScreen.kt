@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
 import androidx.compose.foundation.layout.*
@@ -27,13 +28,15 @@ import java.util.*
 
 object MaintenanceConstants {
     const val OIL_CHANGE = "Cambio de aceite"
+    const val BRAKE_CHECK = "Revisión de frenos"
     const val GENERAL_CHECK = "Revisión general"
     const val AIR_FILTER = "Cambio de filtro de aire"
+    const val TIRE_ROTATION = "Rotación de neumáticos"
 
     val MAIN_FILTERS = listOf(
         OIL_CHANGE,
-        "Revisión de frenos",
-        "Rotación de neumáticos",
+        BRAKE_CHECK,
+        TIRE_ROTATION,
         AIR_FILTER,
         GENERAL_CHECK
     )
@@ -65,7 +68,6 @@ fun MaintenanceHistoryBody(
         rememberTopAppBarState()
     )
 
-    // Mostrar mensajes
     LaunchedEffect(state.userMessage) {
         state.userMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -113,6 +115,7 @@ private fun MaintenanceHistoryContent(
     onEvent: (MaintenanceHistoryEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     when {
         state.isLoading -> {
             Column(
@@ -176,7 +179,6 @@ private fun MaintenanceHistoryContent(
                         val text = it.notes?.trim() ?: ""
                         !MaintenanceConstants.MAIN_FILTERS.contains(text)
                     }
-
                     else -> state.records.filter {
                         it.notes?.trim().equals(filterText, ignoreCase = false)
                     }
@@ -261,6 +263,7 @@ private fun MaintenanceHistoryList(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+
                         Surface(
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             shape = MaterialTheme.shapes.small
@@ -314,8 +317,8 @@ private fun CustomFilterRow(
     val filters = listOf(
         null to "Todos",
         MaintenanceConstants.OIL_CHANGE to MaintenanceConstants.OIL_CHANGE,
-        "Revisión de frenos" to "Revisión de frenos",
-        "Rotación de neumáticos" to "Rotación de neumáticos",
+        MaintenanceConstants.BRAKE_CHECK to MaintenanceConstants.BRAKE_CHECK,
+        MaintenanceConstants.TIRE_ROTATION to MaintenanceConstants.TIRE_ROTATION,
         MaintenanceConstants.AIR_FILTER to MaintenanceConstants.AIR_FILTER,
         MaintenanceConstants.GENERAL_CHECK to MaintenanceConstants.GENERAL_CHECK,
         "Otros" to "Otros"
@@ -323,10 +326,8 @@ private fun CustomFilterRow(
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(filters) { (value, label) ->
-            val selected = selectedFilter == value
-
             FilterChip(
-                selected = selected,
+                selected = selectedFilter == value,
                 onClick = { onSelectFilter(value) },
                 label = { Text(text = label) },
                 colors = FilterChipDefaults.filterChipColors(
@@ -359,6 +360,7 @@ private fun HistorySummaryCard(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.History,
@@ -440,6 +442,7 @@ private fun MaintenanceHistoryItem(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Surface(
                 modifier = Modifier.size(56.dp),
                 color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -514,6 +517,7 @@ private fun RecordDetails(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
             record.mileageKm?.let {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -567,8 +571,8 @@ private fun MaintenanceType.displayName(): String {
     return when (this) {
         MaintenanceType.OIL_CHANGE -> MaintenanceConstants.OIL_CHANGE
         MaintenanceType.FILTER -> "Cambio de filtro"
-        MaintenanceType.BRAKE_SERVICE -> "Servicio de frenos"
-        MaintenanceType.TIRE_ROTATION -> "Rotación de neumáticos"
+        MaintenanceType.BRAKE_SERVICE -> MaintenanceConstants.BRAKE_CHECK
+        MaintenanceType.TIRE_ROTATION -> MaintenanceConstants.TIRE_ROTATION
         MaintenanceType.TIRE_CHANGE -> "Cambio de neumáticos"
         MaintenanceType.ALIGNMENT -> "Alineación"
         MaintenanceType.BATTERY -> "Batería"
