@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
 import androidx.compose.foundation.layout.*
@@ -28,6 +27,14 @@ import java.util.*
 
 object MaintenanceConstants {
     const val GENERAL_CHECK = "Revisión general"
+
+    val MAIN_FILTERS = listOf(
+        "Cambio de aceite",
+        "Revisión de frenos",
+        "Rotación de neumáticos",
+        "Cambio de filtro de aire",
+        GENERAL_CHECK
+    )
 }
 
 @Composable
@@ -174,24 +181,15 @@ private fun MaintenanceHistoryContent(
             val filteredRecords = state.selectedFilterText?.let { filterText ->
                 when (filterText) {
                     "Otros" -> {
-                        val main = listOf(
-                            "Cambio de aceite",
-                            "Revisión de frenos",
-                            "Rotación de neumáticos",
-                            "Cambio de filtro de aire",
-                            MaintenanceConstants.GENERAL_CHECK
-                        )
-
                         state.records.filter { record ->
                             val text = record.notes?.trim() ?: ""
-                            !main.contains(text)
+                            !MaintenanceConstants.MAIN_FILTERS.contains(text)
                         }
                     }
 
                     else -> {
                         state.records.filter {
-                            it.notes?.trim()
-                                .equals(filterText, ignoreCase = false)
+                            it.notes?.trim().equals(filterText, ignoreCase = false)
                         }
                     }
                 }
@@ -202,7 +200,7 @@ private fun MaintenanceHistoryContent(
                 allRecords = state.records,
                 selectedFilterText = state.selectedFilterText,
                 onSelectFilter = { onEvent(MaintenanceHistoryEvent.OnFilterTextSelected(it)) },
-                onDelete = { onEvent(MaintenanceHistoryEvent.OnDeleteRecord(it)) }
+                onDelete = { id -> onEvent(MaintenanceHistoryEvent.OnDeleteRecord(id)) }
             )
         }
     }
@@ -233,6 +231,7 @@ private fun MaintenanceHistoryList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         item {
             HistorySummaryCard(
                 totalRecords = totalRecords,
@@ -261,7 +260,9 @@ private fun MaintenanceHistoryList(
         }
 
         if (records.isEmpty() && selectedFilterText != null) {
-            item { EmptyCustomFilterState(selectedFilterText) }
+            item {
+                EmptyCustomFilterState(selectedFilter = selectedFilterText)
+            }
         } else {
             grouped.forEach { (month, list) ->
                 item(key = "header_$month") {
@@ -271,13 +272,12 @@ private fun MaintenanceHistoryList(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = month.replaceFirstChar {
-                                it.titlecase(Locale.getDefault())
-                            },
+                            text = month.replaceFirstChar { it.titlecase(Locale.getDefault()) },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+
                         Surface(
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             shape = MaterialTheme.shapes.small
@@ -293,7 +293,7 @@ private fun MaintenanceHistoryList(
                 }
 
                 itemsIndexed(
-                    items = list,
+                    list,
                     key = { _, item -> item.id }
                 ) { _, record ->
                     MaintenanceHistoryItem(
@@ -352,6 +352,7 @@ private fun CustomFilterRow(
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(filters) { (value, label) ->
+
             val selected = selectedFilter == value
 
             FilterChip(
@@ -472,9 +473,8 @@ private fun MaintenanceHistoryItem(
     record: MaintenanceHistory,
     onDelete: () -> Unit
 ) {
-    val dateText =
-        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            .format(Date(record.serviceDateMillis))
+    val dateText = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        .format(Date(record.serviceDateMillis))
 
     val costText = record.cost?.let { NumberFormat.getCurrencyInstance().format(it) }
 
