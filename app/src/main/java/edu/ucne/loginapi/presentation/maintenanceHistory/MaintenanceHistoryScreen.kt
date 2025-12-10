@@ -2,47 +2,16 @@
 
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -55,8 +24,7 @@ import edu.ucne.loginapi.domain.model.MaintenanceHistory
 import edu.ucne.loginapi.domain.model.MaintenanceType
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @Composable
 fun MaintenanceHistoryScreen(
@@ -136,7 +104,7 @@ private fun MaintenanceHistoryContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                androidx.compose.material3.CircularProgressIndicator()
+                CircularProgressIndicator()
                 Text(
                     text = "Cargando historial...",
                     style = MaterialTheme.typography.bodyLarge,
@@ -198,15 +166,36 @@ private fun MaintenanceHistoryContent(
         }
 
         else -> {
-            val filteredRecords = state.selectedType?.let { type ->
-                state.records.filter { it.taskType == type }
+            val filteredRecords = state.selectedFilterText?.let { filterText ->
+                when (filterText) {
+                    "Otros" -> {
+                        val mainFilters = listOf(
+                            "Cambio de aceite",
+                            "Revisión de frenos",
+                            "Rotación de neumáticos",
+                            "Cambio de filtro de aire",
+                            "Revisión general"
+                        )
+                        state.records.filter { record ->
+                            val noteText = record.notes?.trim() ?: ""
+                            !mainFilters.contains(noteText)
+                        }
+                    }
+                    else -> {
+                        // Filtrar por coincidencia exacta con el texto
+                        state.records.filter {
+                            it.notes?.trim().equals(filterText, ignoreCase = false)
+                        }
+                    }
+                }
             } ?: state.records
 
             MaintenanceHistoryList(
                 records = filteredRecords,
-                selectedType = state.selectedType,
-                onSelectType = { type ->
-                    onEvent(MaintenanceHistoryEvent.OnTypeFilterSelected(type))
+                allRecords = state.records,
+                selectedFilterText = state.selectedFilterText,
+                onSelectFilter = { filterText ->
+                    onEvent(MaintenanceHistoryEvent.OnFilterTextSelected(filterText))
                 },
                 onDelete = { id ->
                     onEvent(MaintenanceHistoryEvent.OnDeleteRecord(id))
@@ -219,8 +208,9 @@ private fun MaintenanceHistoryContent(
 @Composable
 private fun MaintenanceHistoryList(
     records: List<MaintenanceHistory>,
-    selectedType: MaintenanceType?,
-    onSelectType: (MaintenanceType?) -> Unit,
+    allRecords: List<MaintenanceHistory>,
+    selectedFilterText: String?,
+    onSelectFilter: (String?) -> Unit,
     onDelete: (Int) -> Unit
 ) {
     val monthFormatter = remember {
@@ -232,7 +222,8 @@ private fun MaintenanceHistoryList(
             .groupBy { monthFormatter.format(Date(it.serviceDateMillis)) }
     }
 
-    val totalCost = records.sumOf { it.cost ?: 0.0 }
+    val totalCost = allRecords.sumOf { it.cost ?: 0.0 }
+    val totalRecords = allRecords.size
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -241,8 +232,10 @@ private fun MaintenanceHistoryList(
     ) {
         item {
             HistorySummaryCard(
-                totalRecords = records.size,
-                totalCost = totalCost
+                totalRecords = totalRecords,
+                totalCost = totalCost,
+                filteredCount = records.size,
+                isFiltered = selectedFilterText != null
             )
         }
 
@@ -256,46 +249,120 @@ private fun MaintenanceHistoryList(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                TypeFilterRow(
-                    selectedType = selectedType,
-                    onSelectType = onSelectType
+                CustomFilterRow(
+                    selectedFilter = selectedFilterText,
+                    onSelectFilter = onSelectFilter
                 )
             }
         }
 
-        grouped.forEach { (month, list) ->
-            item(key = "header_$month") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = month.replaceFirstChar { it.titlecase(Locale.getDefault()) },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = MaterialTheme.shapes.small
+        if (records.isEmpty() && selectedFilterText != null) {
+            item {
+                EmptyCustomFilterState(selectedFilter = selectedFilterText)
+            }
+        } else {
+            grouped.forEach { (month, list) ->
+                item(key = "header_$month") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${list.size} ${if (list.size == 1) "registro" else "registros"}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            text = month.replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(
+                                text = "${list.size} ${if (list.size == 1) "registro" else "registros"}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            itemsIndexed(list, key = { _, item -> item.id }) { _, record ->
-                MaintenanceHistoryItem(
-                    record = record,
-                    onDelete = { onDelete(record.id) }
-                )
+                itemsIndexed(list, key = { _, item -> item.id }) { _, record ->
+                    MaintenanceHistoryItem(
+                        record = record,
+                        onDelete = { onDelete(record.id) }
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun EmptyCustomFilterState(selectedFilter: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterAlt,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.outline
+        )
+        Text(
+            text = "No hay registros de \"$selectedFilter\"",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "Intenta con otro filtro",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun CustomFilterRow(
+    selectedFilter: String?,
+    onSelectFilter: (String?) -> Unit
+) {
+    val filters = listOf(
+        null to "Todos",
+        "Cambio de aceite" to "Cambio de aceite",
+        "Revisión de frenos" to "Revisión de frenos",
+        "Rotación de neumáticos" to "Rotación de neumáticos",
+        "Cambio de filtro de aire" to "Cambio de filtro de aire",
+        "Revisión general" to "Revisión general",
+        "Otros" to "Otros"
+    )
+
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(filters) { (filterValue, filterLabel) ->
+            val isSelected = selectedFilter == filterValue
+
+            FilterChip(
+                selected = isSelected,
+                onClick = { onSelectFilter(filterValue) },
+                label = {
+                    Text(
+                        text = filterLabel,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
         }
     }
 }
@@ -303,7 +370,9 @@ private fun MaintenanceHistoryList(
 @Composable
 private fun HistorySummaryCard(
     totalRecords: Int,
-    totalCost: Double
+    totalCost: Double,
+    filteredCount: Int,
+    isFiltered: Boolean
 ) {
     val currency = NumberFormat.getCurrencyInstance().format(totalCost)
 
@@ -331,12 +400,21 @@ private fun HistorySummaryCard(
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
-                Text(
-                    text = "Resumen del historial",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Column {
+                    Text(
+                        text = "Resumen del historial",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    if (isFiltered) {
+                        Text(
+                            text = "Mostrando $filteredCount de $totalRecords registros",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
+                }
             }
 
             Row(
@@ -383,45 +461,6 @@ private fun SummaryItem(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
-    }
-}
-
-@Composable
-private fun TypeFilterRow(
-    selectedType: MaintenanceType?,
-    onSelectType: (MaintenanceType?) -> Unit
-) {
-    val types = listOf<MaintenanceType?>(null) +
-            listOf(
-                MaintenanceType.OIL_CHANGE,
-                MaintenanceType.BRAKE_SERVICE,
-                MaintenanceType.TIRE_ROTATION,
-                MaintenanceType.GENERAL_CHECK,
-                MaintenanceType.OTHER
-            )
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(types) { type ->
-            val isSelected = selectedType == type
-            val label = type?.displayName() ?: "Todos"
-
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSelectType(type) },
-                label = {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
     }
 }
 
@@ -498,10 +537,13 @@ private fun RecordDetails(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
+        // Título: SIEMPRE usar notes si existe, sino taskType
+        val displayTitle = record.notes?.takeIf { it.isNotBlank() } ?: record.taskType.displayName()
+
         Text(
-            text = record.taskType.displayName(),
+            text = displayTitle,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = MaterialTheme.colorScheme.onSurface
@@ -541,7 +583,7 @@ private fun RecordDetails(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "$it km",
+                        text = "${it.toInt()} km",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
@@ -568,22 +610,6 @@ private fun RecordDetails(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        }
-
-        if (!record.notes.isNullOrBlank()) {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = record.notes,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(8.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 

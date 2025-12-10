@@ -1,5 +1,6 @@
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,8 +40,8 @@ class MaintenanceHistoryViewModel @Inject constructor(
             MaintenanceHistoryEvent.LoadInitialData -> loadInitial()
             MaintenanceHistoryEvent.Refresh -> refresh()
             is MaintenanceHistoryEvent.OnDeleteRecord -> deleteRecord(event.id)
-            is MaintenanceHistoryEvent.OnTypeFilterSelected -> {
-                _state.update { it.copy(selectedType = event.type) }
+            is MaintenanceHistoryEvent.OnFilterTextSelected -> {
+                _state.update { it.copy(selectedFilterText = event.filterText) }
             }
             MaintenanceHistoryEvent.OnUserMessageShown -> {
                 _state.update { it.copy(userMessage = null) }
@@ -90,6 +91,12 @@ class MaintenanceHistoryViewModel @Inject constructor(
         historyJob?.cancel()
         historyJob = viewModelScope.launch {
             getMaintenanceHistoryForCarUseCase(carId).collectLatest { list ->
+                Log.d("MaintenanceHistory", "========== REGISTROS RECIBIDOS ==========")
+                Log.d("MaintenanceHistory", "Total de registros: ${list.size}")
+                list.forEachIndexed { index, record ->
+                    Log.d("MaintenanceHistory", "[$index] ID=${record.id}, TaskType=${record.taskType}, WorkshopName=${record.workshopName}, Notes=${record.notes}")
+                }
+                Log.d("MaintenanceHistory", "=========================================")
                 _state.update { it.copy(records = list) }
             }
         }

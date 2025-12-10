@@ -5,10 +5,10 @@ import edu.ucne.loginapi.domain.model.MaintenanceType
 import edu.ucne.loginapi.domain.model.UserCar
 
 data class MaintenanceHistoryUiState(
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val currentCar: UserCar? = null,
     val records: List<MaintenanceHistory> = emptyList(),
-    val selectedType: MaintenanceType? = null,
+    val selectedFilterText: String? = null,
     val userMessage: String? = null
 )

@@ -3,10 +3,9 @@ package edu.ucne.loginapi.presentation.maintenanceHistory
 import edu.ucne.loginapi.domain.model.MaintenanceType
 
 sealed interface MaintenanceHistoryEvent {
-    object LoadInitialData : MaintenanceHistoryEvent
-    object Refresh : MaintenanceHistoryEvent
+    data object LoadInitialData : MaintenanceHistoryEvent
+    data object Refresh : MaintenanceHistoryEvent
     data class OnDeleteRecord(val id: Int) : MaintenanceHistoryEvent
-    data class OnTypeFilterSelected(val type: MaintenanceType?) : MaintenanceHistoryEvent
-    object OnUserMessageShown : MaintenanceHistoryEvent
-
+    data class OnFilterTextSelected(val filterText: String?) : MaintenanceHistoryEvent
+    data object OnUserMessageShown : MaintenanceHistoryEvent
 }
