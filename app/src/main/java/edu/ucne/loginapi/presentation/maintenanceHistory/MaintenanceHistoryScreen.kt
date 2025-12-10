@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
 import androidx.compose.foundation.layout.*
@@ -48,7 +47,8 @@ fun MaintenanceHistoryBody(
     onEvent: (MaintenanceHistoryEvent) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(state.userMessage) {
         state.userMessage?.let {
@@ -176,14 +176,17 @@ private fun MaintenanceHistoryContent(
                             "Cambio de filtro de aire",
                             "Revisión general"
                         )
+
                         state.records.filter { record ->
                             val noteText = record.notes?.trim() ?: ""
                             !mainFilters.contains(noteText)
                         }
                     }
+
                     else -> {
                         state.records.filter {
-                            it.notes?.trim().equals(filterText, ignoreCase = false)
+                            it.notes?.trim()
+                                .equals(filterText, ignoreCase = false)
                         }
                     }
                 }
@@ -229,6 +232,7 @@ private fun MaintenanceHistoryList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         item {
             HistorySummaryCard(
                 totalRecords = totalRecords,
@@ -261,6 +265,7 @@ private fun MaintenanceHistoryList(
             }
         } else {
             grouped.forEach { (month, list) ->
+
                 item(key = "header_$month") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -287,7 +292,10 @@ private fun MaintenanceHistoryList(
                     }
                 }
 
-                itemsIndexed(list, key = { _, item -> item.id }) { _, record ->
+                itemsIndexed(
+                    list,
+                    key = { _, item -> item.id }
+                ) { _, record ->
                     MaintenanceHistoryItem(
                         record = record,
                         onDelete = { onDelete(record.id) }
@@ -301,9 +309,7 @@ private fun MaintenanceHistoryList(
 @Composable
 private fun EmptyCustomFilterState(selectedFilter: String) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxWidth().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -342,9 +348,7 @@ private fun CustomFilterRow(
         "Otros" to "Otros"
     )
 
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(filters) { (filterValue, filterLabel) ->
             val isSelected = selectedFilter == filterValue
 
@@ -384,9 +388,7 @@ private fun HistorySummaryCard(
         shape = MaterialTheme.shapes.extraLarge
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
@@ -406,6 +408,7 @@ private fun HistorySummaryCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+
                     if (isFiltered) {
                         Text(
                             text = "Mostrando $filteredCount de $totalRecords registros",
@@ -468,8 +471,9 @@ private fun MaintenanceHistoryItem(
     record: MaintenanceHistory,
     onDelete: () -> Unit
 ) {
-    val dateText = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        .format(Date(record.serviceDateMillis))
+    val dateText =
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            .format(Date(record.serviceDateMillis))
 
     val costText = record.cost?.let {
         NumberFormat.getCurrencyInstance().format(it)
@@ -484,9 +488,7 @@ private fun MaintenanceHistoryItem(
         shape = MaterialTheme.shapes.large
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
@@ -536,7 +538,8 @@ private fun RecordDetails(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        val displayTitle = record.notes?.takeIf { it.isNotBlank() } ?: record.taskType.displayName()
+        val displayTitle = record.notes?.takeIf { it.isNotBlank() }
+            ?: record.taskType.displayName()
 
         Text(
             text = displayTitle,
@@ -569,6 +572,7 @@ private fun RecordDetails(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             record.mileageKm?.let {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
