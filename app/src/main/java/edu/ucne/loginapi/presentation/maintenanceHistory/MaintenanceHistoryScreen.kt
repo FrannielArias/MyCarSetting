@@ -27,15 +27,17 @@ import java.util.*
 
 object MaintenanceConstants {
     const val GENERAL_CHECK = "Revisión general"
+    const val AIR_FILTER = "Cambio de filtro de aire"
 
     val MAIN_FILTERS = listOf(
         "Cambio de aceite",
         "Revisión de frenos",
         "Rotación de neumáticos",
-        "Cambio de filtro de aire",
+        AIR_FILTER,
         GENERAL_CHECK
     )
 }
+
 
 @Composable
 fun MaintenanceHistoryScreen(
@@ -345,16 +347,14 @@ private fun CustomFilterRow(
         "Cambio de aceite" to "Cambio de aceite",
         "Revisión de frenos" to "Revisión de frenos",
         "Rotación de neumáticos" to "Rotación de neumáticos",
-        "Cambio de filtro de aire" to "Cambio de filtro de aire",
+        MaintenanceConstants.AIR_FILTER to MaintenanceConstants.AIR_FILTER,
         MaintenanceConstants.GENERAL_CHECK to MaintenanceConstants.GENERAL_CHECK,
         "Otros" to "Otros"
     )
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(filters) { (value, label) ->
-
             val selected = selectedFilter == value
-
             FilterChip(
                 selected = selected,
                 onClick = { onSelectFilter(value) },
