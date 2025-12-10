@@ -209,15 +209,31 @@ class MaintenanceViewModel @Inject constructor(
         val taskId = _state.value.taskToCompleteId ?: return
         val costText = _state.value.completeCostAmount.trim()
 
-        val cost = if (costText.isNotBlank()) costText.toDoubleOrNull() else null
-        if (costText.isNotBlank() && cost == null) {
-            _state.update { it.copy(completeCostError = "Ingresa un número válido") }
-            return
+        // ✅ VALIDACIÓN CORREGIDA
+        val cost: Double? = when {
+            costText.isBlank() -> null // Si está vacío, es válido (opcional)
+            else -> {
+                val parsedCost = costText.toDoubleOrNull()
+                if (parsedCost == null) {
+                    // Si no se puede convertir a número, mostrar error
+                    _state.update { it.copy(completeCostError = "Ingresa un número válido") }
+                    return
+                }
+                if (parsedCost < 0) {
+                    _state.update { it.copy(completeCostError = "El costo no puede ser negativo") }
+                    return
+                }
+                parsedCost // Retornar el costo válido
+            }
         }
+
+        // ✅ LOG para ver qué se está enviando
+        android.util.Log.d("MaintenanceViewModel", "Completando tarea ID: $taskId")
+        android.util.Log.d("MaintenanceViewModel", "Texto ingresado: '$costText'")
+        android.util.Log.d("MaintenanceViewModel", "Costo a guardar: $cost")
 
         viewModelScope.launch {
             when (val result = markCompletedUseCase(taskId, System.currentTimeMillis(), cost)) {
-
                 is Resource.Success -> {
                     hideCompleteDialog()
                     showMsg(
@@ -226,8 +242,10 @@ class MaintenanceViewModel @Inject constructor(
                     )
                     triggerSyncUseCase()
                 }
-
-                is Resource.Error -> showMsg("Error al completar tarea")
+                is Resource.Error -> {
+                    android.util.Log.e("MaintenanceViewModel", "Error: ${result.message}")
+                    showMsg("Error al completar tarea")
+                }
                 else -> Unit
             }
         }

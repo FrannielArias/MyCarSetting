@@ -76,6 +76,7 @@ class MaintenanceRepositoryImpl @Inject constructor(
         return Resource.Success(Unit)
     }
 
+    // ✅ ACTUALIZADO: Ahora guarda completedAtMillis y costAmount
     override suspend fun markTaskCompleted(
         taskId: Int,
         completionDateMillis: Long,
@@ -83,8 +84,16 @@ class MaintenanceRepositoryImpl @Inject constructor(
     ): Resource<Unit> {
         val task = getTaskById(taskId) ?: return Resource.Error("La tarea no existe")
 
+        // ✅ LOG 1: Ver qué se recibe
+        android.util.Log.d("DEBUG_COST", "========================================")
+        android.util.Log.d("DEBUG_COST", "Task ID: $taskId")
+        android.util.Log.d("DEBUG_COST", "Cost Amount recibido: $costAmount")
+        android.util.Log.d("DEBUG_COST", "========================================")
+
         val updated = task.copy(
             status = MaintenanceStatus.COMPLETED,
+            completedAtMillis = completionDateMillis,
+            costAmount = costAmount,
             updatedAtMillis = completionDateMillis,
             isPendingUpdate = true
         )
@@ -97,14 +106,23 @@ class MaintenanceRepositoryImpl @Inject constructor(
             taskType = task.type,
             serviceDateMillis = completionDateMillis,
             mileageKm = task.dueMileageKm,
-            cost = null,
+            cost = costAmount, // ✅ Debe tener el valor aquí
             workshopName = null,
             notes = task.title
         )
 
+        // ✅ LOG 2: Ver qué se va a guardar
+        android.util.Log.d("DEBUG_COST", "Guardando en historial:")
+        android.util.Log.d("DEBUG_COST", "- Task Type: ${historyRecord.taskType}")
+        android.util.Log.d("DEBUG_COST", "- Cost: ${historyRecord.cost}")
+        android.util.Log.d("DEBUG_COST", "- Notes: ${historyRecord.notes}")
+        android.util.Log.d("DEBUG_COST", "========================================")
+
         historyDao.upsert(historyRecord.toEntity())
+
         return Resource.Success(Unit)
     }
+
 
     override fun observeHistoryForCar(carId: Int): Flow<List<MaintenanceHistory>> =
         historyDao.observeHistoryForCar(carId).map { list -> list.map { it.toDomain() } }

@@ -18,6 +18,10 @@ data class MaintenanceTaskEntity(
     val status: String,
     val createdAtMillis: Long,
     val updatedAtMillis: Long,
+
+    val completedAtMillis: Long? = null,
+    val costAmount: Double? = null,
+
     val isPendingCreate: Boolean,
     val isPendingUpdate: Boolean,
     val isPendingDelete: Boolean

@@ -10,5 +10,4 @@ class GetMaintenanceHistoryForCarUseCase @Inject constructor(
 ) {
     operator fun invoke(carId: Int): Flow<List<MaintenanceHistory>> =
         repository.observeHistoryForCar(carId)
-
 }
