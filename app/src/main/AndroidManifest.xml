@@ -23,7 +23,6 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAewp5oGGUUFX77ktKtUfWj2CjR8aLK6Ck" />
 
-
         <activity
             android:name="edu.ucne.loginapi.MainActivity"
             android:exported="true"
