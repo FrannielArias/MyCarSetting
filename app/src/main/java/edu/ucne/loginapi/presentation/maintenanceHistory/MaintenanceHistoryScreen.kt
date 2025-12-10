@@ -26,18 +26,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object MaintenanceConstants {
+    const val OIL_CHANGE = "Cambio de aceite"
     const val GENERAL_CHECK = "Revisión general"
     const val AIR_FILTER = "Cambio de filtro de aire"
 
     val MAIN_FILTERS = listOf(
-        "Cambio de aceite",
+        OIL_CHANGE,
         "Revisión de frenos",
         "Rotación de neumáticos",
         AIR_FILTER,
         GENERAL_CHECK
     )
 }
-
 
 @Composable
 fun MaintenanceHistoryScreen(
@@ -61,9 +61,11 @@ fun MaintenanceHistoryBody(
     onEvent: (MaintenanceHistoryEvent) -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollBehavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
 
+    // Mostrar mensajes
     LaunchedEffect(state.userMessage) {
         state.userMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -85,7 +87,7 @@ fun MaintenanceHistoryBody(
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             )
         },
@@ -142,13 +144,7 @@ private fun MaintenanceHistoryContent(
                 Text(
                     text = "Selecciona un vehículo",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Configura un vehículo para ver su historial de mantenimiento",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -168,13 +164,7 @@ private fun MaintenanceHistoryContent(
                 Text(
                     text = "Sin registros de mantenimiento",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Cada vez que completes un mantenimiento, guarda el registro aquí",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -182,17 +172,13 @@ private fun MaintenanceHistoryContent(
         else -> {
             val filteredRecords = state.selectedFilterText?.let { filterText ->
                 when (filterText) {
-                    "Otros" -> {
-                        state.records.filter { record ->
-                            val text = record.notes?.trim() ?: ""
-                            !MaintenanceConstants.MAIN_FILTERS.contains(text)
-                        }
+                    "Otros" -> state.records.filter {
+                        val text = it.notes?.trim() ?: ""
+                        !MaintenanceConstants.MAIN_FILTERS.contains(text)
                     }
 
-                    else -> {
-                        state.records.filter {
-                            it.notes?.trim().equals(filterText, ignoreCase = false)
-                        }
+                    else -> state.records.filter {
+                        it.notes?.trim().equals(filterText, ignoreCase = false)
                     }
                 }
             } ?: state.records
@@ -244,10 +230,7 @@ private fun MaintenanceHistoryList(
         }
 
         item {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "Filtrar por tipo",
                     style = MaterialTheme.typography.titleMedium,
@@ -262,9 +245,7 @@ private fun MaintenanceHistoryList(
         }
 
         if (records.isEmpty() && selectedFilterText != null) {
-            item {
-                EmptyCustomFilterState(selectedFilter = selectedFilterText)
-            }
+            item { EmptyCustomFilterState(selectedFilter = selectedFilterText) }
         } else {
             grouped.forEach { (month, list) ->
                 item(key = "header_$month") {
@@ -274,18 +255,18 @@ private fun MaintenanceHistoryList(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = month.replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                            text = month.replaceFirstChar {
+                                it.titlecase(Locale.getDefault())
+                            },
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.Bold
                         )
-
                         Surface(
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             shape = MaterialTheme.shapes.small
                         ) {
                             Text(
-                                text = "${list.size} ${if (list.size == 1) "registro" else "registros"}",
+                                text = "${list.size} registros",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
@@ -294,10 +275,7 @@ private fun MaintenanceHistoryList(
                     }
                 }
 
-                itemsIndexed(
-                    list,
-                    key = { _, item -> item.id }
-                ) { _, record ->
+                itemsIndexed(list, key = { _, item -> item.id }) { _, record ->
                     MaintenanceHistoryItem(
                         record = record,
                         onDelete = { onDelete(record.id) }
@@ -311,9 +289,7 @@ private fun MaintenanceHistoryList(
 @Composable
 private fun EmptyCustomFilterState(selectedFilter: String) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxWidth().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -325,14 +301,7 @@ private fun EmptyCustomFilterState(selectedFilter: String) {
         )
         Text(
             text = "No hay registros de \"$selectedFilter\"",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = "Intenta con otro filtro",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.titleSmall
         )
     }
 }
@@ -344,7 +313,7 @@ private fun CustomFilterRow(
 ) {
     val filters = listOf(
         null to "Todos",
-        "Cambio de aceite" to "Cambio de aceite",
+        MaintenanceConstants.OIL_CHANGE to MaintenanceConstants.OIL_CHANGE,
         "Revisión de frenos" to "Revisión de frenos",
         "Rotación de neumáticos" to "Rotación de neumáticos",
         MaintenanceConstants.AIR_FILTER to MaintenanceConstants.AIR_FILTER,
@@ -355,15 +324,11 @@ private fun CustomFilterRow(
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(filters) { (value, label) ->
             val selected = selectedFilter == value
+
             FilterChip(
                 selected = selected,
                 onClick = { onSelectFilter(value) },
-                label = {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                },
+                label = { Text(text = label) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -391,42 +356,34 @@ private fun HistorySummaryCard(
         shape = MaterialTheme.shapes.extraLarge
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.History,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
+
                 Column {
                     Text(
                         text = "Resumen del historial",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        fontWeight = FontWeight.Bold
                     )
+
                     if (isFiltered) {
                         Text(
                             text = "Mostrando $filteredCount de $totalRecords registros",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 SummaryItem(
                     label = "Total registros",
                     value = totalRecords.toString(),
@@ -451,19 +408,13 @@ private fun SummaryItem(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        Text(text = label, style = MaterialTheme.typography.labelMedium)
         Text(
             text = value,
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -475,7 +426,6 @@ private fun MaintenanceHistoryItem(
 ) {
     val dateText = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         .format(Date(record.serviceDateMillis))
-
     val costText = record.cost?.let { NumberFormat.getCurrencyInstance().format(it) }
 
     Card(
@@ -487,9 +437,7 @@ private fun MaintenanceHistoryItem(
         shape = MaterialTheme.shapes.large
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
@@ -535,10 +483,8 @@ private fun RecordDetails(
     costText: String?,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
         val title = record.notes?.takeIf { it.isNotBlank() }
             ?: record.taskType.displayName()
 
@@ -547,14 +493,10 @@ private fun RecordDetails(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onSurface
+            overflow = TextOverflow.Ellipsis
         )
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.History,
                 contentDescription = null,
@@ -570,14 +512,11 @@ private fun RecordDetails(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // KM
             record.mileageKm?.let {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Speed,
                         contentDescription = null,
@@ -587,17 +526,14 @@ private fun RecordDetails(
                     Text(
                         text = "${it.toInt()} km",
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.primary
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
 
-            if (!record.workshopName.isNullOrBlank()) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            // Taller
+            record.workshopName?.takeIf { it.isNotBlank() }?.let {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = null,
@@ -605,26 +541,25 @@ private fun RecordDetails(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = record.workshopName!!,
+                        text = it,
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
         }
 
-        if (!costText.isNullOrBlank()) {
+        // Costo
+        costText?.let {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = MaterialTheme.shapes.small
             ) {
                 Text(
-                    text = costText,
+                    text = it,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
@@ -634,7 +569,7 @@ private fun RecordDetails(
 
 private fun MaintenanceType.displayName(): String {
     return when (this) {
-        MaintenanceType.OIL_CHANGE -> "Cambio de aceite"
+        MaintenanceType.OIL_CHANGE -> MaintenanceConstants.OIL_CHANGE
         MaintenanceType.FILTER -> "Cambio de filtro"
         MaintenanceType.BRAKE_SERVICE -> "Servicio de frenos"
         MaintenanceType.TIRE_ROTATION -> "Rotación de neumáticos"
