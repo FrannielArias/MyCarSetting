@@ -182,7 +182,6 @@ private fun MaintenanceHistoryContent(
                         }
                     }
                     else -> {
-                        // Filtrar por coincidencia exacta con el texto
                         state.records.filter {
                             it.notes?.trim().equals(filterText, ignoreCase = false)
                         }
@@ -537,7 +536,6 @@ private fun RecordDetails(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Título: SIEMPRE usar notes si existe, sino taskType
         val displayTitle = record.notes?.takeIf { it.isNotBlank() } ?: record.taskType.displayName()
 
         Text(
