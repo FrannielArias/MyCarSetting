@@ -174,16 +174,17 @@ private fun MaintenanceHistoryContent(
             val filteredRecords = state.selectedFilterText?.let { filterText ->
                 when (filterText) {
                     "Otros" -> {
-                        val mainFilters = listOf(
+                        val main = listOf(
                             "Cambio de aceite",
                             "Revisión de frenos",
                             "Rotación de neumáticos",
                             "Cambio de filtro de aire",
                             MaintenanceConstants.GENERAL_CHECK
                         )
+
                         state.records.filter { record ->
-                            val noteText = record.notes?.trim() ?: ""
-                            !mainFilters.contains(noteText)
+                            val text = record.notes?.trim() ?: ""
+                            !main.contains(text)
                         }
                     }
 
@@ -200,12 +201,8 @@ private fun MaintenanceHistoryContent(
                 records = filteredRecords,
                 allRecords = state.records,
                 selectedFilterText = state.selectedFilterText,
-                onSelectFilter = { filterText ->
-                    onEvent(MaintenanceHistoryEvent.OnFilterTextSelected(filterText))
-                },
-                onDelete = { id ->
-                    onEvent(MaintenanceHistoryEvent.OnDeleteRecord(id))
-                }
+                onSelectFilter = { onEvent(MaintenanceHistoryEvent.OnFilterTextSelected(it)) },
+                onDelete = { onEvent(MaintenanceHistoryEvent.OnDeleteRecord(it)) }
             )
         }
     }
@@ -255,6 +252,7 @@ private fun MaintenanceHistoryList(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
+
                 CustomFilterRow(
                     selectedFilter = selectedFilterText,
                     onSelectFilter = onSelectFilter
@@ -263,9 +261,7 @@ private fun MaintenanceHistoryList(
         }
 
         if (records.isEmpty() && selectedFilterText != null) {
-            item {
-                EmptyCustomFilterState(selectedFilter = selectedFilterText)
-            }
+            item { EmptyCustomFilterState(selectedFilterText) }
         } else {
             grouped.forEach { (month, list) ->
                 item(key = "header_$month") {
@@ -275,7 +271,9 @@ private fun MaintenanceHistoryList(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = month.replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                            text = month.replaceFirstChar {
+                                it.titlecase(Locale.getDefault())
+                            },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -295,7 +293,7 @@ private fun MaintenanceHistoryList(
                 }
 
                 itemsIndexed(
-                    list,
+                    items = list,
                     key = { _, item -> item.id }
                 ) { _, record ->
                     MaintenanceHistoryItem(
@@ -311,7 +309,9 @@ private fun MaintenanceHistoryList(
 @Composable
 private fun EmptyCustomFilterState(selectedFilter: String) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(32.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -351,14 +351,15 @@ private fun CustomFilterRow(
     )
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(filters) { (filterValue, filterLabel) ->
-            val isSelected = selectedFilter == filterValue
+        items(filters) { (value, label) ->
+            val selected = selectedFilter == value
+
             FilterChip(
-                selected = isSelected,
-                onClick = { onSelectFilter(filterValue) },
+                selected = selected,
+                onClick = { onSelectFilter(value) },
                 label = {
                     Text(
-                        text = filterLabel,
+                        text = label,
                         style = MaterialTheme.typography.labelLarge
                     )
                 },
@@ -389,7 +390,9 @@ private fun HistorySummaryCard(
         shape = MaterialTheme.shapes.extraLarge
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
@@ -473,9 +476,7 @@ private fun MaintenanceHistoryItem(
         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             .format(Date(record.serviceDateMillis))
 
-    val costText = record.cost?.let {
-        NumberFormat.getCurrencyInstance().format(it)
-    }
+    val costText = record.cost?.let { NumberFormat.getCurrencyInstance().format(it) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -486,7 +487,9 @@ private fun MaintenanceHistoryItem(
         shape = MaterialTheme.shapes.large
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
@@ -536,11 +539,11 @@ private fun RecordDetails(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        val displayTitle = record.notes?.takeIf { it.isNotBlank() }
+        val title = record.notes?.takeIf { it.isNotBlank() }
             ?: record.taskType.displayName()
 
         Text(
-            text = displayTitle,
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -602,7 +605,7 @@ private fun RecordDetails(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = record.workshopName,
+                        text = record.workshopName!!,
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
