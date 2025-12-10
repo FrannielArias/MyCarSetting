@@ -514,7 +514,6 @@ private fun RecordDetails(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // KM
             record.mileageKm?.let {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -530,8 +529,6 @@ private fun RecordDetails(
                     )
                 }
             }
-
-            // Taller
             record.workshopName?.takeIf { it.isNotBlank() }?.let {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -550,7 +547,6 @@ private fun RecordDetails(
             }
         }
 
-        // Costo
         costText?.let {
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
