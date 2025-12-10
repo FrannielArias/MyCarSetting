@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package edu.ucne.loginapi.presentation.maintenanceHistory
 
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,10 @@ import edu.ucne.loginapi.domain.model.MaintenanceType
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+
+object MaintenanceConstants {
+    const val GENERAL_CHECK = "Revisión general"
+}
 
 @Composable
 fun MaintenanceHistoryScreen(
@@ -174,9 +179,8 @@ private fun MaintenanceHistoryContent(
                             "Revisión de frenos",
                             "Rotación de neumáticos",
                             "Cambio de filtro de aire",
-                            "Revisión general"
+                            MaintenanceConstants.GENERAL_CHECK
                         )
-
                         state.records.filter { record ->
                             val noteText = record.notes?.trim() ?: ""
                             !mainFilters.contains(noteText)
@@ -232,7 +236,6 @@ private fun MaintenanceHistoryList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         item {
             HistorySummaryCard(
                 totalRecords = totalRecords,
@@ -265,7 +268,6 @@ private fun MaintenanceHistoryList(
             }
         } else {
             grouped.forEach { (month, list) ->
-
                 item(key = "header_$month") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -344,14 +346,13 @@ private fun CustomFilterRow(
         "Revisión de frenos" to "Revisión de frenos",
         "Rotación de neumáticos" to "Rotación de neumáticos",
         "Cambio de filtro de aire" to "Cambio de filtro de aire",
-        "Revisión general" to "Revisión general",
+        MaintenanceConstants.GENERAL_CHECK to MaintenanceConstants.GENERAL_CHECK,
         "Otros" to "Otros"
     )
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(filters) { (filterValue, filterLabel) ->
             val isSelected = selectedFilter == filterValue
-
             FilterChip(
                 selected = isSelected,
                 onClick = { onSelectFilter(filterValue) },
@@ -408,7 +409,6 @@ private fun HistorySummaryCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-
                     if (isFiltered) {
                         Text(
                             text = "Mostrando $filteredCount de $totalRecords registros",
@@ -428,9 +428,7 @@ private fun HistorySummaryCard(
                     value = totalRecords.toString(),
                     modifier = Modifier.weight(1f)
                 )
-
                 Spacer(modifier = Modifier.size(16.dp))
-
                 SummaryItem(
                     label = "Inversión total",
                     value = currency,
@@ -572,7 +570,6 @@ private fun RecordDetails(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             record.mileageKm?.let {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -644,7 +641,7 @@ private fun MaintenanceType.displayName(): String {
         MaintenanceType.COOLANT -> "Refrigerante"
         MaintenanceType.INSURANCE_RENEWAL -> "Renovación de seguro"
         MaintenanceType.TAX_RENEWAL -> "Renovación de impuestos"
-        MaintenanceType.GENERAL_CHECK -> "Revisión general"
+        MaintenanceType.GENERAL_CHECK -> MaintenanceConstants.GENERAL_CHECK
         MaintenanceType.OTHER -> "Otro mantenimiento"
     }
 }
